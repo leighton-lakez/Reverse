@@ -1,118 +1,367 @@
-import { useState, useEffect } from "react";
-import { Upload, X } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Upload, X, Send, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
 import BottomNav from "@/components/BottomNav";
 import { supabase } from "@/integrations/supabase/client";
-import LocationAutocomplete from "@/components/LocationAutocomplete";
 import { getUserFriendlyError } from "@/lib/errorHandler";
 import { itemSchema } from "@/lib/validationSchemas";
 
+type Message = {
+  id: string;
+  type: "bot" | "user";
+  content: string;
+  options?: string[];
+  inputType?: "text" | "number" | "image" | "select";
+  timestamp: Date;
+};
+
+type ItemData = {
+  title: string;
+  brand: string;
+  category: string;
+  description: string;
+  condition: string;
+  price: string;
+  location: string;
+  size: string;
+  tradePreference: string;
+  images: File[];
+};
+
+const conversationSteps = [
+  "welcome",
+  "images",
+  "title",
+  "brand",
+  "category",
+  "description",
+  "condition",
+  "price",
+  "location",
+  "size",
+  "trade",
+  "summary",
+] as const;
+
+type ConversationStep = (typeof conversationSteps)[number];
+
 const Sell = () => {
   const navigate = useNavigate();
-  const [imageFiles, setImageFiles] = useState<File[]>([]);
-  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
-  const [location, setLocation] = useState("");
-  const [category, setCategory] = useState("");
-  const [condition, setCondition] = useState("");
-  const [tradePreference, setTradePreference] = useState("yes");
-  const [loading, setLoading] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [currentStep, setCurrentStep] = useState<ConversationStep>("welcome");
+  const [inputValue, setInputValue] = useState("");
+  const [isTyping, setIsTyping] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [itemData, setItemData] = useState<ItemData>({
+    title: "",
+    brand: "",
+    category: "",
+    description: "",
+    condition: "",
+    price: "",
+    location: "",
+    size: "",
+    tradePreference: "",
+    images: [],
+  });
+
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
 
   useEffect(() => {
-    // Check if user is logged in
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session) {
         navigate("/auth");
       } else {
         setUserId(session.user.id);
+        startConversation();
       }
     });
   }, [navigate]);
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const addMessage = (content: string, type: "bot" | "user", options?: string[], inputType?: Message["inputType"]) => {
+    const newMessage: Message = {
+      id: Date.now().toString(),
+      type,
+      content,
+      options,
+      inputType,
+      timestamp: new Date(),
+    };
+    setMessages((prev) => [...prev, newMessage]);
+  };
+
+  const addBotMessageWithDelay = (content: string, delay: number = 600, options?: string[], inputType?: Message["inputType"]) => {
+    setIsTyping(true);
+    setTimeout(() => {
+      setIsTyping(false);
+      addMessage(content, "bot", options, inputType);
+    }, delay);
+  };
+
+  const startConversation = () => {
+    addBotMessageWithDelay(
+      "Hey there! 👋 I'm here to help you list your item. This will only take a minute. Ready to get started?",
+      300
+    );
+    setTimeout(() => {
+      addBotMessageWithDelay("First up, let's add some photos of your item. You can upload multiple images. Click the upload button below! 📸", 1000);
+      setCurrentStep("images");
+    }, 1000);
+  };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files) {
       const newFiles = Array.from(files);
       const newPreviews = newFiles.map((file) => URL.createObjectURL(file));
-      setImageFiles([...imageFiles, ...newFiles]);
-      setImagePreviews([...imagePreviews, ...newPreviews]);
+
+      const updatedImages = [...itemData.images, ...newFiles];
+      const updatedPreviews = [...imagePreviews, ...newPreviews];
+
+      setItemData({ ...itemData, images: updatedImages });
+      setImagePreviews(updatedPreviews);
+
+      addMessage(`Added ${newFiles.length} photo(s)`, "user");
+
+      if (updatedImages.length > 0) {
+        addBotMessageWithDelay(
+          `Great! I've got ${updatedImages.length} photo(s). You can add more or we can move on. What's the title of your item?`,
+          800
+        );
+        setCurrentStep("title");
+      }
     }
   };
 
   const removeImage = (index: number) => {
-    // Revoke the object URL to free memory
     URL.revokeObjectURL(imagePreviews[index]);
-    setImageFiles(imageFiles.filter((_, i) => i !== index));
+    setItemData({
+      ...itemData,
+      images: itemData.images.filter((_, i) => i !== index),
+    });
     setImagePreviews(imagePreviews.filter((_, i) => i !== index));
   };
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const handleSubmitInput = (value?: string) => {
+    const inputToSubmit = value || inputValue.trim();
+    if (!inputToSubmit && currentStep !== "images") return;
+
+    addMessage(inputToSubmit, "user");
+    setInputValue("");
+
+    switch (currentStep) {
+      case "title":
+        setItemData({ ...itemData, title: inputToSubmit });
+        addBotMessageWithDelay("Perfect! What brand is it?", 600);
+        setCurrentStep("brand");
+        break;
+
+      case "brand":
+        setItemData({ ...itemData, brand: inputToSubmit });
+        addBotMessageWithDelay(
+          "Got it! What category does this item belong to?",
+          600,
+          ["Handbags", "Shoes", "Clothing", "Accessories", "Jewelry", "Watches"],
+          "select"
+        );
+        setCurrentStep("category");
+        break;
+
+      case "category":
+        setItemData({ ...itemData, category: inputToSubmit.toLowerCase() });
+        addBotMessageWithDelay(
+          "Nice! Can you describe the item? Include details about authenticity, flaws, or anything special about it.",
+          600
+        );
+        setCurrentStep("description");
+        break;
+
+      case "description":
+        setItemData({ ...itemData, description: inputToSubmit });
+        addBotMessageWithDelay(
+          "Thanks! What condition is the item in?",
+          600,
+          ["New with Tags", "Like New", "Excellent", "Good", "Fair"],
+          "select"
+        );
+        setCurrentStep("condition");
+        break;
+
+      case "condition":
+        const conditionMap: Record<string, string> = {
+          "New with Tags": "new",
+          "Like New": "like-new",
+          "Excellent": "excellent",
+          "Good": "good",
+          "Fair": "fair",
+        };
+        setItemData({ ...itemData, condition: conditionMap[inputToSubmit] || inputToSubmit });
+        addBotMessageWithDelay("What price are you asking for it? (just the number, like 150)", 600);
+        setCurrentStep("price");
+        break;
+
+      case "price":
+        setItemData({ ...itemData, price: inputToSubmit });
+        addBotMessageWithDelay("Where are you located? (City, State)", 600);
+        setCurrentStep("location");
+        break;
+
+      case "location":
+        setItemData({ ...itemData, location: inputToSubmit });
+        addBotMessageWithDelay("What size is the item? (e.g., M, 8, 32, or type 'N/A' if not applicable)", 600);
+        setCurrentStep("size");
+        break;
+
+      case "size":
+        setItemData({ ...itemData, size: inputToSubmit });
+        addBotMessageWithDelay(
+          "Last question! Are you open to trades?",
+          600,
+          ["Yes", "No"],
+          "select"
+        );
+        setCurrentStep("trade");
+        break;
+
+      case "trade":
+        setItemData({ ...itemData, tradePreference: inputToSubmit.toLowerCase() });
+        showSummary(inputToSubmit);
+        break;
+    }
+  };
+
+  const showSummary = (tradeAnswer: string) => {
+    const data = { ...itemData, tradePreference: tradeAnswer.toLowerCase() };
+
+    addBotMessageWithDelay("Perfect! Here's what we've got:", 600);
+
+    setTimeout(() => {
+      const summary = `
+📦 **${data.title}**
+🏷️ Brand: ${data.brand}
+📂 Category: ${data.category.charAt(0).toUpperCase() + data.category.slice(1)}
+📝 Description: ${data.description}
+✨ Condition: ${data.condition}
+💰 Price: $${data.price}
+📍 Location: ${data.location}
+📏 Size: ${data.size}
+🔄 Open to trades: ${data.tradePreference}
+📸 ${data.images.length} photo(s)
+      `.trim();
+
+      addMessage(summary, "bot");
+
+      setTimeout(() => {
+        addBotMessageWithDelay(
+          "Does everything look good? Click 'List Item' to publish or 'Start Over' to restart.",
+          1200,
+          ["List Item", "Start Over"],
+          "select"
+        );
+        setCurrentStep("summary");
+      }, 800);
+    }, 1200);
+  };
+
+  const handleOptionClick = (option: string) => {
+    if (currentStep === "summary") {
+      if (option === "List Item") {
+        submitListing();
+      } else {
+        resetConversation();
+      }
+    } else {
+      handleSubmitInput(option);
+    }
+  };
+
+  const resetConversation = () => {
+    // Clear images
+    imagePreviews.forEach(preview => URL.revokeObjectURL(preview));
+    setImagePreviews([]);
+
+    // Reset state
+    setMessages([]);
+    setItemData({
+      title: "",
+      brand: "",
+      category: "",
+      description: "",
+      condition: "",
+      price: "",
+      location: "",
+      size: "",
+      tradePreference: "",
+      images: [],
+    });
+    setCurrentStep("welcome");
+
+    // Restart
+    startConversation();
+  };
+
+  const submitListing = async () => {
     if (!userId) return;
 
-    setLoading(true);
-    const formData = new FormData(e.currentTarget);
+    setSubmitting(true);
+    addMessage("List Item", "user");
+    addBotMessageWithDelay("Great! Let me create your listing... 🚀", 300);
 
     try {
-      // Validate input data
+      // Validate
       const validationResult = itemSchema.safeParse({
-        title: formData.get("title") as string,
-        brand: formData.get("brand") as string,
-        category,
-        description: formData.get("description") as string,
-        condition,
-        price: parseFloat(formData.get("price") as string),
-        location,
-        size: formData.get("size") as string,
+        title: itemData.title,
+        brand: itemData.brand,
+        category: itemData.category,
+        description: itemData.description,
+        condition: itemData.condition,
+        price: parseFloat(itemData.price),
+        location: itemData.location,
+        size: itemData.size,
       });
 
       if (!validationResult.success) {
         const firstError = validationResult.error.errors[0];
-        toast({
-          title: "Validation Error",
-          description: firstError.message,
-          variant: "destructive",
-        });
-        setLoading(false);
-        return;
+        throw new Error(firstError.message);
       }
 
-      // Upload images to storage bucket
+      // Upload images
       const uploadedImageUrls: string[] = [];
-      
-      for (const file of imageFiles) {
-        const fileExt = file.name.split('.').pop();
+      for (const file of itemData.images) {
+        const fileExt = file.name.split(".").pop();
         const fileName = `${userId}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
-        
+
         const { data: uploadData, error: uploadError } = await supabase.storage
-          .from('item-images')
+          .from("item-images")
           .upload(fileName, file);
 
         if (uploadError) {
-          console.error('Error uploading image:', uploadError);
-          throw new Error('Failed to upload images');
+          throw new Error("Failed to upload images");
         }
 
-        // Get public URL for the uploaded image
-        const { data: { publicUrl } } = supabase.storage
-          .from('item-images')
-          .getPublicUrl(uploadData.path);
-        
+        const {
+          data: { publicUrl },
+        } = supabase.storage.from("item-images").getPublicUrl(uploadData.path);
+
         uploadedImageUrls.push(publicUrl);
       }
 
+      // Insert item
       const { error } = await supabase.from("items").insert({
         user_id: userId,
         title: validationResult.data.title,
@@ -123,218 +372,203 @@ const Sell = () => {
         price: validationResult.data.price,
         location: validationResult.data.location,
         size: validationResult.data.size,
-        trade_preference: tradePreference,
+        trade_preference: itemData.tradePreference,
         images: uploadedImageUrls,
       });
 
       if (error) throw error;
 
-      toast({
-        title: "Success!",
-        description: "Your item has been listed.",
-      });
-      navigate("/");
+      setTimeout(() => {
+        addMessage("Your item is now live! ✨", "bot");
+        toast({
+          title: "Success!",
+          description: "Your item has been listed.",
+        });
+
+        setTimeout(() => {
+          navigate("/");
+        }, 1500);
+      }, 1000);
     } catch (error: any) {
+      addMessage(`Oops! ${getUserFriendlyError(error)} Please try again.`, "bot");
       toast({
         title: "Error",
         description: getUserFriendlyError(error),
         variant: "destructive",
       });
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   };
 
+  const getCurrentInputType = (): "text" | "number" => {
+    return currentStep === "price" ? "number" : "text";
+  };
+
+  const getPlaceholder = (): string => {
+    const placeholders: Record<ConversationStep, string> = {
+      welcome: "",
+      images: "",
+      title: "e.g., Gucci Leather Handbag",
+      brand: "e.g., Gucci",
+      category: "",
+      description: "Describe your item...",
+      condition: "",
+      price: "150",
+      location: "Los Angeles, CA",
+      size: "M, 8, 32, etc.",
+      trade: "",
+      summary: "",
+    };
+    return placeholders[currentStep];
+  };
+
+  const canSubmitInput = currentStep !== "images" && currentStep !== "summary";
+
   return (
-    <div className="min-h-screen bg-background pb-24">
+    <div className="min-h-screen bg-background pb-24 flex flex-col">
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-lg border-b border-border">
-        <div className="max-w-3xl mx-auto px-4 py-2">
-          <h1 className="text-xl font-bold text-foreground">List Item</h1>
+      <header className="sticky top-0 z-50 glass">
+        <div className="max-w-3xl mx-auto px-6 py-4">
+          <h1 className="text-2xl font-black tracking-tighter text-gradient">
+            List Your Item
+          </h1>
         </div>
       </header>
 
-      {/* Form */}
-      <main className="max-w-3xl mx-auto px-4 py-3">
-        <form onSubmit={handleSubmit} className="space-y-3 animate-fade-in">
-          {/* Image Upload */}
-          <div className="space-y-2">
-            <Label className="text-sm font-semibold">Photos</Label>
-            <div className="grid grid-cols-4 gap-2">
-              {imagePreviews.map((preview, index) => (
-                <div key={index} className="relative aspect-square rounded-md overflow-hidden group">
-                  <img src={preview} alt={`Upload ${index + 1}`} className="w-full h-full object-cover" />
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    size="icon"
-                    className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                    onClick={() => removeImage(index)}
-                  >
-                    <X className="h-3 w-3" />
-                  </Button>
-                </div>
-              ))}
-              
-              <label className="aspect-square rounded-md border-2 border-dashed border-border hover:border-primary transition-colors cursor-pointer flex flex-col items-center justify-center gap-1 bg-muted/50 hover:bg-muted">
-                <Upload className="h-6 w-6 text-muted-foreground" />
-                <span className="text-xs text-muted-foreground">Add</span>
-                <input
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  className="hidden"
-                  onChange={handleImageUpload}
-                />
-              </label>
-            </div>
-          </div>
+      {/* Chat Messages */}
+      <main className="flex-1 max-w-3xl mx-auto w-full px-4 py-6 overflow-y-auto">
+        <div className="space-y-4">
+          {messages.map((message) => (
+            <div
+              key={message.id}
+              className={`flex ${message.type === "user" ? "justify-end" : "justify-start"} animate-fade-in`}
+            >
+              <div
+                className={`max-w-[80%] rounded-2xl px-4 py-3 shadow-md ${
+                  message.type === "user"
+                    ? "gradient-primary text-primary-foreground shadow-glow"
+                    : "glass text-foreground"
+                }`}
+              >
+                <p className="text-sm whitespace-pre-line leading-relaxed">{message.content}</p>
 
-          {/* Title */}
-          <div className="space-y-1">
-            <Label htmlFor="title" className="text-sm font-semibold">Title *</Label>
-            <Input
-              id="title"
-              name="title"
-              placeholder="e.g., Gucci Leather Handbag"
-              required
-              className="bg-muted border-border h-9"
-            />
-          </div>
-
-          {/* Brand & Category */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <Label htmlFor="brand" className="text-sm font-semibold">Brand *</Label>
-              <Input
-                id="brand"
-                name="brand"
-                placeholder="e.g., Gucci"
-                required
-                className="bg-muted border-border h-9"
-              />
-            </div>
-            
-            <div className="space-y-1">
-              <Label htmlFor="category" className="text-sm font-semibold">Category *</Label>
-              <Select required value={category} onValueChange={setCategory}>
-                <SelectTrigger className="bg-muted border-border h-9">
-                  <SelectValue placeholder="Category" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="handbags">Handbags</SelectItem>
-                  <SelectItem value="shoes">Shoes</SelectItem>
-                  <SelectItem value="clothing">Clothing</SelectItem>
-                  <SelectItem value="accessories">Accessories</SelectItem>
-                  <SelectItem value="jewelry">Jewelry</SelectItem>
-                  <SelectItem value="watches">Watches</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          {/* Description */}
-          <div className="space-y-1">
-            <Label htmlFor="description" className="text-sm font-semibold">Description *</Label>
-            <Textarea
-              id="description"
-              name="description"
-              placeholder="Describe condition, authenticity, flaws..."
-              rows={3}
-              required
-              className="bg-muted border-border resize-none text-sm"
-            />
-          </div>
-
-          {/* Condition & Price */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <Label htmlFor="condition" className="text-sm font-semibold">Condition *</Label>
-              <Select required value={condition} onValueChange={setCondition}>
-                <SelectTrigger className="bg-muted border-border h-9">
-                  <SelectValue placeholder="Condition" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="new">New with Tags</SelectItem>
-                <SelectItem value="like-new">Like New</SelectItem>
-                <SelectItem value="excellent">Excellent</SelectItem>
-                <SelectItem value="good">Good</SelectItem>
-                <SelectItem value="fair">Fair</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="space-y-1">
-              <Label htmlFor="price" className="text-sm font-semibold">Price *</Label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm font-semibold">
-                  $
-                </span>
-                <Input
-                  id="price"
-                  name="price"
-                  type="number"
-                  placeholder="0.00"
-                  min="0"
-                  step="0.01"
-                  required
-                  className="pl-7 bg-muted border-border h-9"
-                />
+                {message.options && (
+                  <div className="flex flex-wrap gap-2 mt-3">
+                    {message.options.map((option) => (
+                      <Button
+                        key={option}
+                        onClick={() => handleOptionClick(option)}
+                        size="sm"
+                        variant="outline"
+                        className="bg-background/50 hover:bg-background border-border"
+                      >
+                        {option}
+                      </Button>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
-          </div>
+          ))}
 
-          {/* Location & Size */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <Label htmlFor="location" className="text-sm font-semibold">Location *</Label>
-              <LocationAutocomplete
-                value={location}
-                onChange={setLocation}
-                placeholder="City, State"
-                className="bg-muted border-border h-9"
-                required
-              />
+          {isTyping && (
+            <div className="flex justify-start animate-fade-in">
+              <div className="glass rounded-2xl px-4 py-3 shadow-md">
+                <div className="flex gap-1">
+                  <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: "0ms" }}></div>
+                  <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: "150ms" }}></div>
+                  <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: "300ms" }}></div>
+                </div>
+              </div>
             </div>
-            
-            <div className="space-y-1">
-              <Label htmlFor="size" className="text-sm font-semibold">Size</Label>
-              <Input
-                id="size"
-                name="size"
-                placeholder="M, 8, 32"
-                className="bg-muted border-border h-9"
-              />
+          )}
+
+          {/* Image Previews */}
+          {imagePreviews.length > 0 && currentStep !== "summary" && (
+            <div className="flex justify-start">
+              <div className="glass rounded-2xl p-3 shadow-md">
+                <div className="grid grid-cols-3 gap-2">
+                  {imagePreviews.map((preview, index) => (
+                    <div key={index} className="relative aspect-square rounded-md overflow-hidden group">
+                      <img src={preview} alt={`Upload ${index + 1}`} className="w-full h-full object-cover" />
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="icon"
+                        className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={() => removeImage(index)}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
-          </div>
+          )}
 
-          {/* Trade Option */}
-          <div className="space-y-1">
-            <Label htmlFor="trade" className="text-sm font-semibold">Open to Trades?</Label>
-            <Select value={tradePreference} onValueChange={setTradePreference}>
-              <SelectTrigger className="bg-muted border-border h-9">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="yes">Yes</SelectItem>
-                <SelectItem value="no">No</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Submit Button */}
-          <div className="pt-2">
-            <Button
-              type="submit"
-              className="w-full h-10 text-base font-semibold bg-primary hover:bg-primary/90 text-primary-foreground"
-              disabled={loading}
-            >
-              {loading ? "Listing..." : "List Item"}
-            </Button>
-          </div>
-        </form>
+          <div ref={messagesEndRef} />
+        </div>
       </main>
-      
+
+      {/* Input Area */}
+      <div className="sticky bottom-16 glass">
+        <div className="max-w-3xl mx-auto px-6 py-4">
+          {currentStep === "images" && (
+            <div className="flex gap-2">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                multiple
+                className="hidden"
+                onChange={handleImageUpload}
+              />
+              <Button
+                onClick={() => fileInputRef.current?.click()}
+                className="flex-1 h-12 text-base gradient-primary shadow-glow hover:shadow-glow-secondary transition-all"
+              >
+                <Upload className="h-5 w-5 mr-2" />
+                Upload Photos
+              </Button>
+            </div>
+          )}
+
+          {canSubmitInput && (
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleSubmitInput();
+              }}
+              className="flex gap-2"
+            >
+              <Input
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                placeholder={getPlaceholder()}
+                type={getCurrentInputType()}
+                className="flex-1 h-12 text-base bg-muted border-border"
+                disabled={submitting}
+                autoFocus
+              />
+              <Button
+                type="submit"
+                size="icon"
+                className="h-12 w-12"
+                disabled={!inputValue.trim() || submitting}
+              >
+                {submitting ? (
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                ) : (
+                  <Send className="h-5 w-5" />
+                )}
+              </Button>
+            </form>
+          )}
+        </div>
+      </div>
+
       <BottomNav />
     </div>
   );

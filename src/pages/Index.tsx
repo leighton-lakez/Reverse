@@ -1,69 +1,36 @@
-import { Search, LogOut } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import ItemCard from "@/components/ItemCard";
+import { LogOut, X, Heart, RotateCcw } from "lucide-react";
 import BottomNav from "@/components/BottomNav";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { toast } from "@/hooks/use-toast";
 
-const mockItems = [
-  {
-    id: 1,
-    image: "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800&auto=format&fit=crop",
-    title: "Gucci Leather Handbag",
-    price: 1299,
-    condition: "Like New",
-    location: "New York, NY"
-  },
-  {
-    id: 2,
-    image: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=800&auto=format&fit=crop",
-    title: "Louis Vuitton Sneakers",
-    price: 850,
-    condition: "Excellent",
-    location: "Los Angeles, CA"
-  },
-  {
-    id: 3,
-    image: "https://images.unsplash.com/photo-1580910051074-3eb694886505?w=800&auto=format&fit=crop",
-    title: "Chanel Classic Dress",
-    price: 2100,
-    condition: "New",
-    location: "Miami, FL"
-  },
-  {
-    id: 4,
-    image: "https://images.unsplash.com/photo-1610652492500-ded49ceeb378?w=800&auto=format&fit=crop",
-    title: "Prada Sunglasses",
-    price: 320,
-    condition: "Good",
-    location: "Chicago, IL"
-  },
-  {
-    id: 5,
-    image: "https://images.unsplash.com/photo-1599003254870-59d164d408ba?w=800&auto=format&fit=crop",
-    title: "Versace Silk Scarf",
-    price: 180,
-    condition: "Like New",
-    location: "San Francisco, CA"
-  },
-  {
-    id: 6,
-    image: "https://images.unsplash.com/photo-1582639510494-c80b5de9f148?w=800&auto=format&fit=crop",
-    title: "Balenciaga Track Jacket",
-    price: 750,
-    condition: "Excellent",
-    location: "Boston, MA"
-  }
-];
+interface Item {
+  id: string;
+  title: string;
+  brand: string;
+  price: number;
+  condition: string;
+  location: string;
+  images: string[];
+  user_id: string;
+  description: string;
+}
 
 const Index = () => {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [items, setItems] = useState<any[]>([]);
+  const [items, setItems] = useState<Item[]>([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
+  const [swipeDirection, setSwipeDirection] = useState<"left" | "right" | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [skippedItems, setSkippedItems] = useState<Item[]>([]);
+
   const navigate = useNavigate();
+  const cardRef = useRef<HTMLDivElement>(null);
+  const startPosRef = useRef({ x: 0, y: 0 });
 
   useEffect(() => {
     // Check auth status
@@ -97,8 +64,10 @@ const Index = () => {
   }, [navigate]);
 
   useEffect(() => {
-    fetchItems();
-  }, []);
+    if (user) {
+      fetchItems();
+    }
+  }, [user]);
 
   const fetchItems = async () => {
     setLoading(true);
@@ -106,6 +75,7 @@ const Index = () => {
       .from("items")
       .select("*")
       .eq("status", "available")
+      .neq("user_id", user.id) // Don't show user's own items
       .order("created_at", { ascending: false });
 
     if (!error && data) {
@@ -119,77 +89,300 @@ const Index = () => {
     navigate("/auth");
   };
 
-  const filteredItems = items.filter(item =>
-    item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    item.condition.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    item.location.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const sendInterestedMessage = async (item: Item) => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase.from("messages").insert({
+        sender_id: user.id,
+        receiver_id: item.user_id,
+        content: `I'm interested in this product: ${item.title}`,
+        item_id: item.id,
+        read: false,
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Message sent!",
+        description: `You've expressed interest in ${item.title}`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "Failed to send message",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleSwipe = async (direction: "left" | "right") => {
+    if (currentIndex >= items.length) return;
+
+    const currentItem = items[currentIndex];
+    setSwipeDirection(direction);
+
+    // If swiping right, send message
+    if (direction === "right") {
+      await sendInterestedMessage(currentItem);
+    } else {
+      // If swiping left, add to skipped items
+      setSkippedItems([...skippedItems, currentItem]);
+    }
+
+    // Wait for animation to complete
+    setTimeout(() => {
+      setCurrentIndex(currentIndex + 1);
+      setSwipeDirection(null);
+      setDragOffset({ x: 0, y: 0 });
+    }, 300);
+  };
+
+  const handleUndo = () => {
+    if (skippedItems.length === 0) return;
+
+    // Get the last skipped item
+    const lastSkipped = skippedItems[skippedItems.length - 1];
+
+    // Remove it from skipped
+    setSkippedItems(skippedItems.slice(0, -1));
+
+    // Move back one card
+    if (currentIndex > 0) {
+      setCurrentIndex(currentIndex - 1);
+    }
+  };
+
+  // Touch/Mouse handlers for drag
+  const handleStart = (clientX: number, clientY: number) => {
+    setIsDragging(true);
+    startPosRef.current = { x: clientX, y: clientY };
+  };
+
+  const handleMove = (clientX: number, clientY: number) => {
+    if (!isDragging) return;
+
+    const deltaX = clientX - startPosRef.current.x;
+    const deltaY = clientY - startPosRef.current.y;
+
+    setDragOffset({ x: deltaX, y: deltaY });
+  };
+
+  const handleEnd = () => {
+    if (!isDragging) return;
+    setIsDragging(false);
+
+    const threshold = 100;
+
+    if (Math.abs(dragOffset.x) > threshold) {
+      if (dragOffset.x > 0) {
+        handleSwipe("right");
+      } else {
+        handleSwipe("left");
+      }
+    } else {
+      // Reset position
+      setDragOffset({ x: 0, y: 0 });
+    }
+  };
+
+  // Mouse events
+  const handleMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    handleStart(e.clientX, e.clientY);
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    handleMove(e.clientX, e.clientY);
+  };
+
+  const handleMouseUp = () => {
+    handleEnd();
+  };
+
+  // Touch events
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    handleStart(touch.clientX, touch.clientY);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    handleMove(touch.clientX, touch.clientY);
+  };
+
+  const handleTouchEnd = () => {
+    handleEnd();
+  };
+
+  const currentItem = items[currentIndex];
+  const nextItem = items[currentIndex + 1];
+  const rotation = dragOffset.x / 20;
+  const opacity = Math.min(Math.abs(dragOffset.x) / 100, 1);
 
   return (
-    <div className="min-h-screen bg-background pb-24">
+    <div className="min-h-screen bg-background pb-24 flex flex-col">
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-lg border-b border-border">
-        <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between mb-4">
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-              Design-Up
+      <header className="sticky top-0 z-50 glass">
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <h1 className="text-4xl font-black tracking-tighter text-gradient">
+              DesignX
             </h1>
             <Button
               variant="ghost"
               size="icon"
               onClick={handleSignOut}
               title="Sign out"
+              className="hover:bg-primary/10 transition-all"
             >
               <LogOut className="h-5 w-5" />
             </Button>
-          </div>
-          
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-            <Input
-              placeholder="Search designer items..."
-              className="pl-10 bg-muted border-border"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 py-6">
-        <div className="mb-6 animate-fade-in">
-          <h2 className="text-2xl font-semibold text-foreground mb-2">Trending Designer Items</h2>
-          <p className="text-muted-foreground">Discover luxury pieces from your community</p>
-        </div>
-
+      <main className="flex-1 max-w-md mx-auto w-full px-4 py-6 flex flex-col items-center justify-center">
         {loading ? (
           <div className="text-center py-12">
-            <p className="text-xl text-muted-foreground">Loading...</p>
+            <p className="text-xl text-muted-foreground">Loading items...</p>
           </div>
-        ) : filteredItems.length > 0 ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-            {filteredItems.map((item, index) => (
-              <div key={item.id} style={{ animationDelay: `${index * 0.1}s` }}>
-                <ItemCard 
-                  id={item.id}
-                  image={item.images?.[0] || "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800&auto=format&fit=crop"}
-                  title={item.title}
-                  price={parseFloat(item.price)}
-                  condition={item.condition}
-                  location={item.location}
-                  userId={item.user_id}
-                />
-              </div>
-            ))}
+        ) : currentIndex >= items.length ? (
+          <div className="text-center py-12">
+            <h2 className="text-2xl font-bold text-foreground mb-2">That's all for now!</h2>
+            <p className="text-muted-foreground mb-6">
+              You've seen all available items. Check back later for more.
+            </p>
+            <Button onClick={() => { setCurrentIndex(0); fetchItems(); }}>
+              Refresh
+            </Button>
           </div>
         ) : (
-          <div className="text-center py-12">
-            <p className="text-xl text-muted-foreground">No products found</p>
-            <p className="text-sm text-muted-foreground mt-2">
-              {searchQuery ? "Try searching with different keywords" : "Be the first to list an item!"}
-            </p>
-          </div>
+          <>
+            {/* Card Stack */}
+            <div className="relative w-full aspect-[3/4] max-h-[600px]">
+              {/* Next card (behind) */}
+              {nextItem && (
+                <div className="absolute inset-0 w-full h-full">
+                  <div className="relative w-full h-full rounded-3xl overflow-hidden shadow-xl bg-card border border-border scale-95 opacity-50">
+                    <img
+                      src={nextItem.images?.[0] || "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800&auto=format&fit=crop"}
+                      alt={nextItem.title}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Current card */}
+              {currentItem && (
+                <div
+                  ref={cardRef}
+                  className="absolute inset-0 w-full h-full cursor-grab active:cursor-grabbing touch-none"
+                  style={{
+                    transform: `translateX(${dragOffset.x}px) translateY(${dragOffset.y}px) rotate(${rotation}deg)`,
+                    transition: isDragging ? "none" : "all 0.3s ease-out",
+                  }}
+                  onMouseDown={handleMouseDown}
+                  onMouseMove={isDragging ? handleMouseMove : undefined}
+                  onMouseUp={handleMouseUp}
+                  onMouseLeave={handleMouseUp}
+                  onTouchStart={handleTouchStart}
+                  onTouchMove={handleTouchMove}
+                  onTouchEnd={handleTouchEnd}
+                >
+                  <div className="relative w-full h-full rounded-3xl overflow-hidden shadow-2xl bg-card border border-border">
+                    {/* Image */}
+                    <img
+                      src={currentItem.images?.[0] || "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800&auto=format&fit=crop"}
+                      alt={currentItem.title}
+                      className="w-full h-full object-cover"
+                      draggable={false}
+                    />
+
+                    {/* Gradient overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+
+                    {/* Swipe indicators */}
+                    <div
+                      className="absolute top-8 right-8 pointer-events-none"
+                      style={{ opacity: dragOffset.x < 0 ? opacity : 0 }}
+                    >
+                      <div className="bg-red-500 text-white px-6 py-3 rounded-xl font-bold text-2xl rotate-12 border-4 border-white shadow-xl">
+                        NOPE
+                      </div>
+                    </div>
+                    <div
+                      className="absolute top-8 left-8 pointer-events-none"
+                      style={{ opacity: dragOffset.x > 0 ? opacity : 0 }}
+                    >
+                      <div className="bg-green-500 text-white px-6 py-3 rounded-xl font-bold text-2xl -rotate-12 border-4 border-white shadow-xl">
+                        INTERESTED
+                      </div>
+                    </div>
+
+                    {/* Item info */}
+                    <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
+                      <h2 className="text-2xl font-bold mb-1">{currentItem.title}</h2>
+                      <p className="text-lg font-semibold mb-2">${currentItem.price}</p>
+                      <div className="flex items-center gap-3 text-sm mb-2">
+                        <span className="bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full">
+                          {currentItem.brand}
+                        </span>
+                        <span className="bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full">
+                          {currentItem.condition}
+                        </span>
+                      </div>
+                      <p className="text-sm opacity-90">{currentItem.location}</p>
+                      {currentItem.description && (
+                        <p className="text-sm opacity-75 mt-2 line-clamp-2">
+                          {currentItem.description}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex items-center justify-center gap-6 mt-8">
+              <Button
+                size="icon"
+                variant="outline"
+                className="h-16 w-16 rounded-full border-2 border-red-500 hover:bg-red-500 hover:text-white transition-all shadow-lg"
+                onClick={() => handleSwipe("left")}
+              >
+                <X className="h-8 w-8" />
+              </Button>
+
+              {skippedItems.length > 0 && (
+                <Button
+                  size="icon"
+                  variant="outline"
+                  className="h-12 w-12 rounded-full border-2 hover:bg-muted transition-all shadow-lg"
+                  onClick={handleUndo}
+                >
+                  <RotateCcw className="h-5 w-5" />
+                </Button>
+              )}
+
+              <Button
+                size="icon"
+                variant="outline"
+                className="h-16 w-16 rounded-full border-2 border-green-500 hover:bg-green-500 hover:text-white transition-all shadow-lg"
+                onClick={() => handleSwipe("right")}
+              >
+                <Heart className="h-8 w-8" />
+              </Button>
+            </div>
+
+            {/* Counter */}
+            <div className="mt-4 text-center text-sm text-muted-foreground">
+              {currentIndex + 1} / {items.length}
+            </div>
+          </>
         )}
       </main>
 

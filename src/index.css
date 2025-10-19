@@ -1,49 +1,75 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+/* DesignX - Modern Design System */
+/* All colors MUST be HSL */
 
 @layer base {
   :root {
-    --background: 222 47% 11%;
-    --foreground: 210 40% 98%;
+    /* Modern dark background with deep navy blue */
+    --background: 224 71% 4%;
+    --foreground: 213 31% 97%;
 
-    --card: 222 47% 14%;
-    --card-foreground: 210 40% 98%;
+    /* Cards with subtle elevation */
+    --card: 224 71% 6%;
+    --card-foreground: 213 31% 97%;
 
-    --popover: 222 47% 14%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 224 71% 6%;
+    --popover-foreground: 213 31% 97%;
 
-    --primary: 262 83% 58%;
+    /* Vibrant gradient colors - Electric Blue to Purple */
+    --primary: 221 83% 53%;
     --primary-foreground: 210 40% 98%;
 
-    --secondary: 217 91% 60%;
+    --secondary: 270 80% 60%;
     --secondary-foreground: 210 40% 98%;
 
-    --muted: 222 30% 25%;
-    --muted-foreground: 215 20% 65%;
+    /* Subtle muted tones */
+    --muted: 217 33% 17%;
+    --muted-foreground: 217 20% 70%;
 
-    --accent: 262 83% 58%;
+    --accent: 221 83% 53%;
     --accent-foreground: 210 40% 98%;
 
-    --destructive: 0 84% 60%;
+    --destructive: 0 72% 51%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 222 30% 22%;
-    --input: 222 30% 22%;
-    --ring: 262 83% 58%;
+    /* Borders and inputs with subtle contrast */
+    --border: 217 33% 15%;
+    --input: 217 33% 15%;
+    --ring: 221 83% 53%;
 
-    --radius: 0.75rem;
+    /* Modern rounded corners */
+    --radius: 1rem;
 
-    --gradient-luxury: linear-gradient(135deg, hsl(262 83% 58% / 0.15), hsl(217 91% 60% / 0.15));
-    --gradient-card: linear-gradient(145deg, hsl(222 47% 16%), hsl(222 47% 12%));
-    --gradient-hero: linear-gradient(180deg, hsl(222 47% 11%), hsl(262 83% 58% / 0.05));
-    --shadow-glow: 0 8px 32px hsl(262 83% 58% / 0.25);
-    --shadow-card: 0 4px 20px hsl(222 47% 5% / 0.5);
+    /* Success color */
+    --success: 142 76% 36%;
+    --success-foreground: 210 40% 98%;
+
+    /* Modern gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(221 83% 53%), hsl(270 80% 60%));
+    --gradient-card: linear-gradient(145deg, hsl(224 71% 7%), hsl(224 71% 5%));
+    --gradient-mesh: radial-gradient(at 40% 20%, hsl(221 83% 53% / 0.2) 0px, transparent 50%),
+                      radial-gradient(at 80% 0%, hsl(270 80% 60% / 0.2) 0px, transparent 50%),
+                      radial-gradient(at 0% 50%, hsl(221 83% 53% / 0.15) 0px, transparent 50%);
+
+    /* Glassmorphism */
+    --glass-bg: hsl(224 71% 6% / 0.7);
+    --glass-border: hsl(217 33% 25% / 0.3);
+
+    /* Shadows */
+    --shadow-sm: 0 2px 8px hsl(224 71% 4% / 0.4);
+    --shadow-md: 0 4px 16px hsl(224 71% 4% / 0.5);
+    --shadow-lg: 0 8px 32px hsl(224 71% 4% / 0.6);
+    --shadow-glow: 0 0 40px hsl(221 83% 53% / 0.3);
+    --shadow-glow-secondary: 0 0 40px hsl(270 80% 60% / 0.3);
+
+    /* Transitions */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
   }
 }
 
@@ -54,5 +80,68 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    letter-spacing: -0.011em;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-bold;
+    letter-spacing: -0.03em;
+  }
+
+  /* Scrollbar styling */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: hsl(var(--muted) / 0.3);
+    border-radius: 10px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--primary) / 0.5);
+    border-radius: 10px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--primary) / 0.7);
+  }
+}
+
+/* Custom utility classes */
+@layer utilities {
+  .glass {
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+  }
+
+  .gradient-primary {
+    background: var(--gradient-primary);
+  }
+
+  .gradient-mesh {
+    background: var(--gradient-mesh);
+  }
+
+  .shadow-glow {
+    box-shadow: var(--shadow-glow);
+  }
+
+  .shadow-glow-secondary {
+    box-shadow: var(--shadow-glow-secondary);
+  }
+
+  .text-gradient {
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
   }
 }

@@ -4,15 +4,18 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "@/hooks/use-toast";
 import { getUserFriendlyError } from "@/lib/errorHandler";
 import { authSchema } from "@/lib/validationSchemas";
+import { createClient } from "@supabase/supabase-js";
 
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -56,19 +59,49 @@ export default function Auth() {
       }
 
       if (isLogin) {
-        const { error } = await supabase.auth.signInWithPassword({
+        // Create a client with appropriate storage based on remember me preference
+        const authClient = rememberMe
+          ? supabase
+          : createClient(
+              import.meta.env.VITE_SUPABASE_URL,
+              import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+              {
+                auth: {
+                  storage: sessionStorage,
+                  persistSession: true,
+                  autoRefreshToken: true,
+                }
+              }
+            );
+
+        const { error } = await authClient.auth.signInWithPassword({
           email: validationResult.data.email,
           password: validationResult.data.password,
         });
 
         if (error) throw error;
-        
+
         toast({
           title: "Welcome back!",
           description: "You've successfully logged in.",
         });
       } else {
-        const { error } = await supabase.auth.signUp({
+        // For sign up, also use appropriate storage based on remember me
+        const authClient = rememberMe
+          ? supabase
+          : createClient(
+              import.meta.env.VITE_SUPABASE_URL,
+              import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+              {
+                auth: {
+                  storage: sessionStorage,
+                  persistSession: true,
+                  autoRefreshToken: true,
+                }
+              }
+            );
+
+        const { error } = await authClient.auth.signUp({
           email: validationResult.data.email,
           password: validationResult.data.password,
           options: {
@@ -95,18 +128,18 @@ export default function Auth() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center px-4">
+    <div className="min-h-screen bg-background gradient-mesh flex items-center justify-center px-4">
       <div className="w-full max-w-md space-y-8">
         <div className="text-center">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-            Design-Up
+          <h1 className="text-6xl font-black tracking-tighter text-gradient mb-4">
+            DesignX
           </h1>
-          <p className="mt-2 text-muted-foreground">
-            {isLogin ? "Sign in to your account" : "Create your account"}
+          <p className="text-lg text-muted-foreground">
+            {isLogin ? "Welcome back to the future of design" : "Join the design revolution"}
           </p>
         </div>
 
-        <form onSubmit={handleAuth} className="space-y-6 bg-card p-8 rounded-lg border border-border">
+        <form onSubmit={handleAuth} className="space-y-6 glass p-8 rounded-2xl shadow-glow">
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input
@@ -132,8 +165,21 @@ export default function Auth() {
             />
           </div>
 
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="remember"
+              checked={rememberMe}
+              onCheckedChange={(checked) => setRememberMe(checked as boolean)}
+            />
+            <label
+              htmlFor="remember"
+              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+            >
+              Remember me
+            </label>
+          </div>
 
-          <Button type="submit" className="w-full" disabled={loading}>
+          <Button type="submit" className="w-full gradient-primary shadow-glow hover:shadow-glow-secondary transition-all" disabled={loading}>
             {loading ? "Loading..." : isLogin ? "Sign In" : "Sign Up"}
           </Button>
 

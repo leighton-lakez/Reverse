@@ -79,7 +79,7 @@ export default function ProfileSetup() {
 
       toast({
         title: "Profile complete!",
-        description: "Welcome to Design-Up!",
+        description: "Welcome to DesignX!",
       });
 
       navigate("/");
@@ -95,18 +95,18 @@ export default function ProfileSetup() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center px-4">
+    <div className="min-h-screen bg-background gradient-mesh flex items-center justify-center px-4">
       <div className="w-full max-w-md space-y-8">
         <div className="text-center">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+          <h1 className="text-5xl font-black tracking-tighter text-gradient mb-4">
             Complete Your Profile
           </h1>
-          <p className="mt-2 text-muted-foreground">
+          <p className="text-lg text-muted-foreground">
             Tell us a bit about yourself to get started
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6 bg-card p-8 rounded-lg border border-border">
+        <form onSubmit={handleSubmit} className="space-y-6 glass p-8 rounded-2xl shadow-glow">
           <div className="space-y-2">
             <Label htmlFor="displayName">Display Name *</Label>
             <Input
@@ -139,7 +139,7 @@ export default function ProfileSetup() {
             />
           </div>
 
-          <Button type="submit" className="w-full" disabled={loading}>
+          <Button type="submit" className="w-full gradient-primary shadow-glow hover:shadow-glow-secondary transition-all" disabled={loading}>
             {loading ? "Saving..." : "Complete Setup"}
           </Button>
         </form>
