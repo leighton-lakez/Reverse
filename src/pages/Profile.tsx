@@ -288,11 +288,17 @@ const Profile = () => {
               <div className="text-lg font-bold text-foreground">{myListings.length}</div>
               <div className="text-xs text-muted-foreground">Listings</div>
             </div>
-            <div className="text-center">
+            <div 
+              className="text-center cursor-pointer hover:bg-muted/50 rounded-lg p-2 -m-2 transition-colors"
+              onClick={() => navigate("/followers")}
+            >
               <div className="text-lg font-bold text-foreground">{followersCount}</div>
               <div className="text-xs text-muted-foreground">Followers</div>
             </div>
-            <div className="text-center">
+            <div 
+              className="text-center cursor-pointer hover:bg-muted/50 rounded-lg p-2 -m-2 transition-colors"
+              onClick={() => navigate("/following")}
+            >
               <div className="text-lg font-bold text-foreground">{followingCount}</div>
               <div className="text-xs text-muted-foreground">Following</div>
             </div>

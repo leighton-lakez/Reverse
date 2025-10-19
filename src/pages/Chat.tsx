@@ -293,7 +293,13 @@ const Chat = () => {
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => navigate(-1)}
+                onClick={() => {
+                  if (window.history.length > 1) {
+                    navigate(-1);
+                  } else {
+                    navigate("/messages");
+                  }
+                }}
                 className="hover:bg-muted"
               >
                 <ArrowLeft className="h-5 w-5" />

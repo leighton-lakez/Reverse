@@ -16,6 +16,8 @@ import Auth from "./pages/Auth";
 import ProfileSetup from "./pages/ProfileSetup";
 import EditListing from "./pages/EditListing";
 import Settings from "./pages/Settings";
+import FollowersList from "./pages/FollowersList";
+import FollowingList from "./pages/FollowingList";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -40,6 +42,10 @@ const App = () => (
           <Route path="/profile-setup" element={<ProfileSetup />} />
           <Route path="/edit-listing/:id" element={<EditListing />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/followers" element={<FollowersList />} />
+          <Route path="/followers/:userId" element={<FollowersList />} />
+          <Route path="/following" element={<FollowingList />} />
+          <Route path="/following/:userId" element={<FollowingList />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
