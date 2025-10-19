@@ -22,26 +22,34 @@ const ItemDetail = () => {
     // Fetch real item data with seller information from database
     const fetchItemDetails = async () => {
       if (location.state?.item?.id) {
-        // If we have item data from navigation state, fetch fresh data with seller info
         const itemId = location.state.item.id;
         
-        const { data, error } = await supabase
+        // Fetch item data
+        const { data: itemData, error: itemError } = await supabase
           .from('items')
-          .select(`
-            *,
-            seller:profiles!items_user_id_fkey(id, display_name, avatar_url)
-          `)
+          .select('*')
           .eq('id', itemId)
           .single();
 
-        if (error) {
-          console.error('Error fetching item:', error);
+        if (itemError) {
+          console.error('Error fetching item:', itemError);
           toast.error('Failed to load item details');
           navigate('/');
           return;
         }
 
-        setItem(data);
+        // Fetch seller profile separately
+        const { data: sellerData } = await supabase
+          .from('profiles')
+          .select('id, display_name, avatar_url')
+          .eq('id', itemData.user_id)
+          .single();
+
+        // Combine item and seller data
+        setItem({
+          ...itemData,
+          seller: sellerData
+        });
         setLoading(false);
       } else {
         toast.error('Item not found');
@@ -99,9 +107,12 @@ const ItemDetail = () => {
           <div className="lg:col-span-2 animate-fade-in">
             <div className="aspect-square rounded-lg overflow-hidden bg-muted h-[280px]">
               <img
-                src={item.image}
+                src={item.images?.[0] || item.image || "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800&auto=format&fit=crop"}
                 alt={item.title}
                 className="w-full h-full object-cover"
+                onError={(e) => {
+                  e.currentTarget.src = "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800&auto=format&fit=crop";
+                }}
               />
             </div>
           </div>

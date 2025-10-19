@@ -5,7 +5,7 @@ import { Heart } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface ItemCardProps {
-  id: number;
+  id: string;
   image: string;
   title: string;
   price: number;
@@ -45,11 +45,14 @@ const ItemCard = ({ id, image, title, price, condition, location, userId }: Item
       onClick={handleCardClick}
       className="group overflow-hidden border-border bg-card hover:shadow-[var(--shadow-glow)] transition-all duration-300 animate-scale-in cursor-pointer"
     >
-      <div className="relative aspect-square overflow-hidden">
+      <div className="relative aspect-square overflow-hidden bg-muted">
         <img
           src={image}
           alt={title}
           className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+          onError={(e) => {
+            e.currentTarget.src = "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800&auto=format&fit=crop";
+          }}
         />
         <Button
           size="icon"
