@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { ArrowLeft, Settings, MapPin, Calendar, Star, Package, Edit2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Settings, MapPin, Calendar, Star, Package, Edit2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -17,8 +17,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { toast } from "sonner";
+import { toast } from "@/hooks/use-toast";
 import BottomNav from "@/components/BottomNav";
+import { supabase } from "@/integrations/supabase/client";
 
 const myListings = [
   {
@@ -50,12 +51,41 @@ const myListings = [
 const Profile = () => {
   const navigate = useNavigate();
   const [isEditOpen, setIsEditOpen] = useState(false);
+  const [user, setUser] = useState<any>(null);
+  const [myListings, setMyListings] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [profileData, setProfileData] = useState({
     name: "Alex Johnson",
     bio: "Designer fashion enthusiast 👗 Curating luxury finds from around the world",
     location: "New York, NY",
     avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400"
   });
+
+  useEffect(() => {
+    // Check auth status
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session) {
+        navigate("/auth");
+      } else {
+        setUser(session.user);
+        fetchUserItems(session.user.id);
+      }
+    });
+  }, [navigate]);
+
+  const fetchUserItems = async (userId: string) => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("items")
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false });
+
+    if (!error && data) {
+      setMyListings(data);
+    }
+    setLoading(false);
+  };
 
   const handleSaveProfile = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -67,8 +97,14 @@ const Profile = () => {
       avatar: profileData.avatar
     });
     setIsEditOpen(false);
-    toast.success("Profile updated successfully!");
+    toast({
+      title: "Success",
+      description: "Profile updated successfully!",
+    });
   };
+
+  const activeListings = myListings;
+  const soldListings: any[] = [];
 
   return (
     <div className="min-h-screen bg-background pb-24">
@@ -188,57 +224,73 @@ const Profile = () => {
           </TabsList>
           
           <TabsContent value="active">
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-              {myListings.filter(item => item.status === "Active").map((item) => (
-                <Card key={item.id} className="group overflow-hidden border-border hover:shadow-[var(--shadow-glow)] transition-all">
-                  <div className="relative aspect-square overflow-hidden">
-                    <img
-                      src={item.image}
-                      alt={item.title}
-                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
-                    />
-                    <Badge className="absolute top-1 right-1 text-xs bg-primary text-primary-foreground">
-                      {item.status}
-                    </Badge>
-                  </div>
-                  
-                  <div className="p-2 space-y-1">
-                    <h3 className="font-semibold text-xs text-foreground line-clamp-1">{item.title}</h3>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-bold text-primary">${item.price}</span>
-                      <Badge variant="outline" className="text-[10px] px-1 py-0">{item.condition}</Badge>
+            {loading ? (
+              <div className="text-center py-12">
+                <p className="text-muted-foreground">Loading...</p>
+              </div>
+            ) : activeListings.length > 0 ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                {activeListings.map((item) => (
+                  <Card key={item.id} className="group overflow-hidden border-border hover:shadow-[var(--shadow-glow)] transition-all">
+                    <div className="relative aspect-square overflow-hidden">
+                      <img
+                        src={item.images?.[0] || "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800&auto=format&fit=crop"}
+                        alt={item.title}
+                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                      />
+                      <Badge className="absolute top-1 right-1 text-xs bg-primary text-primary-foreground">
+                        Active
+                      </Badge>
                     </div>
-                  </div>
-                </Card>
-              ))}
-            </div>
+                    
+                    <div className="p-2 space-y-1">
+                      <h3 className="font-semibold text-xs text-foreground line-clamp-1">{item.title}</h3>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-bold text-primary">${parseFloat(item.price)}</span>
+                        <Badge variant="outline" className="text-[10px] px-1 py-0">{item.condition}</Badge>
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <p className="text-muted-foreground">No active listings</p>
+              </div>
+            )}
           </TabsContent>
           
           <TabsContent value="sold">
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-              {myListings.filter(item => item.status === "Sold").map((item) => (
-                <Card key={item.id} className="overflow-hidden border-border opacity-75">
-                  <div className="relative aspect-square overflow-hidden">
-                    <img
-                      src={item.image}
-                      alt={item.title}
-                      className="h-full w-full object-cover grayscale"
-                    />
-                    <Badge className="absolute top-1 right-1 text-xs bg-secondary text-secondary-foreground">
-                      Sold
-                    </Badge>
-                  </div>
-                  
-                  <div className="p-2 space-y-1">
-                    <h3 className="font-semibold text-xs text-foreground line-clamp-1">{item.title}</h3>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-bold text-foreground">${item.price}</span>
-                      <Badge variant="outline" className="text-[10px] px-1 py-0">{item.condition}</Badge>
+            {soldListings.length > 0 ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                {soldListings.map((item) => (
+                  <Card key={item.id} className="overflow-hidden border-border opacity-75">
+                    <div className="relative aspect-square overflow-hidden">
+                      <img
+                        src={item.images?.[0] || "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800&auto=format&fit=crop"}
+                        alt={item.title}
+                        className="h-full w-full object-cover grayscale"
+                      />
+                      <Badge className="absolute top-1 right-1 text-xs bg-secondary text-secondary-foreground">
+                        Sold
+                      </Badge>
                     </div>
-                  </div>
-                </Card>
-              ))}
-            </div>
+                    
+                    <div className="p-2 space-y-1">
+                      <h3 className="font-semibold text-xs text-foreground line-clamp-1">{item.title}</h3>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-bold text-foreground">${parseFloat(item.price)}</span>
+                        <Badge variant="outline" className="text-[10px] px-1 py-0">{item.condition}</Badge>
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <p className="text-muted-foreground">No sold items yet</p>
+              </div>
+            )}
           </TabsContent>
         </Tabs>
       </main>

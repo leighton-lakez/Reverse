@@ -1,8 +1,11 @@
-import { Search } from "lucide-react";
+import { Search, LogOut } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import ItemCard from "@/components/ItemCard";
 import BottomNav from "@/components/BottomNav";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 
 const mockItems = [
   {
@@ -57,8 +60,53 @@ const mockItems = [
 
 const Index = () => {
   const [searchQuery, setSearchQuery] = useState("");
+  const [items, setItems] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<any>(null);
+  const navigate = useNavigate();
 
-  const filteredItems = mockItems.filter(item =>
+  useEffect(() => {
+    // Check auth status
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      if (!session) {
+        navigate("/auth");
+      }
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user ?? null);
+      if (!session) {
+        navigate("/auth");
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [navigate]);
+
+  useEffect(() => {
+    fetchItems();
+  }, []);
+
+  const fetchItems = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("items")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (!error && data) {
+      setItems(data);
+    }
+    setLoading(false);
+  };
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    navigate("/auth");
+  };
+
+  const filteredItems = items.filter(item =>
     item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     item.condition.toLowerCase().includes(searchQuery.toLowerCase()) ||
     item.location.toLowerCase().includes(searchQuery.toLowerCase())
@@ -73,6 +121,14 @@ const Index = () => {
             <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
               Design-Up
             </h1>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleSignOut}
+              title="Sign out"
+            >
+              <LogOut className="h-5 w-5" />
+            </Button>
           </div>
           
           <div className="relative">
@@ -94,18 +150,31 @@ const Index = () => {
           <p className="text-muted-foreground">Discover luxury pieces from your community</p>
         </div>
 
-        {filteredItems.length > 0 ? (
+        {loading ? (
+          <div className="text-center py-12">
+            <p className="text-xl text-muted-foreground">Loading...</p>
+          </div>
+        ) : filteredItems.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredItems.map((item, index) => (
               <div key={item.id} style={{ animationDelay: `${index * 0.1}s` }}>
-                <ItemCard {...item} />
+                <ItemCard 
+                  id={item.id}
+                  image={item.images?.[0] || "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800&auto=format&fit=crop"}
+                  title={item.title}
+                  price={parseFloat(item.price)}
+                  condition={item.condition}
+                  location={item.location}
+                />
               </div>
             ))}
           </div>
         ) : (
           <div className="text-center py-12">
             <p className="text-xl text-muted-foreground">No products found</p>
-            <p className="text-sm text-muted-foreground mt-2">Try searching with different keywords</p>
+            <p className="text-sm text-muted-foreground mt-2">
+              {searchQuery ? "Try searching with different keywords" : "Be the first to list an item!"}
+            </p>
           </div>
         )}
       </main>

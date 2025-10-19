@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { ArrowLeft, Upload, X } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Upload, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,12 +12,31 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { toast } from "sonner";
+import { toast } from "@/hooks/use-toast";
 import BottomNav from "@/components/BottomNav";
+import { supabase } from "@/integrations/supabase/client";
+import LocationAutocomplete from "@/components/LocationAutocomplete";
 
 const Sell = () => {
   const navigate = useNavigate();
   const [images, setImages] = useState<string[]>([]);
+  const [location, setLocation] = useState("");
+  const [category, setCategory] = useState("");
+  const [condition, setCondition] = useState("");
+  const [tradePreference, setTradePreference] = useState("yes");
+  const [loading, setLoading] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Check if user is logged in
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session) {
+        navigate("/auth");
+      } else {
+        setUserId(session.user.id);
+      }
+    });
+  }, [navigate]);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -31,10 +50,44 @@ const Sell = () => {
     setImages(images.filter((_, i) => i !== index));
   };
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    toast.success("Item listed successfully!");
-    navigate("/");
+    if (!userId) return;
+
+    setLoading(true);
+    const formData = new FormData(e.currentTarget);
+
+    try {
+      const { error } = await supabase.from("items").insert({
+        user_id: userId,
+        title: formData.get("title") as string,
+        brand: formData.get("brand") as string,
+        category,
+        description: formData.get("description") as string,
+        condition,
+        price: parseFloat(formData.get("price") as string),
+        location,
+        size: formData.get("size") as string || null,
+        trade_preference: tradePreference,
+        images: images,
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Success!",
+        description: "Your item has been listed.",
+      });
+      navigate("/");
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -87,6 +140,7 @@ const Sell = () => {
             <Label htmlFor="title" className="text-sm font-semibold">Title *</Label>
             <Input
               id="title"
+              name="title"
               placeholder="e.g., Gucci Leather Handbag"
               required
               className="bg-muted border-border h-9"
@@ -99,6 +153,7 @@ const Sell = () => {
               <Label htmlFor="brand" className="text-sm font-semibold">Brand *</Label>
               <Input
                 id="brand"
+                name="brand"
                 placeholder="e.g., Gucci"
                 required
                 className="bg-muted border-border h-9"
@@ -107,7 +162,7 @@ const Sell = () => {
             
             <div className="space-y-1">
               <Label htmlFor="category" className="text-sm font-semibold">Category *</Label>
-              <Select required>
+              <Select required value={category} onValueChange={setCategory}>
                 <SelectTrigger className="bg-muted border-border h-9">
                   <SelectValue placeholder="Category" />
                 </SelectTrigger>
@@ -128,6 +183,7 @@ const Sell = () => {
             <Label htmlFor="description" className="text-sm font-semibold">Description *</Label>
             <Textarea
               id="description"
+              name="description"
               placeholder="Describe condition, authenticity, flaws..."
               rows={3}
               required
@@ -139,7 +195,7 @@ const Sell = () => {
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
               <Label htmlFor="condition" className="text-sm font-semibold">Condition *</Label>
-              <Select required>
+              <Select required value={condition} onValueChange={setCondition}>
                 <SelectTrigger className="bg-muted border-border h-9">
                   <SelectValue placeholder="Condition" />
               </SelectTrigger>
@@ -161,6 +217,7 @@ const Sell = () => {
                 </span>
                 <Input
                   id="price"
+                  name="price"
                   type="number"
                   placeholder="0.00"
                   min="0"
@@ -176,11 +233,12 @@ const Sell = () => {
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
               <Label htmlFor="location" className="text-sm font-semibold">Location *</Label>
-              <Input
-                id="location"
+              <LocationAutocomplete
+                value={location}
+                onChange={setLocation}
                 placeholder="City, State"
-                required
                 className="bg-muted border-border h-9"
+                required
               />
             </div>
             
@@ -188,6 +246,7 @@ const Sell = () => {
               <Label htmlFor="size" className="text-sm font-semibold">Size</Label>
               <Input
                 id="size"
+                name="size"
                 placeholder="M, 8, 32"
                 className="bg-muted border-border h-9"
               />
@@ -197,7 +256,7 @@ const Sell = () => {
           {/* Trade Option */}
           <div className="space-y-1">
             <Label htmlFor="trade" className="text-sm font-semibold">Open to Trades?</Label>
-            <Select defaultValue="yes">
+            <Select value={tradePreference} onValueChange={setTradePreference}>
               <SelectTrigger className="bg-muted border-border h-9">
                 <SelectValue />
               </SelectTrigger>
@@ -213,8 +272,9 @@ const Sell = () => {
             <Button
               type="submit"
               className="w-full h-10 text-base font-semibold bg-primary hover:bg-primary/90 text-primary-foreground"
+              disabled={loading}
             >
-              List Item
+              {loading ? "Listing..." : "List Item"}
             </Button>
           </div>
         </form>

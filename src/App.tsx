@@ -10,6 +10,7 @@ import Profile from "./pages/Profile";
 import ItemDetail from "./pages/ItemDetail";
 import Checkout from "./pages/Checkout";
 import Chat from "./pages/Chat";
+import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,6 +29,7 @@ const App = () => (
           <Route path="/item-detail" element={<ItemDetail />} />
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/chat" element={<Chat />} />
+          <Route path="/auth" element={<Auth />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
