@@ -90,10 +90,12 @@ const Chat = () => {
   };
 
   const fetchMessages = async (userId: string, otherUserId: string, itemId?: string) => {
+    // Use .in() method to avoid string interpolation - safer and more readable
     const { data, error } = await supabase
       .from("messages")
       .select("*")
-      .or(`and(sender_id.eq.${userId},receiver_id.eq.${otherUserId}),and(sender_id.eq.${otherUserId},receiver_id.eq.${userId})`)
+      .in('sender_id', [userId, otherUserId])
+      .in('receiver_id', [userId, otherUserId])
       .order("created_at", { ascending: true });
 
     if (!error && data) {
