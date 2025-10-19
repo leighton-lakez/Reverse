@@ -26,6 +26,7 @@ export type Database = {
           location: string
           price: number
           size: string | null
+          status: string
           title: string
           trade_preference: string | null
           updated_at: string
@@ -42,6 +43,7 @@ export type Database = {
           location: string
           price: number
           size?: string | null
+          status?: string
           title: string
           trade_preference?: string | null
           updated_at?: string
@@ -58,6 +60,7 @@ export type Database = {
           location?: string
           price?: number
           size?: string | null
+          status?: string
           title?: string
           trade_preference?: string | null
           updated_at?: string
@@ -132,6 +135,53 @@ export type Database = {
           location?: string | null
         }
         Relationships: []
+      }
+      transactions: {
+        Row: {
+          amount: number
+          buyer_id: string
+          completed_at: string | null
+          created_at: string
+          id: string
+          item_id: string
+          payment_intent_id: string | null
+          seller_id: string
+          shipping_address: Json
+          status: string
+        }
+        Insert: {
+          amount: number
+          buyer_id: string
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          item_id: string
+          payment_intent_id?: string | null
+          seller_id: string
+          shipping_address: Json
+          status?: string
+        }
+        Update: {
+          amount?: number
+          buyer_id?: string
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          item_id?: string
+          payment_intent_id?: string | null
+          seller_id?: string
+          shipping_address?: Json
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transactions_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "items"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

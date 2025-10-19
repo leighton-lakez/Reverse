@@ -105,6 +105,7 @@ const Index = () => {
     const { data, error } = await supabase
       .from("items")
       .select("*")
+      .eq("status", "available")
       .order("created_at", { ascending: false });
 
     if (!error && data) {

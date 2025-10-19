@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { ArrowLeft, CreditCard, Lock } from "lucide-react";
+import { useState, useEffect } from "react";
+import { ArrowLeft, Lock } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,23 +8,86 @@ import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import BottomNav from "@/components/BottomNav";
+import { supabase } from "@/integrations/supabase/client";
 
 const Checkout = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const item = location.state?.item || {};
   const [loading, setLoading] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
+
+  // Require authentication for checkout
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error("Please sign in to complete your purchase");
+        navigate('/auth', { state: { returnTo: '/checkout', item } });
+        return;
+      }
+      setUserId(session.user.id);
+    };
+    checkAuth();
+  }, [navigate, item]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    
+    if (!userId) {
+      toast.error("Authentication required");
+      navigate('/auth');
+      return;
+    }
+
+    if (!item.id || !item.user_id) {
+      toast.error("Invalid item data");
+      return;
+    }
+
     setLoading(true);
     
-    // Simulate payment processing
-    setTimeout(() => {
-      setLoading(false);
-      toast.success("Order placed successfully!");
+    try {
+      const formData = new FormData(e.currentTarget);
+      const shippingAddress = {
+        firstName: formData.get('firstName'),
+        lastName: formData.get('lastName'),
+        address: formData.get('address'),
+        city: formData.get('city'),
+        state: formData.get('state'),
+        zip: formData.get('zip'),
+      };
+
+      // Create transaction record
+      const { error: transactionError } = await supabase
+        .from('transactions')
+        .insert({
+          buyer_id: userId,
+          seller_id: item.user_id,
+          item_id: item.id,
+          amount: subtotal,
+          status: 'pending',
+          shipping_address: shippingAddress as any,
+        } as any);
+
+      if (transactionError) throw transactionError;
+
+      // Mark item as pending
+      const { error: itemError } = await supabase
+        .from('items')
+        .update({ status: 'pending' })
+        .eq('id', item.id);
+
+      if (itemError) throw itemError;
+
+      toast.success("Order placed successfully! Payment will be processed separately.");
       navigate("/");
-    }, 2000);
+    } catch (error: any) {
+      console.error('Checkout error:', error);
+      toast.error(error.message || "Failed to process order. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const subtotal = item.price || 0;
@@ -63,29 +126,29 @@ const Checkout = () => {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="firstName">First Name</Label>
-                      <Input id="firstName" required className="bg-muted border-border" />
+                      <Input id="firstName" name="firstName" required className="bg-muted border-border" />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="lastName">Last Name</Label>
-                      <Input id="lastName" required className="bg-muted border-border" />
+                      <Input id="lastName" name="lastName" required className="bg-muted border-border" />
                     </div>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="address">Address</Label>
-                    <Input id="address" required className="bg-muted border-border" />
+                    <Input id="address" name="address" required className="bg-muted border-border" />
                   </div>
                   <div className="grid grid-cols-3 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="city">City</Label>
-                      <Input id="city" required className="bg-muted border-border" />
+                      <Input id="city" name="city" required className="bg-muted border-border" />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="state">State</Label>
-                      <Input id="state" required className="bg-muted border-border" />
+                      <Input id="state" name="state" required className="bg-muted border-border" />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="zip">ZIP</Label>
-                      <Input id="zip" required className="bg-muted border-border" />
+                      <Input id="zip" name="zip" required className="bg-muted border-border" />
                     </div>
                   </div>
                 </div>
@@ -94,39 +157,13 @@ const Checkout = () => {
               {/* Payment Information */}
               <Card className="p-6 border-border animate-fade-in" style={{ animationDelay: "0.1s" }}>
                 <h2 className="text-xl font-semibold text-foreground mb-4 flex items-center gap-2">
-                  <CreditCard className="h-5 w-5" />
-                  Payment Information
+                  <Lock className="h-5 w-5" />
+                  Payment
                 </h2>
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="cardNumber">Card Number</Label>
-                    <Input
-                      id="cardNumber"
-                      placeholder="1234 5678 9012 3456"
-                      required
-                      className="bg-muted border-border"
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="expiry">Expiry Date</Label>
-                      <Input
-                        id="expiry"
-                        placeholder="MM/YY"
-                        required
-                        className="bg-muted border-border"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="cvv">CVV</Label>
-                      <Input
-                        id="cvv"
-                        placeholder="123"
-                        required
-                        className="bg-muted border-border"
-                      />
-                    </div>
-                  </div>
+                <div className="text-sm text-muted-foreground space-y-2">
+                  <p>Your order will be held pending payment arrangement with the seller.</p>
+                  <p className="font-medium text-foreground">No payment information is collected at this time.</p>
+                  <p>The seller will contact you to arrange secure payment and delivery.</p>
                 </div>
               </Card>
 
