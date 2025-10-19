@@ -1,7 +1,5 @@
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
-import { Command, CommandEmpty, CommandGroup, CommandItem, CommandList } from "@/components/ui/command";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 const US_CITIES = [
   "New York, NY", "Los Angeles, CA", "Chicago, IL", "Houston, TX", "Phoenix, AZ",
@@ -45,42 +43,33 @@ export default function LocationAutocomplete({
   };
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <div className="relative">
-          <Input
-            placeholder={placeholder}
-            value={inputValue}
-            onChange={(e) => {
-              setInputValue(e.target.value);
-              onChange(e.target.value);
-              setOpen(true);
-            }}
-            onFocus={() => setOpen(true)}
-            className={className}
-            required={required}
-          />
+    <div className="relative">
+      <Input
+        placeholder={placeholder}
+        value={inputValue}
+        onChange={(e) => {
+          setInputValue(e.target.value);
+          onChange(e.target.value);
+          setOpen(e.target.value.length > 0);
+        }}
+        onFocus={() => inputValue.length > 0 && setOpen(true)}
+        onBlur={() => setTimeout(() => setOpen(false), 200)}
+        className={className}
+        required={required}
+      />
+      {open && filteredCities.length > 0 && (
+        <div className="absolute top-full left-0 right-0 mt-1 bg-popover border border-border rounded-md shadow-lg z-50 max-h-60 overflow-auto">
+          {filteredCities.map((city) => (
+            <div
+              key={city}
+              onClick={() => handleSelect(city)}
+              className="px-3 py-2 cursor-pointer hover:bg-muted text-sm"
+            >
+              {city}
+            </div>
+          ))}
         </div>
-      </PopoverTrigger>
-      <PopoverContent className="w-full p-0 z-50 bg-popover" align="start">
-        <Command>
-          <CommandList>
-            <CommandEmpty>No cities found.</CommandEmpty>
-            <CommandGroup>
-              {filteredCities.map((city) => (
-                <CommandItem
-                  key={city}
-                  value={city}
-                  onSelect={() => handleSelect(city)}
-                  className="cursor-pointer"
-                >
-                  {city}
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          </CommandList>
-        </Command>
-      </PopoverContent>
-    </Popover>
+      )}
+    </div>
   );
 }

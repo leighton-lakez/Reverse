@@ -11,16 +11,17 @@ interface ItemCardProps {
   price: number;
   condition: string;
   location: string;
+  userId?: string;
 }
 
-const ItemCard = ({ id, image, title, price, condition, location }: ItemCardProps) => {
+const ItemCard = ({ id, image, title, price, condition, location, userId }: ItemCardProps) => {
   const navigate = useNavigate();
 
   const handleCardClick = (e: React.MouseEvent) => {
     // Only navigate to detail if not clicking buttons
     const target = e.target as HTMLElement;
     if (!target.closest('button')) {
-      navigate("/item-detail", { state: { item: { id, image, title, price, condition, location } } });
+      navigate("/item-detail", { state: { item: { id, image, title, price, condition, location, userId } } });
     }
   };
 
@@ -33,7 +34,7 @@ const ItemCard = ({ id, image, title, price, condition, location }: ItemCardProp
     e.stopPropagation();
     navigate("/chat", { 
       state: { 
-        seller: { name: "Seller Name", avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150" },
+        sellerId: userId,
         item: { id, image, title, price, condition, location }
       } 
     });
@@ -62,28 +63,30 @@ const ItemCard = ({ id, image, title, price, condition, location }: ItemCardProp
         </Badge>
       </div>
       
-      <div className="p-4 space-y-3">
+      <div className="p-2 space-y-2">
         <div>
-          <h3 className="font-semibold text-lg text-foreground line-clamp-1">{title}</h3>
-          <p className="text-sm text-muted-foreground">{location}</p>
+          <h3 className="font-semibold text-sm text-foreground line-clamp-1">{title}</h3>
+          <p className="text-xs text-muted-foreground truncate">{location}</p>
         </div>
         
         <div className="flex items-center justify-between">
-          <span className="text-2xl font-bold text-primary">${price}</span>
+          <span className="text-lg font-bold text-primary">${price}</span>
         </div>
         
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 gap-1">
           <Button 
             onClick={handleBuyNow}
             variant="default" 
-            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
+            size="sm"
+            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground text-xs py-1 h-7"
           >
-            Buy Now
+            Buy
           </Button>
           <Button 
             onClick={handleTrade}
             variant="outline" 
-            className="w-full border-primary text-primary hover:bg-primary/10"
+            size="sm"
+            className="w-full border-primary text-primary hover:bg-primary/10 text-xs py-1 h-7"
           >
             Trade
           </Button>

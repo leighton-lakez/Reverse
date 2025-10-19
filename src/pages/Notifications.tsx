@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { ArrowLeft, Heart, MessageCircle, ShoppingBag, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -6,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import BottomNav from "@/components/BottomNav";
+import { supabase } from "@/integrations/supabase/client";
 
 const friendsPosts = [
   {
@@ -118,6 +120,99 @@ const systemNotifications = [
 
 const Notifications = () => {
   const navigate = useNavigate();
+  const [messageNotifications, setMessageNotifications] = useState<any[]>([]);
+  const [currentUserId, setCurrentUserId] = useState<string>("");
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session) {
+        navigate("/auth");
+        return;
+      }
+      setCurrentUserId(session.user.id);
+      fetchMessageNotifications(session.user.id);
+    });
+
+    // Set up realtime subscription for new messages
+    const channel = supabase
+      .channel('message-notifications')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages'
+        },
+        (payload) => {
+          const newMsg = payload.new as any;
+          if (newMsg.receiver_id === currentUserId) {
+            fetchMessageNotifications(currentUserId);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [navigate]);
+
+  const fetchMessageNotifications = async (userId: string) => {
+    const { data: messages, error } = await supabase
+      .from("messages")
+      .select("*")
+      .eq("receiver_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(10);
+
+    if (error || !messages) return;
+
+    // Fetch sender profiles and items separately
+    const senderIds = [...new Set(messages.map(m => m.sender_id))];
+    const itemIds = messages.map(m => m.item_id).filter(Boolean);
+
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("id, display_name, avatar_url")
+      .in("id", senderIds);
+
+    const { data: items } = await supabase
+      .from("items")
+      .select("id, title")
+      .in("id", itemIds);
+
+    const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
+    const itemMap = new Map(items?.map(i => [i.id, i]) || []);
+
+    const notifications = messages.map(msg => {
+      const sender = profileMap.get(msg.sender_id);
+      const item = msg.item_id ? itemMap.get(msg.item_id) : null;
+      
+      return {
+        id: msg.id,
+        name: sender?.display_name || "User",
+        avatar: sender?.avatar_url || "",
+        message: msg.content,
+        itemTitle: item?.title || "",
+        timeAgo: getTimeAgo(new Date(msg.created_at)),
+        unread: !msg.read,
+        senderId: msg.sender_id
+      };
+    });
+    
+    setMessageNotifications(notifications);
+  };
+
+  const getTimeAgo = (date: Date) => {
+    const seconds = Math.floor((new Date().getTime() - date.getTime()) / 1000);
+    if (seconds < 60) return `${seconds}s ago`;
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `${minutes}m ago`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours}h ago`;
+    const days = Math.floor(hours / 24);
+    return `${days}d ago`;
+  };
 
   return (
     <div className="min-h-screen bg-background pb-24">
@@ -167,6 +262,12 @@ const Notifications = () => {
             {messageNotifications.map((notification) => (
               <Card
                 key={notification.id}
+                onClick={() => navigate("/chat", { 
+                  state: { 
+                    sellerId: notification.senderId,
+                    item: { title: notification.itemTitle }
+                  } 
+                })}
                 className={`p-2.5 border-border hover:bg-muted/50 transition-all cursor-pointer ${
                   notification.unread ? 'bg-primary/5 border-l-2 border-l-primary' : ''
                 }`}
@@ -174,7 +275,7 @@ const Notifications = () => {
                 <div className="flex gap-2">
                   <Avatar className="h-9 w-9 flex-shrink-0">
                     <AvatarImage src={notification.avatar} />
-                    <AvatarFallback>{notification.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                    <AvatarFallback>{notification.name.split(' ').map((n: string) => n[0]).join('')}</AvatarFallback>
                   </Avatar>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-2">
@@ -188,8 +289,10 @@ const Notifications = () => {
                       </div>
                       <span className="text-[9px] text-muted-foreground flex-shrink-0">{notification.timeAgo}</span>
                     </div>
-                    <p className="text-[11px] text-foreground">{notification.message}</p>
-                    <p className="text-[9px] text-muted-foreground">Re: {notification.itemTitle}</p>
+                    <p className="text-[11px] text-foreground line-clamp-1">{notification.message}</p>
+                    {notification.itemTitle && (
+                      <p className="text-[9px] text-muted-foreground">Re: {notification.itemTitle}</p>
+                    )}
                   </div>
                   <MessageCircle className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0 mt-0.5" />
                 </div>

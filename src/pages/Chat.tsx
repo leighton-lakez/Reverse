@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ArrowLeft, Send, Image, Smile } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -6,6 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
 import BottomNav from "@/components/BottomNav";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
 
 interface Message {
   id: number;
@@ -17,37 +19,113 @@ interface Message {
 const Chat = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { seller, item } = location.state || {};
+  const { sellerId, item } = location.state || {};
   
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: 1,
-      text: "Hi! I'm interested in your item.",
-      sender: "me",
-      timestamp: "10:30 AM"
-    },
-    {
-      id: 2,
-      text: "Great! It's still available. Would you like to know more about it?",
-      sender: "them",
-      timestamp: "10:32 AM"
-    }
-  ]);
-  
+  const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [seller, setSeller] = useState<any>(null);
 
-  const handleSend = () => {
-    if (!newMessage.trim()) return;
-    
-    const message: Message = {
-      id: messages.length + 1,
-      text: newMessage,
-      sender: "me",
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  useEffect(() => {
+    // Get current user
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session) {
+        navigate("/auth");
+        return;
+      }
+      setCurrentUser(session.user);
+      
+      // Fetch seller profile
+      if (sellerId) {
+        fetchSellerProfile(sellerId);
+        fetchMessages(session.user.id, sellerId, item?.id);
+      }
+    });
+
+    // Set up realtime subscription for new messages
+    const channel = supabase
+      .channel('messages')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages'
+        },
+        (payload) => {
+          const newMsg = payload.new as any;
+          if ((newMsg.sender_id === sellerId && newMsg.receiver_id === currentUser?.id) ||
+              (newMsg.sender_id === currentUser?.id && newMsg.receiver_id === sellerId)) {
+            setMessages(prev => [...prev, {
+              id: Date.now(),
+              text: newMsg.content,
+              sender: newMsg.sender_id === currentUser?.id ? "me" : "them",
+              timestamp: new Date(newMsg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            }]);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
     };
+  }, [navigate, sellerId, item]);
+
+  const fetchSellerProfile = async (userId: string) => {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", userId)
+      .single();
+
+    if (!error && data) {
+      setSeller({
+        name: data.display_name || "User",
+        avatar: data.avatar_url
+      });
+    }
+  };
+
+  const fetchMessages = async (userId: string, otherUserId: string, itemId?: string) => {
+    const { data, error } = await supabase
+      .from("messages")
+      .select("*")
+      .or(`and(sender_id.eq.${userId},receiver_id.eq.${otherUserId}),and(sender_id.eq.${otherUserId},receiver_id.eq.${userId})`)
+      .order("created_at", { ascending: true });
+
+    if (!error && data) {
+      setMessages(data.map(msg => ({
+        id: Date.now() + Math.random(),
+        text: msg.content,
+        sender: msg.sender_id === userId ? "me" : "them",
+        timestamp: new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      })));
+    }
+  };
+
+  const handleSend = async () => {
+    if (!newMessage.trim() || !currentUser || !sellerId) return;
     
-    setMessages([...messages, message]);
-    setNewMessage("");
+    try {
+      const { error } = await supabase
+        .from("messages")
+        .insert({
+          sender_id: currentUser.id,
+          receiver_id: sellerId,
+          item_id: item?.id || null,
+          content: newMessage
+        });
+
+      if (error) throw error;
+      setNewMessage("");
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "Failed to send message",
+        variant: "destructive",
+      });
+    }
   };
 
   return (

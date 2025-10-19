@@ -178,7 +178,7 @@ const Index = () => {
             <p className="text-xl text-muted-foreground">Loading...</p>
           </div>
         ) : filteredItems.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
             {filteredItems.map((item, index) => (
               <div key={item.id} style={{ animationDelay: `${index * 0.1}s` }}>
                 <ItemCard 
@@ -188,6 +188,7 @@ const Index = () => {
                   price={parseFloat(item.price)}
                   condition={item.condition}
                   location={item.location}
+                  userId={item.user_id}
                 />
               </div>
             ))}
