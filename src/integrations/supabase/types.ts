@@ -73,6 +73,7 @@ export type Database = {
           content: string
           created_at: string
           id: string
+          image_url: string | null
           item_id: string | null
           read: boolean
           receiver_id: string
@@ -83,6 +84,7 @@ export type Database = {
           content: string
           created_at?: string
           id?: string
+          image_url?: string | null
           item_id?: string | null
           read?: boolean
           receiver_id: string
@@ -93,6 +95,7 @@ export type Database = {
           content?: string
           created_at?: string
           id?: string
+          image_url?: string | null
           item_id?: string | null
           read?: boolean
           receiver_id?: string
