@@ -1,21 +1,24 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { ArrowLeft, Send, Image, Smile } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import BottomNav from "@/components/BottomNav";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { getUserFriendlyError } from "@/lib/errorHandler";
 import { messageSchema } from "@/lib/validationSchemas";
+import EmojiPicker from "emoji-picker-react";
 
 interface Message {
   id: number;
   text: string;
   sender: "me" | "them";
   timestamp: string;
+  imageUrl?: string;
 }
 
 const Chat = () => {
@@ -27,6 +30,9 @@ const Chat = () => {
   const [newMessage, setNewMessage] = useState("");
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [seller, setSeller] = useState<any>(null);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     let channel: any = null;
@@ -66,7 +72,8 @@ const Chat = () => {
                   id: Date.now() + Math.random(),
                   text: newMsg.content,
                   sender: newMsg.sender_id === session.user.id ? "me" : "them",
-                  timestamp: new Date(newMsg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                  timestamp: new Date(newMsg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                  imageUrl: newMsg.image_url
                 }]);
               }
             }
@@ -113,13 +120,85 @@ const Chat = () => {
         id: Date.now() + Math.random(),
         text: msg.content,
         sender: msg.sender_id === userId ? "me" : "them",
-        timestamp: new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        timestamp: new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        imageUrl: msg.image_url
       })));
     }
   };
 
-  const handleSend = async () => {
-    if (!newMessage.trim() || !currentUser || !sellerId) return;
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !currentUser || !sellerId) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Invalid file",
+        description: "Please select an image file",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "Please select an image smaller than 5MB",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setUploading(true);
+    try {
+      // Upload to Supabase storage
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${currentUser.id}-${Date.now()}.${fileExt}`;
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('item-images')
+        .upload(fileName, file);
+
+      if (uploadError) throw uploadError;
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('item-images')
+        .getPublicUrl(fileName);
+
+      // Send message with image
+      const { error } = await supabase
+        .from("messages")
+        .insert({
+          sender_id: currentUser.id,
+          receiver_id: sellerId,
+          item_id: item?.id || null,
+          content: "📷 Image",
+          image_url: publicUrl
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Image sent",
+        description: "Your image has been sent",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: getUserFriendlyError(error),
+        variant: "destructive",
+      });
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  const handleSend = async (imageUrl?: string) => {
+    if ((!newMessage.trim() && !imageUrl) || !currentUser || !sellerId) return;
     
     try {
       // Validate message content
@@ -147,7 +226,8 @@ const Chat = () => {
           sender_id: currentUser.id,
           receiver_id: sellerId,
           item_id: item?.id || null,
-          content: validationResult.data.content
+          content: validationResult.data.content,
+          image_url: imageUrl || null
         });
 
       if (error) throw error;
@@ -217,6 +297,13 @@ const Chat = () => {
                   : "bg-muted text-foreground"
               }`}
             >
+              {message.imageUrl ? (
+                <img 
+                  src={message.imageUrl} 
+                  alt="Shared image" 
+                  className="rounded-lg max-w-full h-auto mb-2"
+                />
+              ) : null}
               <p className="text-sm">{message.text}</p>
               <p className={`text-[10px] mt-1 ${
                 message.sender === "me" ? "text-primary-foreground/70" : "text-muted-foreground"
@@ -231,22 +318,48 @@ const Chat = () => {
       {/* Input */}
       <div className="border-t border-border bg-background p-4 pb-28">
         <div className="max-w-7xl mx-auto flex gap-2">
-          <Button variant="ghost" size="icon" className="flex-shrink-0">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleImageUpload}
+          />
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="flex-shrink-0"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading}
+          >
             <Image className="h-5 w-5" />
           </Button>
-          <Button variant="ghost" size="icon" className="flex-shrink-0">
-            <Smile className="h-5 w-5" />
-          </Button>
+          <Popover open={showEmojiPicker} onOpenChange={setShowEmojiPicker}>
+            <PopoverTrigger asChild>
+              <Button variant="ghost" size="icon" className="flex-shrink-0">
+                <Smile className="h-5 w-5" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-full p-0 border-none" align="start">
+              <EmojiPicker
+                onEmojiClick={(emojiData) => {
+                  setNewMessage(prev => prev + emojiData.emoji);
+                  setShowEmojiPicker(false);
+                }}
+              />
+            </PopoverContent>
+          </Popover>
           <Input
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
-            onKeyPress={(e) => e.key === "Enter" && handleSend()}
+            onKeyPress={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
             placeholder="Type a message..."
             className="flex-1 bg-muted border-border"
           />
           <Button
-            onClick={handleSend}
+            onClick={() => handleSend()}
             size="icon"
+            disabled={uploading}
             className="flex-shrink-0 bg-primary hover:bg-primary/90 text-primary-foreground"
           >
             <Send className="h-5 w-5" />
