@@ -29,48 +29,58 @@ const Chat = () => {
   const [seller, setSeller] = useState<any>(null);
 
   useEffect(() => {
-    // Get current user
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    let channel: any = null;
+
+    // Get current user and set up realtime
+    const setupChat = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      
       if (!session) {
         navigate("/auth");
         return;
       }
+      
       setCurrentUser(session.user);
       
-      // Fetch seller profile
+      // Fetch seller profile and messages
       if (sellerId) {
         fetchSellerProfile(sellerId);
         fetchMessages(session.user.id, sellerId, item?.id);
+        
+        // Set up realtime subscription AFTER we have the user
+        channel = supabase
+          .channel('messages-chat')
+          .on(
+            'postgres_changes',
+            {
+              event: 'INSERT',
+              schema: 'public',
+              table: 'messages'
+            },
+            (payload) => {
+              const newMsg = payload.new as any;
+              // Check if message is part of this conversation
+              if ((newMsg.sender_id === sellerId && newMsg.receiver_id === session.user.id) ||
+                  (newMsg.sender_id === session.user.id && newMsg.receiver_id === sellerId)) {
+                setMessages(prev => [...prev, {
+                  id: Date.now() + Math.random(),
+                  text: newMsg.content,
+                  sender: newMsg.sender_id === session.user.id ? "me" : "them",
+                  timestamp: new Date(newMsg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                }]);
+              }
+            }
+          )
+          .subscribe();
       }
-    });
+    };
 
-    // Set up realtime subscription for new messages
-    const channel = supabase
-      .channel('messages')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'messages'
-        },
-        (payload) => {
-          const newMsg = payload.new as any;
-          if ((newMsg.sender_id === sellerId && newMsg.receiver_id === currentUser?.id) ||
-              (newMsg.sender_id === currentUser?.id && newMsg.receiver_id === sellerId)) {
-            setMessages(prev => [...prev, {
-              id: Date.now(),
-              text: newMsg.content,
-              sender: newMsg.sender_id === currentUser?.id ? "me" : "them",
-              timestamp: new Date(newMsg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-            }]);
-          }
-        }
-      )
-      .subscribe();
+    setupChat();
 
     return () => {
-      supabase.removeChannel(channel);
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
     };
   }, [navigate, sellerId, item]);
 
