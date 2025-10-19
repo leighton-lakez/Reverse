@@ -8,6 +8,7 @@ import Sell from "./pages/Sell";
 import Notifications from "./pages/Notifications";
 import Messages from "./pages/Messages";
 import Profile from "./pages/Profile";
+import UserProfile from "./pages/UserProfile";
 import ItemDetail from "./pages/ItemDetail";
 import Checkout from "./pages/Checkout";
 import Chat from "./pages/Chat";
@@ -31,6 +32,7 @@ const App = () => (
           <Route path="/notifications" element={<Notifications />} />
           <Route path="/messages" element={<Messages />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/user/:userId" element={<UserProfile />} />
           <Route path="/item-detail" element={<ItemDetail />} />
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/chat" element={<Chat />} />

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ArrowLeft, MessageCircle, Package } from "lucide-react";
+import { ArrowLeft, MessageCircle, Package, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -7,6 +7,92 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import BottomNav from "@/components/BottomNav";
 import { supabase } from "@/integrations/supabase/client";
+
+// Friends Section Component
+const FriendsSection = ({ currentUserId }: { currentUserId: string }) => {
+  const [friends, setFriends] = useState<any[]>([]);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (currentUserId) {
+      fetchFriends();
+    }
+  }, [currentUserId]);
+
+  const fetchFriends = async () => {
+    // Get users that current user follows
+    const { data: following } = await supabase
+      .from("follows")
+      .select("following_id")
+      .eq("follower_id", currentUserId);
+
+    if (!following || following.length === 0) {
+      setFriends([]);
+      return;
+    }
+
+    const followingIds = following.map(f => f.following_id);
+
+    // Get users that follow current user back (mutual follows = friends)
+    const { data: mutualFollows } = await supabase
+      .from("follows")
+      .select("follower_id")
+      .eq("following_id", currentUserId)
+      .in("follower_id", followingIds);
+
+    if (!mutualFollows || mutualFollows.length === 0) {
+      setFriends([]);
+      return;
+    }
+
+    const friendIds = mutualFollows.map(f => f.follower_id);
+
+    // Fetch friend profiles
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("id, display_name, avatar_url")
+      .in("id", friendIds);
+
+    setFriends(profiles || []);
+  };
+
+  if (friends.length === 0) {
+    return (
+      <Card className="p-6 text-center border-border bg-muted/30">
+        <div className="flex items-center justify-center gap-2 mb-2">
+          <Users className="h-10 w-10 text-muted-foreground" />
+        </div>
+        <p className="text-sm text-muted-foreground font-medium">0 Friends</p>
+        <p className="text-xs text-muted-foreground mt-1">
+          When you and another user follow each other, you'll become friends
+        </p>
+      </Card>
+    );
+  }
+
+  return (
+    <div className="space-y-2">
+      {friends.map((friend) => (
+        <Card
+          key={friend.id}
+          onClick={() => navigate(`/user/${friend.id}`)}
+          className="p-3 border-border hover:bg-muted/50 transition-all cursor-pointer"
+        >
+          <div className="flex items-center gap-3">
+            <Avatar className="h-10 w-10 border-2 border-primary">
+              <AvatarImage src={friend.avatar_url} />
+              <AvatarFallback>{friend.display_name?.split(' ').map((n: string) => n[0]).join('')}</AvatarFallback>
+            </Avatar>
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-foreground">{friend.display_name}</p>
+              <p className="text-xs text-muted-foreground">Friend</p>
+            </div>
+          </div>
+        </Card>
+      ))}
+    </div>
+  );
+};
 
 const Notifications = () => {
   const navigate = useNavigate();
@@ -227,17 +313,7 @@ const Notifications = () => {
         {/* Empty state for friends (since there's no friends system) */}
         <div className="animate-fade-in" style={{ animationDelay: "0.2s" }}>
           <h2 className="text-xs font-semibold text-muted-foreground mb-2">Friends</h2>
-          <Card className="p-6 text-center border-border bg-muted/30">
-            <div className="flex items-center justify-center gap-2 mb-2">
-              <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center">
-                <span className="text-lg font-bold text-muted-foreground">0</span>
-              </div>
-            </div>
-            <p className="text-sm text-muted-foreground font-medium">0 Friends Added</p>
-            <p className="text-xs text-muted-foreground mt-1">
-              Connect with other users to see their activity
-            </p>
-          </Card>
+          <FriendsSection currentUserId={currentUserId} />
         </div>
       </main>
       

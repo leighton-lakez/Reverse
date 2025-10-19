@@ -58,6 +58,8 @@ const Profile = () => {
   const [myListings, setMyListings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [editLocation, setEditLocation] = useState("");
+  const [followersCount, setFollowersCount] = useState(0);
+  const [followingCount, setFollowingCount] = useState(0);
   const [profileData, setProfileData] = useState({
     name: "",
     bio: "",
@@ -74,6 +76,7 @@ const Profile = () => {
         setUser(session.user);
         await fetchUserProfile(session.user.id);
         await fetchUserItems(session.user.id);
+        await fetchFollowCounts(session.user.id);
       }
     });
   }, [navigate]);
@@ -108,6 +111,21 @@ const Profile = () => {
       setMyListings(data);
     }
     setLoading(false);
+  };
+
+  const fetchFollowCounts = async (userId: string) => {
+    const { count: followers } = await supabase
+      .from("follows")
+      .select("*", { count: "exact", head: true })
+      .eq("following_id", userId);
+
+    const { count: following } = await supabase
+      .from("follows")
+      .select("*", { count: "exact", head: true })
+      .eq("follower_id", userId);
+
+    setFollowersCount(followers || 0);
+    setFollowingCount(following || 0);
   };
 
   const handleSaveProfile = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -265,18 +283,18 @@ const Profile = () => {
           
           <p className="text-sm text-foreground mt-2 line-clamp-2">{profileData.bio}</p>
           
-          <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-border">
+          <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-border">
             <div className="text-center">
               <div className="text-lg font-bold text-foreground">{myListings.length}</div>
               <div className="text-xs text-muted-foreground">Listings</div>
             </div>
             <div className="text-center">
-              <div className="text-lg font-bold text-foreground">0</div>
-              <div className="text-xs text-muted-foreground">Sold</div>
+              <div className="text-lg font-bold text-foreground">{followersCount}</div>
+              <div className="text-xs text-muted-foreground">Followers</div>
             </div>
             <div className="text-center">
-              <div className="text-lg font-bold text-foreground">0</div>
-              <div className="text-xs text-muted-foreground">Followers</div>
+              <div className="text-lg font-bold text-foreground">{followingCount}</div>
+              <div className="text-xs text-muted-foreground">Following</div>
             </div>
           </div>
         </Card>

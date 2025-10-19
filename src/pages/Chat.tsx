@@ -255,13 +255,18 @@ const Chat = () => {
               >
                 <ArrowLeft className="h-5 w-5" />
               </Button>
-              <Avatar className="h-10 w-10 border-2 border-primary">
-                <AvatarImage src={seller?.avatar} />
-                <AvatarFallback>{seller?.name?.split(' ').map((n: string) => n[0]).join('')}</AvatarFallback>
-              </Avatar>
-              <div>
-                <h2 className="font-semibold text-foreground">{seller?.name}</h2>
-                <p className="text-xs text-muted-foreground">Online</p>
+              <div 
+                className="flex items-center gap-3 cursor-pointer hover:bg-muted/50 rounded-lg p-2 -m-2 transition-colors"
+                onClick={() => navigate(`/user/${sellerId}`)}
+              >
+                <Avatar className="h-10 w-10 border-2 border-primary">
+                  <AvatarImage src={seller?.avatar} />
+                  <AvatarFallback>{seller?.name?.split(' ').map((n: string) => n[0]).join('')}</AvatarFallback>
+                </Avatar>
+                <div>
+                  <h2 className="font-semibold text-foreground">{seller?.name}</h2>
+                  <p className="text-xs text-muted-foreground">Online</p>
+                </div>
               </div>
             </div>
           </div>
