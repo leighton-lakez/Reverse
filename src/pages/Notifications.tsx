@@ -137,27 +137,24 @@ const Notifications = () => {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 py-6 space-y-6">
+      <main className="max-w-7xl mx-auto px-4 py-4 space-y-4">
         {/* Friends' Recent Posts */}
         <div className="animate-fade-in">
-          <h2 className="text-lg font-semibold text-foreground mb-3">Friends' Activity (24h)</h2>
+          <h2 className="text-sm font-semibold text-foreground mb-2">Friends' Activity (24h)</h2>
           <ScrollArea className="w-full">
-            <div className="flex gap-4 pb-2">
+            <div className="flex gap-2 pb-1">
               {friendsPosts.map((friend) => (
-                <Card key={friend.id} className="flex-shrink-0 w-40 overflow-hidden border-border hover:shadow-[var(--shadow-glow)] transition-all cursor-pointer">
+                <Card key={friend.id} className="flex-shrink-0 w-24 overflow-hidden border-border hover:shadow-[var(--shadow-glow)] transition-all cursor-pointer">
                   <div className="relative aspect-square">
                     <img src={friend.itemImage} alt={friend.itemTitle} className="w-full h-full object-cover" />
+                    <Avatar className="absolute bottom-1 right-1 h-6 w-6 border-2 border-background">
+                      <AvatarImage src={friend.avatar} />
+                      <AvatarFallback>{friend.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                    </Avatar>
                   </div>
-                  <div className="p-3 space-y-2">
-                    <div className="flex items-center gap-2">
-                      <Avatar className="h-6 w-6">
-                        <AvatarImage src={friend.avatar} />
-                        <AvatarFallback>{friend.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-                      </Avatar>
-                      <span className="text-xs font-medium text-foreground truncate">{friend.name}</span>
-                    </div>
-                    <p className="text-xs text-muted-foreground truncate">{friend.itemTitle}</p>
-                    <p className="text-xs text-muted-foreground">{friend.timeAgo}</p>
+                  <div className="p-1.5">
+                    <p className="text-[10px] font-medium text-foreground truncate">{friend.name}</p>
+                    <p className="text-[9px] text-muted-foreground">{friend.timeAgo}</p>
                   </div>
                 </Card>
               ))}
@@ -167,36 +164,36 @@ const Notifications = () => {
 
         {/* Message Notifications */}
         <div className="animate-fade-in" style={{ animationDelay: "0.1s" }}>
-          <h2 className="text-lg font-semibold text-foreground mb-3">Messages</h2>
-          <div className="space-y-3">
+          <h2 className="text-sm font-semibold text-foreground mb-2">Messages</h2>
+          <div className="space-y-2">
             {messageNotifications.map((notification) => (
               <Card
                 key={notification.id}
-                className={`p-4 border-border hover:bg-muted/50 transition-all cursor-pointer ${
+                className={`p-3 border-border hover:bg-muted/50 transition-all cursor-pointer ${
                   notification.unread ? 'bg-primary/5 border-l-4 border-l-primary' : ''
                 }`}
               >
-                <div className="flex gap-3">
-                  <Avatar className="h-12 w-12 flex-shrink-0">
+                <div className="flex gap-2">
+                  <Avatar className="h-10 w-10 flex-shrink-0">
                     <AvatarImage src={notification.avatar} />
                     <AvatarFallback>{notification.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
                   </Avatar>
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-2 mb-1">
+                    <div className="flex items-start justify-between gap-2 mb-0.5">
                       <div className="flex items-center gap-2">
-                        <span className="font-semibold text-foreground">{notification.name}</span>
+                        <span className="text-sm font-semibold text-foreground">{notification.name}</span>
                         {notification.unread && (
-                          <Badge variant="default" className="h-5 px-2 bg-primary text-primary-foreground">
+                          <Badge variant="default" className="h-4 px-1.5 text-[10px] bg-primary text-primary-foreground">
                             New
                           </Badge>
                         )}
                       </div>
-                      <span className="text-xs text-muted-foreground flex-shrink-0">{notification.timeAgo}</span>
+                      <span className="text-[10px] text-muted-foreground flex-shrink-0">{notification.timeAgo}</span>
                     </div>
-                    <p className="text-sm text-foreground mb-1">{notification.message}</p>
-                    <p className="text-xs text-muted-foreground">Re: {notification.itemTitle}</p>
+                    <p className="text-xs text-foreground mb-0.5">{notification.message}</p>
+                    <p className="text-[10px] text-muted-foreground">Re: {notification.itemTitle}</p>
                   </div>
-                  <MessageCircle className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                  <MessageCircle className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-1" />
                 </div>
               </Card>
             ))}
@@ -205,31 +202,31 @@ const Notifications = () => {
 
         {/* System & Promotional Notifications */}
         <div className="animate-fade-in" style={{ animationDelay: "0.2s" }}>
-          <h2 className="text-lg font-semibold text-foreground mb-3">Design-Up Updates</h2>
-          <div className="space-y-3">
+          <h2 className="text-sm font-semibold text-foreground mb-2">Design-Up Updates</h2>
+          <div className="space-y-2">
             {systemNotifications.map((notification) => {
               const Icon = notification.icon;
               return (
                 <Card
                   key={notification.id}
-                  className={`p-4 border-border hover:bg-muted/50 transition-all cursor-pointer ${
+                  className={`p-3 border-border hover:bg-muted/50 transition-all cursor-pointer ${
                     notification.type === 'promotion' ? 'bg-gradient-to-r from-primary/5 to-secondary/5' : ''
                   }`}
                 >
-                  <div className="flex gap-3">
-                    <div className={`h-10 w-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+                  <div className="flex gap-2">
+                    <div className={`h-8 w-8 rounded-full flex items-center justify-center flex-shrink-0 ${
                       notification.type === 'promotion' ? 'bg-gradient-to-br from-primary to-secondary' : 'bg-muted'
                     }`}>
-                      <Icon className={`h-5 w-5 ${
+                      <Icon className={`h-4 w-4 ${
                         notification.type === 'promotion' ? 'text-background' : 'text-foreground'
                       }`} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-2 mb-1">
-                        <span className="font-semibold text-foreground">{notification.title}</span>
-                        <span className="text-xs text-muted-foreground flex-shrink-0">{notification.timeAgo}</span>
+                      <div className="flex items-start justify-between gap-2 mb-0.5">
+                        <span className="text-sm font-semibold text-foreground">{notification.title}</span>
+                        <span className="text-[10px] text-muted-foreground flex-shrink-0">{notification.timeAgo}</span>
                       </div>
-                      <p className="text-sm text-muted-foreground">{notification.message}</p>
+                      <p className="text-xs text-muted-foreground">{notification.message}</p>
                     </div>
                   </div>
                 </Card>
