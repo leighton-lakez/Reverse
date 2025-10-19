@@ -95,18 +95,18 @@ export default function ProfileSetup() {
   };
 
   return (
-    <div className="min-h-screen bg-background gradient-mesh flex items-center justify-center px-4">
-      <div className="w-full max-w-md space-y-8">
+    <div className="min-h-screen bg-background gradient-mesh flex items-center justify-center px-4 sm:px-6">
+      <div className="w-full max-w-md space-y-6 sm:space-y-8">
         <div className="text-center">
-          <h1 className="text-5xl font-black tracking-tighter text-gradient mb-4">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tighter text-gradient mb-3 sm:mb-4">
             Complete Your Profile
           </h1>
-          <p className="text-lg text-muted-foreground">
+          <p className="text-base sm:text-lg text-muted-foreground px-2">
             Tell us a bit about yourself to get started
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6 glass p-8 rounded-2xl shadow-glow">
+        <form onSubmit={handleSubmit} className="space-y-5 sm:space-y-6 glass p-6 sm:p-8 rounded-2xl shadow-glow">
           <div className="space-y-2">
             <Label htmlFor="displayName">Display Name *</Label>
             <Input
@@ -139,7 +139,7 @@ export default function ProfileSetup() {
             />
           </div>
 
-          <Button type="submit" className="w-full gradient-primary shadow-glow hover:shadow-glow-secondary transition-all" disabled={loading}>
+          <Button type="submit" className="w-full h-11 sm:h-12 text-sm sm:text-base gradient-primary shadow-glow hover:shadow-glow-secondary transition-all" disabled={loading}>
             {loading ? "Saving..." : "Complete Setup"}
           </Button>
         </form>

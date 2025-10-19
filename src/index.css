@@ -85,6 +85,17 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     letter-spacing: -0.011em;
+    /* Better text rendering on mobile */
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    /* Prevent horizontal overflow */
+    overflow-x: hidden;
+    max-width: 100vw;
+  }
+
+  html {
+    overflow-x: hidden;
+    max-width: 100vw;
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -122,6 +133,10 @@
     border: 1px solid var(--glass-border);
   }
 
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
   .gradient-primary {
     background: var(--gradient-primary);
   }
@@ -143,5 +158,25 @@
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
+  }
+
+  /* Mobile-specific utilities */
+  @media (max-width: 640px) {
+    .touch-target {
+      min-height: 44px;
+      min-width: 44px;
+    }
+
+    /* Prevent text overflow on mobile */
+    * {
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+    }
+
+    /* Ensure nothing causes horizontal scroll */
+    body, html {
+      overflow-x: hidden !important;
+      max-width: 100vw !important;
+    }
   }
 }

@@ -221,12 +221,12 @@ const Index = () => {
   const opacity = Math.min(Math.abs(dragOffset.x) / 100, 1);
 
   return (
-    <div className="min-h-screen bg-background pb-24 flex flex-col">
+    <div className="min-h-screen bg-background pb-20 sm:pb-24 flex flex-col overflow-hidden">
       {/* Header */}
       <header className="sticky top-0 z-50 glass">
-        <div className="max-w-7xl mx-auto px-6 py-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4">
           <div className="flex items-center justify-between">
-            <h1 className="text-4xl font-black tracking-tighter text-gradient">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tighter text-gradient">
               DesignX
             </h1>
             <Button
@@ -234,16 +234,16 @@ const Index = () => {
               size="icon"
               onClick={handleSignOut}
               title="Sign out"
-              className="hover:bg-primary/10 transition-all"
+              className="hover:bg-primary/10 transition-all h-9 w-9 sm:h-10 sm:w-10"
             >
-              <LogOut className="h-5 w-5" />
+              <LogOut className="h-4 w-4 sm:h-5 sm:w-5" />
             </Button>
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 max-w-md mx-auto w-full px-4 py-6 flex flex-col items-center justify-center">
+      <main className="flex-1 max-w-md mx-auto w-full px-3 sm:px-4 py-4 sm:py-6 flex flex-col items-center justify-center">
         {loading ? (
           <div className="text-center py-12">
             <p className="text-xl text-muted-foreground">Loading items...</p>
@@ -261,7 +261,7 @@ const Index = () => {
         ) : (
           <>
             {/* Card Stack */}
-            <div className="relative w-full aspect-[3/4] max-h-[600px]">
+            <div className="relative w-full aspect-[3/4] max-h-[500px] sm:max-h-[600px]">
               {/* Next card (behind) */}
               {nextItem && (
                 <div className="absolute inset-0 w-full h-full">
@@ -306,37 +306,37 @@ const Index = () => {
 
                     {/* Swipe indicators */}
                     <div
-                      className="absolute top-8 right-8 pointer-events-none"
+                      className="absolute top-4 sm:top-8 right-4 sm:right-8 pointer-events-none"
                       style={{ opacity: dragOffset.x < 0 ? opacity : 0 }}
                     >
-                      <div className="bg-red-500 text-white px-6 py-3 rounded-xl font-bold text-2xl rotate-12 border-4 border-white shadow-xl">
+                      <div className="bg-red-500 text-white px-3 py-2 sm:px-6 sm:py-3 rounded-xl font-bold text-lg sm:text-2xl rotate-12 border-2 sm:border-4 border-white shadow-xl">
                         NOPE
                       </div>
                     </div>
                     <div
-                      className="absolute top-8 left-8 pointer-events-none"
+                      className="absolute top-4 sm:top-8 left-4 sm:left-8 pointer-events-none"
                       style={{ opacity: dragOffset.x > 0 ? opacity : 0 }}
                     >
-                      <div className="bg-green-500 text-white px-6 py-3 rounded-xl font-bold text-2xl -rotate-12 border-4 border-white shadow-xl">
+                      <div className="bg-green-500 text-white px-3 py-2 sm:px-6 sm:py-3 rounded-xl font-bold text-base sm:text-2xl -rotate-12 border-2 sm:border-4 border-white shadow-xl">
                         INTERESTED
                       </div>
                     </div>
 
                     {/* Item info */}
-                    <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
-                      <h2 className="text-2xl font-bold mb-1">{currentItem.title}</h2>
-                      <p className="text-lg font-semibold mb-2">${currentItem.price}</p>
-                      <div className="flex items-center gap-3 text-sm mb-2">
-                        <span className="bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full">
+                    <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6 text-white">
+                      <h2 className="text-xl sm:text-2xl font-bold mb-1 line-clamp-2">{currentItem.title}</h2>
+                      <p className="text-base sm:text-lg font-semibold mb-2">${currentItem.price}</p>
+                      <div className="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm mb-2 flex-wrap">
+                        <span className="bg-white/20 backdrop-blur-sm px-2 sm:px-3 py-1 rounded-full">
                           {currentItem.brand}
                         </span>
-                        <span className="bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full">
+                        <span className="bg-white/20 backdrop-blur-sm px-2 sm:px-3 py-1 rounded-full">
                           {currentItem.condition}
                         </span>
                       </div>
-                      <p className="text-sm opacity-90">{currentItem.location}</p>
+                      <p className="text-xs sm:text-sm opacity-90">{currentItem.location}</p>
                       {currentItem.description && (
-                        <p className="text-sm opacity-75 mt-2 line-clamp-2">
+                        <p className="text-xs sm:text-sm opacity-75 mt-2 line-clamp-2">
                           {currentItem.description}
                         </p>
                       )}
@@ -347,39 +347,39 @@ const Index = () => {
             </div>
 
             {/* Action Buttons */}
-            <div className="flex items-center justify-center gap-6 mt-8">
+            <div className="flex items-center justify-center gap-4 sm:gap-6 mt-6 sm:mt-8">
               <Button
                 size="icon"
                 variant="outline"
-                className="h-16 w-16 rounded-full border-2 border-red-500 hover:bg-red-500 hover:text-white transition-all shadow-lg"
+                className="h-14 w-14 sm:h-16 sm:w-16 rounded-full border-2 border-red-500 hover:bg-red-500 hover:text-white transition-all shadow-lg"
                 onClick={() => handleSwipe("left")}
               >
-                <X className="h-8 w-8" />
+                <X className="h-6 w-6 sm:h-8 sm:w-8" />
               </Button>
 
               {skippedItems.length > 0 && (
                 <Button
                   size="icon"
                   variant="outline"
-                  className="h-12 w-12 rounded-full border-2 hover:bg-muted transition-all shadow-lg"
+                  className="h-10 w-10 sm:h-12 sm:w-12 rounded-full border-2 hover:bg-muted transition-all shadow-lg"
                   onClick={handleUndo}
                 >
-                  <RotateCcw className="h-5 w-5" />
+                  <RotateCcw className="h-4 w-4 sm:h-5 sm:w-5" />
                 </Button>
               )}
 
               <Button
                 size="icon"
                 variant="outline"
-                className="h-16 w-16 rounded-full border-2 border-green-500 hover:bg-green-500 hover:text-white transition-all shadow-lg"
+                className="h-14 w-14 sm:h-16 sm:w-16 rounded-full border-2 border-green-500 hover:bg-green-500 hover:text-white transition-all shadow-lg"
                 onClick={() => handleSwipe("right")}
               >
-                <Heart className="h-8 w-8" />
+                <Heart className="h-6 w-6 sm:h-8 sm:w-8" />
               </Button>
             </div>
 
             {/* Counter */}
-            <div className="mt-4 text-center text-sm text-muted-foreground">
+            <div className="mt-3 sm:mt-4 text-center text-xs sm:text-sm text-muted-foreground">
               {currentIndex + 1} / {items.length}
             </div>
           </>

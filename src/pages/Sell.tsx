@@ -114,13 +114,15 @@ const Sell = () => {
   };
 
   const startConversation = () => {
+    // Set to images step immediately so upload button appears right away
+    setCurrentStep("images");
+
     addBotMessageWithDelay(
       "Hey there! 👋 I'm here to help you list your item. This will only take a minute. Ready to get started?",
       300
     );
     setTimeout(() => {
       addBotMessageWithDelay("First up, let's add some photos of your item. You can upload multiple images. Click the upload button below! 📸", 1000);
-      setCurrentStep("images");
     }, 1000);
   };
 
@@ -423,21 +425,21 @@ const Sell = () => {
     return placeholders[currentStep];
   };
 
-  const canSubmitInput = currentStep !== "images" && currentStep !== "summary";
+  const canSubmitInput = currentStep !== "images" && currentStep !== "summary" && currentStep !== "welcome";
 
   return (
-    <div className="min-h-screen bg-background pb-24 flex flex-col">
+    <div className="min-h-screen bg-background pb-20 sm:pb-24 flex flex-col overflow-hidden">
       {/* Header */}
       <header className="sticky top-0 z-50 glass">
-        <div className="max-w-3xl mx-auto px-6 py-4">
-          <h1 className="text-2xl font-black tracking-tighter text-gradient">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 py-3 sm:py-4">
+          <h1 className="text-xl sm:text-2xl font-black tracking-tighter text-gradient">
             List Your Item
           </h1>
         </div>
       </header>
 
       {/* Chat Messages */}
-      <main className="flex-1 max-w-3xl mx-auto w-full px-4 py-6 overflow-y-auto">
+      <main className="flex-1 max-w-3xl mx-auto w-full px-3 sm:px-4 py-4 sm:py-6 overflow-y-auto">
         <div className="space-y-4">
           {messages.map((message) => (
             <div
@@ -445,23 +447,23 @@ const Sell = () => {
               className={`flex ${message.type === "user" ? "justify-end" : "justify-start"} animate-fade-in`}
             >
               <div
-                className={`max-w-[80%] rounded-2xl px-4 py-3 shadow-md ${
+                className={`max-w-[85%] sm:max-w-[80%] rounded-2xl px-3 sm:px-4 py-2.5 sm:py-3 shadow-md ${
                   message.type === "user"
                     ? "gradient-primary text-primary-foreground shadow-glow"
                     : "glass text-foreground"
                 }`}
               >
-                <p className="text-sm whitespace-pre-line leading-relaxed">{message.content}</p>
+                <p className="text-xs sm:text-sm whitespace-pre-line leading-relaxed">{message.content}</p>
 
                 {message.options && (
-                  <div className="flex flex-wrap gap-2 mt-3">
+                  <div className="flex flex-wrap gap-1.5 sm:gap-2 mt-2 sm:mt-3">
                     {message.options.map((option) => (
                       <Button
                         key={option}
                         onClick={() => handleOptionClick(option)}
                         size="sm"
                         variant="outline"
-                        className="bg-background/50 hover:bg-background border-border"
+                        className="bg-background/50 hover:bg-background border-border text-xs sm:text-sm h-8 sm:h-9 px-2 sm:px-3"
                       >
                         {option}
                       </Button>
@@ -474,11 +476,11 @@ const Sell = () => {
 
           {isTyping && (
             <div className="flex justify-start animate-fade-in">
-              <div className="glass rounded-2xl px-4 py-3 shadow-md">
+              <div className="glass rounded-2xl px-3 sm:px-4 py-2.5 sm:py-3 shadow-md">
                 <div className="flex gap-1">
-                  <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: "0ms" }}></div>
-                  <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: "150ms" }}></div>
-                  <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: "300ms" }}></div>
+                  <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: "0ms" }}></div>
+                  <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: "150ms" }}></div>
+                  <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: "300ms" }}></div>
                 </div>
               </div>
             </div>
@@ -514,7 +516,7 @@ const Sell = () => {
 
       {/* Input Area */}
       <div className="sticky bottom-16 glass">
-        <div className="max-w-3xl mx-auto px-6 py-4">
+        <div className="max-w-3xl mx-auto px-3 sm:px-6 py-3 sm:py-4">
           {currentStep === "images" && (
             <div className="flex gap-2">
               <input
@@ -527,9 +529,9 @@ const Sell = () => {
               />
               <Button
                 onClick={() => fileInputRef.current?.click()}
-                className="flex-1 h-12 text-base gradient-primary shadow-glow hover:shadow-glow-secondary transition-all"
+                className="flex-1 h-11 sm:h-12 text-sm sm:text-base gradient-primary shadow-glow hover:shadow-glow-secondary transition-all"
               >
-                <Upload className="h-5 w-5 mr-2" />
+                <Upload className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
                 Upload Photos
               </Button>
             </div>
@@ -548,20 +550,20 @@ const Sell = () => {
                 onChange={(e) => setInputValue(e.target.value)}
                 placeholder={getPlaceholder()}
                 type={getCurrentInputType()}
-                className="flex-1 h-12 text-base bg-muted border-border"
+                className="flex-1 h-11 sm:h-12 text-sm sm:text-base bg-muted border-border"
                 disabled={submitting}
                 autoFocus
               />
               <Button
                 type="submit"
                 size="icon"
-                className="h-12 w-12"
+                className="h-11 w-11 sm:h-12 sm:w-12"
                 disabled={!inputValue.trim() || submitting}
               >
                 {submitting ? (
-                  <Loader2 className="h-5 w-5 animate-spin" />
+                  <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 animate-spin" />
                 ) : (
-                  <Send className="h-5 w-5" />
+                  <Send className="h-4 w-4 sm:h-5 sm:w-5" />
                 )}
               </Button>
             </form>

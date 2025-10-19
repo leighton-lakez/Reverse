@@ -128,18 +128,18 @@ export default function Auth() {
   };
 
   return (
-    <div className="min-h-screen bg-background gradient-mesh flex items-center justify-center px-4">
-      <div className="w-full max-w-md space-y-8">
+    <div className="min-h-screen bg-background gradient-mesh flex items-center justify-center px-4 sm:px-6">
+      <div className="w-full max-w-md space-y-6 sm:space-y-8">
         <div className="text-center">
-          <h1 className="text-6xl font-black tracking-tighter text-gradient mb-4">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tighter text-gradient mb-3 sm:mb-4">
             DesignX
           </h1>
-          <p className="text-lg text-muted-foreground">
+          <p className="text-base sm:text-lg text-muted-foreground px-2">
             {isLogin ? "Welcome back to the future of design" : "Join the design revolution"}
           </p>
         </div>
 
-        <form onSubmit={handleAuth} className="space-y-6 glass p-8 rounded-2xl shadow-glow">
+        <form onSubmit={handleAuth} className="space-y-5 sm:space-y-6 glass p-6 sm:p-8 rounded-2xl shadow-glow">
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input
@@ -173,13 +173,13 @@ export default function Auth() {
             />
             <label
               htmlFor="remember"
-              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+              className="text-xs sm:text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
             >
               Remember me
             </label>
           </div>
 
-          <Button type="submit" className="w-full gradient-primary shadow-glow hover:shadow-glow-secondary transition-all" disabled={loading}>
+          <Button type="submit" className="w-full h-11 sm:h-12 text-sm sm:text-base gradient-primary shadow-glow hover:shadow-glow-secondary transition-all" disabled={loading}>
             {loading ? "Loading..." : isLogin ? "Sign In" : "Sign Up"}
           </Button>
 
@@ -187,7 +187,7 @@ export default function Auth() {
             <button
               type="button"
               onClick={() => setIsLogin(!isLogin)}
-              className="text-sm text-primary hover:underline"
+              className="text-xs sm:text-sm text-primary hover:underline"
             >
               {isLogin
                 ? "Don't have an account? Sign up"
