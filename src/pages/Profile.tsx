@@ -266,11 +266,11 @@ const Profile = () => {
               <div className="text-xs text-muted-foreground">Listings</div>
             </div>
             <div className="text-center">
-              <div className="text-lg font-bold text-foreground">1</div>
+              <div className="text-lg font-bold text-foreground">0</div>
               <div className="text-xs text-muted-foreground">Sold</div>
             </div>
             <div className="text-center">
-              <div className="text-lg font-bold text-foreground">23</div>
+              <div className="text-lg font-bold text-foreground">0</div>
               <div className="text-xs text-muted-foreground">Followers</div>
             </div>
           </div>
