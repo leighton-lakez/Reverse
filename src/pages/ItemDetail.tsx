@@ -192,7 +192,7 @@ const ItemDetail = () => {
                 Buy Now
               </Button>
               <Button
-                onClick={() => navigate("/chat", { state: { seller, item } })}
+                onClick={() => navigate("/chat", { state: { sellerId: item.user_id, item: { id: item.id, title: item.title, price: item.price, image: item.images?.[0] || item.image } } })}
                 variant="outline"
                 className="h-11 text-sm font-semibold border-primary text-primary hover:bg-primary/10"
               >
