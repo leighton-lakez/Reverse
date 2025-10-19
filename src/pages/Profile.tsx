@@ -175,7 +175,12 @@ const Profile = () => {
         <div className="max-w-7xl mx-auto px-4 py-2">
           <div className="flex items-center justify-between">
             <h1 className="text-xl font-bold text-foreground">Profile</h1>
-            <Button variant="ghost" size="icon" className="hover:bg-muted">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="hover:bg-muted"
+              onClick={() => navigate("/settings")}
+            >
               <Settings className="h-5 w-5" />
             </Button>
           </div>
