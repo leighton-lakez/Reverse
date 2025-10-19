@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import BottomNav from "@/components/BottomNav";
 
 const Sell = () => {
   const navigate = useNavigate();
@@ -240,6 +241,8 @@ const Sell = () => {
           </div>
         </form>
       </main>
+      
+      <BottomNav />
     </div>
   );
 };

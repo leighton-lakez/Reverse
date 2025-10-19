@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import BottomNav from "@/components/BottomNav";
 
 const ItemDetail = () => {
   const navigate = useNavigate();
@@ -153,6 +154,8 @@ const ItemDetail = () => {
           </div>
         </div>
       </main>
+      
+      <BottomNav />
     </div>
   );
 };

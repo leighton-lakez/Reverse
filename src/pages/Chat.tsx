@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
+import BottomNav from "@/components/BottomNav";
 
 interface Message {
   id: number;
@@ -118,7 +119,7 @@ const Chat = () => {
       </div>
 
       {/* Input */}
-      <div className="border-t border-border bg-background p-4 pb-safe">
+      <div className="border-t border-border bg-background p-4 pb-28">
         <div className="max-w-7xl mx-auto flex gap-2">
           <Button variant="ghost" size="icon" className="flex-shrink-0">
             <Image className="h-5 w-5" />
@@ -142,6 +143,8 @@ const Chat = () => {
           </Button>
         </div>
       </div>
+      
+      <BottomNav />
     </div>
   );
 };

@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
+import BottomNav from "@/components/BottomNav";
 
 const Checkout = () => {
   const navigate = useNavigate();
@@ -190,6 +191,8 @@ const Checkout = () => {
           </div>
         </div>
       </main>
+      
+      <BottomNav />
     </div>
   );
 };
