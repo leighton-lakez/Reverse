@@ -45,7 +45,10 @@ const BottomNav = () => {
           
           <Button
             variant="ghost"
-            className="flex flex-col items-center gap-1 h-auto py-2 hover:text-primary hover:bg-primary/10"
+            onClick={() => navigate("/profile")}
+            className={`flex flex-col items-center gap-1 h-auto py-2 hover:text-primary hover:bg-primary/10 ${
+              location.pathname === "/profile" ? "text-primary" : ""
+            }`}
           >
             <User className="h-6 w-6" />
             <span className="text-xs font-medium">Profile</span>
