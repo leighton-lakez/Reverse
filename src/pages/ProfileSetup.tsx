@@ -7,6 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
 import LocationAutocomplete from "@/components/LocationAutocomplete";
+import { profileSchema } from "@/lib/validationSchemas";
+import { getUserFriendlyError } from "@/lib/errorHandler";
 
 export default function ProfileSetup() {
   const [displayName, setDisplayName] = useState("");
@@ -50,13 +52,27 @@ export default function ProfileSetup() {
     setLoading(true);
 
     try {
+      // Validate profile data
+      const validationResult = profileSchema.safeParse({
+        display_name: displayName,
+        location,
+        bio,
+      });
+
+      if (!validationResult.success) {
+        const firstError = validationResult.error.errors[0];
+        toast({
+          title: "Validation Error",
+          description: firstError.message,
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
+
       const { error } = await supabase
         .from("profiles")
-        .update({
-          display_name: displayName,
-          location: location,
-          bio: bio || null,
-        })
+        .update(validationResult.data)
         .eq("id", userId);
 
       if (error) throw error;
@@ -70,7 +86,7 @@ export default function ProfileSetup() {
     } catch (error: any) {
       toast({
         title: "Error",
-        description: error.message,
+        description: getUserFriendlyError(error),
         variant: "destructive",
       });
     } finally {

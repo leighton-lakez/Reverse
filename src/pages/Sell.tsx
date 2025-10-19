@@ -17,6 +17,7 @@ import BottomNav from "@/components/BottomNav";
 import { supabase } from "@/integrations/supabase/client";
 import LocationAutocomplete from "@/components/LocationAutocomplete";
 import { getUserFriendlyError } from "@/lib/errorHandler";
+import { itemSchema } from "@/lib/validationSchemas";
 
 const Sell = () => {
   const navigate = useNavigate();
@@ -59,8 +60,8 @@ const Sell = () => {
     const formData = new FormData(e.currentTarget);
 
     try {
-      const { error } = await supabase.from("items").insert({
-        user_id: userId,
+      // Validate input data
+      const validationResult = itemSchema.safeParse({
         title: formData.get("title") as string,
         brand: formData.get("brand") as string,
         category,
@@ -68,7 +69,30 @@ const Sell = () => {
         condition,
         price: parseFloat(formData.get("price") as string),
         location,
-        size: formData.get("size") as string || null,
+        size: formData.get("size") as string,
+      });
+
+      if (!validationResult.success) {
+        const firstError = validationResult.error.errors[0];
+        toast({
+          title: "Validation Error",
+          description: firstError.message,
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
+
+      const { error } = await supabase.from("items").insert({
+        user_id: userId,
+        title: validationResult.data.title,
+        brand: validationResult.data.brand,
+        category: validationResult.data.category,
+        description: validationResult.data.description,
+        condition: validationResult.data.condition,
+        price: validationResult.data.price,
+        location: validationResult.data.location,
+        size: validationResult.data.size,
         trade_preference: tradePreference,
         images: images,
       });

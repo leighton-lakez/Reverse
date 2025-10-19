@@ -22,6 +22,7 @@ import BottomNav from "@/components/BottomNav";
 import LocationAutocomplete from "@/components/LocationAutocomplete";
 import { supabase } from "@/integrations/supabase/client";
 import { getUserFriendlyError } from "@/lib/errorHandler";
+import { profileSchema } from "@/lib/validationSchemas";
 
 const myListings = [
   {
@@ -119,21 +120,34 @@ const Profile = () => {
     const bio = formData.get("bio") as string;
 
     try {
+      // Validate profile data
+      const validationResult = profileSchema.safeParse({
+        display_name: name,
+        location: editLocation,
+        bio,
+      });
+
+      if (!validationResult.success) {
+        const firstError = validationResult.error.errors[0];
+        toast({
+          title: "Validation Error",
+          description: firstError.message,
+          variant: "destructive",
+        });
+        return;
+      }
+
       const { error } = await supabase
         .from("profiles")
-        .update({
-          display_name: name,
-          bio: bio,
-          location: editLocation,
-        })
+        .update(validationResult.data)
         .eq("id", user.id);
 
       if (error) throw error;
 
       setProfileData({
-        name: name,
-        bio: bio,
-        location: editLocation,
+        name: validationResult.data.display_name,
+        bio: validationResult.data.bio || "",
+        location: validationResult.data.location,
         avatar: profileData.avatar
       });
       

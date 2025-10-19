@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
 import { getUserFriendlyError } from "@/lib/errorHandler";
+import { authSchema } from "@/lib/validationSchemas";
 
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
@@ -37,10 +38,27 @@ export default function Auth() {
     setLoading(true);
 
     try {
+      // Validate credentials
+      const validationResult = authSchema.safeParse({
+        email,
+        password,
+      });
+
+      if (!validationResult.success) {
+        const firstError = validationResult.error.errors[0];
+        toast({
+          title: "Validation Error",
+          description: firstError.message,
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
+
       if (isLogin) {
         const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
+          email: validationResult.data.email,
+          password: validationResult.data.password,
         });
 
         if (error) throw error;
@@ -51,8 +69,8 @@ export default function Auth() {
         });
       } else {
         const { error } = await supabase.auth.signUp({
-          email,
-          password,
+          email: validationResult.data.email,
+          password: validationResult.data.password,
           options: {
             emailRedirectTo: `${window.location.origin}/`,
           },

@@ -9,6 +9,7 @@ import BottomNav from "@/components/BottomNav";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { getUserFriendlyError } from "@/lib/errorHandler";
+import { messageSchema } from "@/lib/validationSchemas";
 
 interface Message {
   id: number;
@@ -109,13 +110,28 @@ const Chat = () => {
     if (!newMessage.trim() || !currentUser || !sellerId) return;
     
     try {
+      // Validate message content
+      const validationResult = messageSchema.safeParse({
+        content: newMessage.trim(),
+      });
+
+      if (!validationResult.success) {
+        const firstError = validationResult.error.errors[0];
+        toast({
+          title: "Validation Error",
+          description: firstError.message,
+          variant: "destructive",
+        });
+        return;
+      }
+
       const { error } = await supabase
         .from("messages")
         .insert({
           sender_id: currentUser.id,
           receiver_id: sellerId,
           item_id: item?.id || null,
-          content: newMessage
+          content: validationResult.data.content
         });
 
       if (error) throw error;
