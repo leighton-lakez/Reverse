@@ -53,10 +53,10 @@ const ItemDetail = () => {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 py-6">
-        <div className="grid lg:grid-cols-2 gap-8">
+        <div className="grid lg:grid-cols-5 gap-6">
           {/* Image Gallery */}
-          <div className="animate-fade-in">
-            <div className="aspect-square rounded-lg overflow-hidden bg-muted">
+          <div className="lg:col-span-2 animate-fade-in">
+            <div className="aspect-[4/3] rounded-lg overflow-hidden bg-muted sticky top-24">
               <img
                 src={item.image}
                 alt={item.title}
@@ -66,67 +66,64 @@ const ItemDetail = () => {
           </div>
 
           {/* Item Details */}
-          <div className="space-y-6 animate-fade-in" style={{ animationDelay: "0.1s" }}>
-            <div>
-              <div className="flex items-start justify-between mb-2">
-                <h1 className="text-3xl font-bold text-foreground">{item.title}</h1>
-                <Badge className="bg-primary text-primary-foreground">{item.condition}</Badge>
+          <div className="lg:col-span-3 space-y-4 animate-fade-in" style={{ animationDelay: "0.1s" }}>
+            <Card className="p-5 border-border bg-card">
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex-1">
+                  <h1 className="text-2xl font-bold text-foreground mb-2">{item.title}</h1>
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <MapPin className="h-4 w-4" />
+                    <span>{item.location}</span>
+                  </div>
+                </div>
+                <Badge className="bg-primary text-primary-foreground text-sm px-3 py-1">{item.condition}</Badge>
               </div>
-              <div className="flex items-center gap-2 text-muted-foreground mb-4">
-                <MapPin className="h-4 w-4" />
-                <span>{item.location}</span>
-              </div>
-              <div className="text-4xl font-bold text-primary mb-6">${item.price}</div>
-            </div>
-
-            <Separator />
+              <div className="text-3xl font-bold text-primary">${item.price}</div>
+            </Card>
 
             {/* Description */}
-            <div>
+            <Card className="p-5 border-border bg-card">
               <h3 className="text-lg font-semibold text-foreground mb-3">Description</h3>
-              <p className="text-muted-foreground leading-relaxed">
+              <p className="text-sm text-muted-foreground leading-relaxed">
                 Authentic designer piece in excellent condition. This item has been carefully maintained and comes from a smoke-free home. 
                 Original packaging and authenticity certificate included. Perfect for anyone looking to add a luxury piece to their collection.
               </p>
-            </div>
-
-            <Separator />
+            </Card>
 
             {/* Item Details */}
-            <div>
-              <h3 className="text-lg font-semibold text-foreground mb-3">Details</h3>
+            <Card className="p-5 border-border bg-card">
+              <h3 className="text-lg font-semibold text-foreground mb-4">Product Details</h3>
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <span className="text-sm text-muted-foreground">Brand</span>
-                  <p className="text-foreground font-medium">{item.title?.split(' ')[0]}</p>
+                <div className="space-y-1">
+                  <span className="text-xs text-muted-foreground uppercase">Brand</span>
+                  <p className="text-foreground font-semibold">{item.title?.split(' ')[0]}</p>
                 </div>
-                <div>
-                  <span className="text-sm text-muted-foreground">Condition</span>
-                  <p className="text-foreground font-medium">{item.condition}</p>
+                <div className="space-y-1">
+                  <span className="text-xs text-muted-foreground uppercase">Condition</span>
+                  <p className="text-foreground font-semibold">{item.condition}</p>
                 </div>
-                <div>
-                  <span className="text-sm text-muted-foreground">Category</span>
-                  <p className="text-foreground font-medium">Accessories</p>
+                <div className="space-y-1">
+                  <span className="text-xs text-muted-foreground uppercase">Category</span>
+                  <p className="text-foreground font-semibold">Accessories</p>
                 </div>
-                <div>
-                  <span className="text-sm text-muted-foreground">Size</span>
-                  <p className="text-foreground font-medium">One Size</p>
+                <div className="space-y-1">
+                  <span className="text-xs text-muted-foreground uppercase">Size</span>
+                  <p className="text-foreground font-semibold">One Size</p>
                 </div>
               </div>
-            </div>
-
-            <Separator />
+            </Card>
 
             {/* Seller Info */}
-            <Card className="p-4 border-border bg-muted/30">
-              <div className="flex items-center gap-4 mb-4">
-                <Avatar className="h-16 w-16 border-2 border-primary">
+            <Card className="p-5 border-border bg-gradient-to-br from-muted/50 to-muted/30">
+              <h3 className="text-lg font-semibold text-foreground mb-4">Seller Information</h3>
+              <div className="flex items-center gap-4">
+                <Avatar className="h-14 w-14 border-2 border-primary">
                   <AvatarImage src={seller.avatar} />
                   <AvatarFallback>{seller.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
                 </Avatar>
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
-                    <h4 className="font-semibold text-foreground">{seller.name}</h4>
+                    <h4 className="font-semibold text-foreground text-base">{seller.name}</h4>
                     {seller.verified && (
                       <ShieldCheck className="h-4 w-4 text-primary" />
                     )}
@@ -137,6 +134,7 @@ const ItemDetail = () => {
                 </div>
                 <Button
                   variant="outline"
+                  size="sm"
                   onClick={() => navigate("/profile")}
                   className="border-primary text-primary hover:bg-primary/10"
                 >
@@ -146,17 +144,17 @@ const ItemDetail = () => {
             </Card>
 
             {/* Action Buttons */}
-            <div className="grid grid-cols-2 gap-4 pt-4">
+            <div className="grid grid-cols-2 gap-3 sticky bottom-4 bg-background p-4 rounded-lg border border-border shadow-lg">
               <Button
                 onClick={() => navigate("/checkout", { state: { item } })}
-                className="h-14 text-lg font-semibold bg-primary hover:bg-primary/90 text-primary-foreground"
+                className="h-12 text-base font-semibold bg-primary hover:bg-primary/90 text-primary-foreground"
               >
                 Buy Now
               </Button>
               <Button
                 onClick={() => navigate("/chat", { state: { seller, item } })}
                 variant="outline"
-                className="h-14 text-lg font-semibold border-primary text-primary hover:bg-primary/10"
+                className="h-12 text-base font-semibold border-primary text-primary hover:bg-primary/10"
               >
                 Offer Trade
               </Button>
