@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Heart } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface ItemCardProps {
   id: number;
@@ -12,9 +13,37 @@ interface ItemCardProps {
   location: string;
 }
 
-const ItemCard = ({ image, title, price, condition, location }: ItemCardProps) => {
+const ItemCard = ({ id, image, title, price, condition, location }: ItemCardProps) => {
+  const navigate = useNavigate();
+
+  const handleCardClick = (e: React.MouseEvent) => {
+    // Only navigate to detail if not clicking buttons
+    const target = e.target as HTMLElement;
+    if (!target.closest('button')) {
+      navigate("/item-detail", { state: { item: { id, image, title, price, condition, location } } });
+    }
+  };
+
+  const handleBuyNow = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigate("/checkout", { state: { item: { id, image, title, price, condition, location } } });
+  };
+
+  const handleTrade = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigate("/chat", { 
+      state: { 
+        seller: { name: "Seller Name", avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150" },
+        item: { id, image, title, price, condition, location }
+      } 
+    });
+  };
+
   return (
-    <Card className="group overflow-hidden border-border bg-card hover:shadow-[var(--shadow-glow)] transition-all duration-300 animate-scale-in">
+    <Card 
+      onClick={handleCardClick}
+      className="group overflow-hidden border-border bg-card hover:shadow-[var(--shadow-glow)] transition-all duration-300 animate-scale-in cursor-pointer"
+    >
       <div className="relative aspect-square overflow-hidden">
         <img
           src={image}
@@ -44,10 +73,18 @@ const ItemCard = ({ image, title, price, condition, location }: ItemCardProps) =
         </div>
         
         <div className="grid grid-cols-2 gap-2">
-          <Button variant="default" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
+          <Button 
+            onClick={handleBuyNow}
+            variant="default" 
+            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
+          >
             Buy Now
           </Button>
-          <Button variant="outline" className="w-full border-primary text-primary hover:bg-primary/10">
+          <Button 
+            onClick={handleTrade}
+            variant="outline" 
+            className="w-full border-primary text-primary hover:bg-primary/10"
+          >
             Trade
           </Button>
         </div>
