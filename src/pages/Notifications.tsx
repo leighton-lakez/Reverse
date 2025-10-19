@@ -63,42 +63,63 @@ const Notifications = () => {
       .from("messages")
       .select("*")
       .eq("receiver_id", userId)
-      .order("created_at", { ascending: false })
-      .limit(10);
+      .order("created_at", { ascending: false });
 
     if (error || !messages) return;
 
-    // Fetch sender profiles and items separately
-    const senderIds = [...new Set(messages.map(m => m.sender_id))];
-    const itemIds = messages.map(m => m.item_id).filter(Boolean);
+    // Group messages by sender
+    const groupedBySender = messages.reduce((acc, msg) => {
+      if (!acc[msg.sender_id]) {
+        acc[msg.sender_id] = {
+          messages: [],
+          unreadCount: 0,
+          latestMessage: msg,
+        };
+      }
+      acc[msg.sender_id].messages.push(msg);
+      if (!msg.read) {
+        acc[msg.sender_id].unreadCount++;
+      }
+      // Keep the most recent message
+      if (new Date(msg.created_at) > new Date(acc[msg.sender_id].latestMessage.created_at)) {
+        acc[msg.sender_id].latestMessage = msg;
+      }
+      return acc;
+    }, {} as Record<string, { messages: any[]; unreadCount: number; latestMessage: any }>);
 
+    // Fetch sender profiles
+    const senderIds = Object.keys(groupedBySender);
     const { data: profiles } = await supabase
       .from("profiles")
       .select("id, display_name, avatar_url")
       .in("id", senderIds);
 
-    const { data: items } = await supabase
-      .from("items")
-      .select("id, title")
-      .in("id", itemIds);
-
     const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
-    const itemMap = new Map(items?.map(i => [i.id, i]) || []);
 
-    const notifications = messages.map(msg => {
-      const sender = profileMap.get(msg.sender_id);
-      const item = msg.item_id ? itemMap.get(msg.item_id) : null;
+    // Create notifications array with grouped data
+    const notifications = senderIds.map(senderId => {
+      const group = groupedBySender[senderId];
+      const sender = profileMap.get(senderId);
+      const latestMsg = group.latestMessage;
       
       return {
-        id: msg.id,
+        id: senderId, // Use senderId as the unique key
         name: sender?.display_name || "User",
         avatar: sender?.avatar_url || "",
-        message: msg.content,
-        itemTitle: item?.title || "",
-        timeAgo: getTimeAgo(new Date(msg.created_at)),
-        unread: !msg.read,
-        senderId: msg.sender_id
+        message: latestMsg.content,
+        messageCount: group.messages.length,
+        unreadCount: group.unreadCount,
+        timeAgo: getTimeAgo(new Date(latestMsg.created_at)),
+        unread: group.unreadCount > 0,
+        senderId: senderId
       };
+    });
+
+    // Sort by most recent message
+    notifications.sort((a, b) => {
+      const aTime = new Date(groupedBySender[a.senderId].latestMessage.created_at).getTime();
+      const bTime = new Date(groupedBySender[b.senderId].latestMessage.created_at).getTime();
+      return bTime - aTime;
     });
     
     setMessageNotifications(notifications);
@@ -158,8 +179,7 @@ const Notifications = () => {
                   key={notification.id}
                   onClick={() => navigate("/chat", { 
                     state: { 
-                      sellerId: notification.senderId,
-                      item: { title: notification.itemTitle }
+                      sellerId: notification.senderId
                     } 
                   })}
                   className={`p-2.5 border-border hover:bg-muted/50 transition-all cursor-pointer ${
@@ -177,16 +197,16 @@ const Notifications = () => {
                           <span className="text-xs font-semibold text-foreground">{notification.name}</span>
                           {notification.unread && (
                             <Badge variant="default" className="h-3.5 px-1.5 text-[9px] bg-primary text-primary-foreground">
-                              New
+                              {notification.unreadCount} New
                             </Badge>
                           )}
                         </div>
                         <span className="text-[9px] text-muted-foreground flex-shrink-0">{notification.timeAgo}</span>
                       </div>
                       <p className="text-[11px] text-foreground line-clamp-1">{notification.message}</p>
-                      {notification.itemTitle && (
-                        <p className="text-[9px] text-muted-foreground">Re: {notification.itemTitle}</p>
-                      )}
+                      <p className="text-[9px] text-muted-foreground mt-0.5">
+                        {notification.messageCount} {notification.messageCount === 1 ? 'message' : 'messages'}
+                      </p>
                     </div>
                     <MessageCircle className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0 mt-0.5" />
                   </div>
