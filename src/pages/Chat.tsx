@@ -151,6 +151,19 @@ const Chat = () => {
     }
 
     setUploading(true);
+    
+    // Create temporary URL for optimistic update
+    const tempUrl = URL.createObjectURL(file);
+    const optimisticMessage: Message = {
+      id: Date.now() + Math.random(),
+      text: "📷 Image",
+      sender: "me",
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      imageUrl: tempUrl
+    };
+    
+    setMessages(prev => [...prev, optimisticMessage]);
+    
     try {
       // Upload to Supabase storage
       const fileExt = file.name.split('.').pop();
@@ -166,6 +179,11 @@ const Chat = () => {
         .from('item-images')
         .getPublicUrl(fileName);
 
+      // Update the optimistic message with real URL
+      setMessages(prev => prev.map(m => 
+        m.id === optimisticMessage.id ? { ...m, imageUrl: publicUrl } : m
+      ));
+
       // Send message with image
       const { error } = await supabase
         .from("messages")
@@ -177,19 +195,27 @@ const Chat = () => {
           image_url: publicUrl
         });
 
-      if (error) throw error;
+      if (error) {
+        // Remove optimistic message on error
+        setMessages(prev => prev.filter(m => m.id !== optimisticMessage.id));
+        throw error;
+      }
 
       toast({
         title: "Image sent",
         description: "Your image has been sent",
       });
     } catch (error: any) {
+      // Remove optimistic message on error
+      setMessages(prev => prev.filter(m => m.id !== optimisticMessage.id));
       toast({
         title: "Error",
         description: getUserFriendlyError(error),
         variant: "destructive",
       });
     } finally {
+      // Clean up temporary URL
+      URL.revokeObjectURL(tempUrl);
       setUploading(false);
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
@@ -216,21 +242,38 @@ const Chat = () => {
         return;
       }
 
+      const messageContent = validationResult.data.content;
+      
+      // Optimistically add message to UI immediately
+      const optimisticMessage: Message = {
+        id: Date.now() + Math.random(),
+        text: messageContent,
+        sender: "me",
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        imageUrl: imageUrl || undefined
+      };
+      
+      setMessages(prev => [...prev, optimisticMessage]);
+      
       // Clear input immediately for better UX
       setNewMessage("");
 
-      // Send to database - realtime will handle displaying it
+      // Send to database in background
       const { error } = await supabase
         .from("messages")
         .insert({
           sender_id: currentUser.id,
           receiver_id: sellerId,
           item_id: item?.id || null,
-          content: validationResult.data.content,
+          content: messageContent,
           image_url: imageUrl || null
         });
 
-      if (error) throw error;
+      if (error) {
+        // Remove optimistic message on error
+        setMessages(prev => prev.filter(m => m.id !== optimisticMessage.id));
+        throw error;
+      }
     } catch (error: any) {
       toast({
         title: "Error",
