@@ -19,6 +19,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
 import BottomNav from "@/components/BottomNav";
+import LocationAutocomplete from "@/components/LocationAutocomplete";
 import { supabase } from "@/integrations/supabase/client";
 
 const myListings = [
@@ -54,24 +55,44 @@ const Profile = () => {
   const [user, setUser] = useState<any>(null);
   const [myListings, setMyListings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [editLocation, setEditLocation] = useState("");
   const [profileData, setProfileData] = useState({
-    name: "Alex Johnson",
-    bio: "Designer fashion enthusiast 👗 Curating luxury finds from around the world",
-    location: "New York, NY",
-    avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400"
+    name: "",
+    bio: "",
+    location: "",
+    avatar: ""
   });
 
   useEffect(() => {
     // Check auth status
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (!session) {
         navigate("/auth");
       } else {
         setUser(session.user);
-        fetchUserItems(session.user.id);
+        await fetchUserProfile(session.user.id);
+        await fetchUserItems(session.user.id);
       }
     });
   }, [navigate]);
+
+  const fetchUserProfile = async (userId: string) => {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", userId)
+      .maybeSingle();
+
+    if (!error && data) {
+      setProfileData({
+        name: data.display_name || "User",
+        bio: data.bio || "",
+        location: data.location || "",
+        avatar: data.avatar_url || ""
+      });
+      setEditLocation(data.location || "");
+    }
+  };
 
   const fetchUserItems = async (userId: string) => {
     setLoading(true);
@@ -87,20 +108,46 @@ const Profile = () => {
     setLoading(false);
   };
 
-  const handleSaveProfile = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSaveProfile = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    
+    if (!user) return;
+    
     const formData = new FormData(e.currentTarget);
-    setProfileData({
-      name: formData.get("name") as string,
-      bio: formData.get("bio") as string,
-      location: formData.get("location") as string,
-      avatar: profileData.avatar
-    });
-    setIsEditOpen(false);
-    toast({
-      title: "Success",
-      description: "Profile updated successfully!",
-    });
+    const name = formData.get("name") as string;
+    const bio = formData.get("bio") as string;
+
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({
+          display_name: name,
+          bio: bio,
+          location: editLocation,
+        })
+        .eq("id", user.id);
+
+      if (error) throw error;
+
+      setProfileData({
+        name: name,
+        bio: bio,
+        location: editLocation,
+        avatar: profileData.avatar
+      });
+      
+      setIsEditOpen(false);
+      toast({
+        title: "Success",
+        description: "Profile updated successfully!",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
   };
 
   const activeListings = myListings;
@@ -181,11 +228,9 @@ const Profile = () => {
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="location">Location</Label>
-                        <Input
-                          id="location"
-                          name="location"
-                          defaultValue={profileData.location}
-                          className="bg-muted border-border"
+                        <LocationAutocomplete
+                          value={editLocation}
+                          onChange={setEditLocation}
                         />
                       </div>
                       <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
