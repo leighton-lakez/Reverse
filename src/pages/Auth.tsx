@@ -70,8 +70,9 @@ export default function Auth() {
         if (error) throw error;
         toast({
           title: "Account created!",
-          description: "Welcome to Design-Up!",
+          description: "Let's complete your profile.",
         });
+        navigate("/profile-setup");
       }
     } catch (error: any) {
       toast({

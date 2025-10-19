@@ -82,6 +82,18 @@ const Index = () => {
       setUser(session?.user ?? null);
       if (!session) {
         navigate("/auth");
+        return;
+      }
+
+      // Check if profile is complete
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("display_name, location")
+        .eq("id", session.user.id)
+        .single();
+
+      if (!profile?.display_name || !profile?.location) {
+        navigate("/profile-setup");
       }
     });
 
