@@ -301,7 +301,8 @@ const Chat = () => {
                 <img 
                   src={message.imageUrl} 
                   alt="Shared image" 
-                  className="rounded-lg max-w-full h-auto mb-2"
+                  className="rounded-lg max-w-[200px] max-h-[200px] object-cover mb-2 cursor-pointer hover:opacity-90 transition-opacity"
+                  onClick={() => window.open(message.imageUrl, '_blank')}
                 />
               ) : null}
               <p className="text-sm">{message.text}</p>
