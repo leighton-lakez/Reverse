@@ -175,7 +175,7 @@ const ItemDetail = () => {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => navigate("/profile")}
+                  onClick={() => navigate(`/user/${item.user_id}`)}
                   className="border-primary text-primary hover:bg-primary/10 text-xs h-8"
                 >
                   View Profile
