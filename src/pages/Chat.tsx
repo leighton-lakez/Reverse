@@ -127,6 +127,18 @@ const Chat = () => {
         return;
       }
 
+      // Optimistically add message to UI immediately
+      const optimisticMessage = {
+        id: Date.now(),
+        text: validationResult.data.content,
+        sender: "me" as const,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      };
+      
+      setMessages(prev => [...prev, optimisticMessage]);
+      setNewMessage("");
+
+      // Then send to database
       const { error } = await supabase
         .from("messages")
         .insert({
@@ -137,13 +149,14 @@ const Chat = () => {
         });
 
       if (error) throw error;
-      setNewMessage("");
     } catch (error: any) {
       toast({
         title: "Error",
         description: getUserFriendlyError(error),
         variant: "destructive",
       });
+      // Optionally remove the optimistic message on error
+      setMessages(prev => prev.filter(m => m.id !== Date.now()));
     }
   };
 
