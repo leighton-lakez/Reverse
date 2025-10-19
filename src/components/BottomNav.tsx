@@ -34,7 +34,10 @@ const BottomNav = () => {
           
           <Button
             variant="ghost"
-            className="flex flex-col items-center gap-1 h-auto py-2 hover:text-primary hover:bg-primary/10"
+            onClick={() => navigate("/notifications")}
+            className={`flex flex-col items-center gap-1 h-auto py-2 hover:text-primary hover:bg-primary/10 ${
+              location.pathname === "/notifications" ? "text-primary" : ""
+            }`}
           >
             <Bell className="h-6 w-6" />
             <span className="text-xs font-medium">Notifications</span>
