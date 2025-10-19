@@ -21,6 +21,7 @@ import { toast } from "@/hooks/use-toast";
 import BottomNav from "@/components/BottomNav";
 import LocationAutocomplete from "@/components/LocationAutocomplete";
 import { supabase } from "@/integrations/supabase/client";
+import { getUserFriendlyError } from "@/lib/errorHandler";
 
 const myListings = [
   {
@@ -144,7 +145,7 @@ const Profile = () => {
     } catch (error: any) {
       toast({
         title: "Error",
-        description: error.message,
+        description: getUserFriendlyError(error),
         variant: "destructive",
       });
     }

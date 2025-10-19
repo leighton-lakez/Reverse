@@ -4,14 +4,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "@/hooks/use-toast";
+import { getUserFriendlyError } from "@/lib/errorHandler";
 
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [rememberMe, setRememberMe] = useState(true);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -46,14 +45,6 @@ export default function Auth() {
 
         if (error) throw error;
         
-        // Store session persistence preference
-        if (rememberMe) {
-          localStorage.setItem('rememberMe', 'true');
-        } else {
-          sessionStorage.setItem('tempSession', 'true');
-          localStorage.removeItem('rememberMe');
-        }
-        
         toast({
           title: "Welcome back!",
           description: "You've successfully logged in.",
@@ -77,7 +68,7 @@ export default function Auth() {
     } catch (error: any) {
       toast({
         title: "Error",
-        description: error.message,
+        description: getUserFriendlyError(error),
         variant: "destructive",
       });
     } finally {
@@ -123,21 +114,6 @@ export default function Auth() {
             />
           </div>
 
-          {isLogin && (
-            <div className="flex items-center space-x-2">
-              <Checkbox 
-                id="rememberMe" 
-                checked={rememberMe}
-                onCheckedChange={(checked) => setRememberMe(checked as boolean)}
-              />
-              <Label 
-                htmlFor="rememberMe" 
-                className="text-sm font-normal cursor-pointer"
-              >
-                Remember me
-              </Label>
-            </div>
-          )}
 
           <Button type="submit" className="w-full" disabled={loading}>
             {loading ? "Loading..." : isLogin ? "Sign In" : "Sign Up"}

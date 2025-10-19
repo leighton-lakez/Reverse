@@ -68,17 +68,6 @@ const Index = () => {
   useEffect(() => {
     // Check auth status
     supabase.auth.getSession().then(async ({ data: { session } }) => {
-      // Check if session should persist based on "remember me" preference
-      const rememberMe = localStorage.getItem('rememberMe');
-      const tempSession = sessionStorage.getItem('tempSession');
-      
-      if (session && !rememberMe && !tempSession) {
-        // User had a session but didn't check "remember me" and browser was closed
-        await supabase.auth.signOut();
-        navigate("/auth");
-        return;
-      }
-      
       setUser(session?.user ?? null);
       if (!session) {
         navigate("/auth");
@@ -90,7 +79,7 @@ const Index = () => {
         .from("profiles")
         .select("display_name, location")
         .eq("id", session.user.id)
-        .single();
+        .maybeSingle();
 
       if (!profile?.display_name || !profile?.location) {
         navigate("/profile-setup");

@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/card";
 import BottomNav from "@/components/BottomNav";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { getUserFriendlyError } from "@/lib/errorHandler";
 
 interface Message {
   id: number;
@@ -122,7 +123,7 @@ const Chat = () => {
     } catch (error: any) {
       toast({
         title: "Error",
-        description: "Failed to send message",
+        description: getUserFriendlyError(error),
         variant: "destructive",
       });
     }

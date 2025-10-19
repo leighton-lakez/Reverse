@@ -16,6 +16,7 @@ import { toast } from "@/hooks/use-toast";
 import BottomNav from "@/components/BottomNav";
 import { supabase } from "@/integrations/supabase/client";
 import LocationAutocomplete from "@/components/LocationAutocomplete";
+import { getUserFriendlyError } from "@/lib/errorHandler";
 
 const Sell = () => {
   const navigate = useNavigate();
@@ -82,7 +83,7 @@ const Sell = () => {
     } catch (error: any) {
       toast({
         title: "Error",
-        description: error.message,
+        description: getUserFriendlyError(error),
         variant: "destructive",
       });
     } finally {
