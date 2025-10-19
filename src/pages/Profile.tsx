@@ -291,7 +291,11 @@ const Profile = () => {
             ) : activeListings.length > 0 ? (
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                 {activeListings.map((item) => (
-                  <Card key={item.id} className="group overflow-hidden border-border hover:shadow-[var(--shadow-glow)] transition-all">
+                  <Card 
+                    key={item.id} 
+                    className="group overflow-hidden border-border hover:shadow-[var(--shadow-glow)] transition-all cursor-pointer"
+                    onClick={() => navigate(`/edit-listing/${item.id}`)}
+                  >
                     <div className="relative aspect-square overflow-hidden bg-muted">
                       <img
                         src={item.images?.[0] || "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800&auto=format&fit=crop"}
@@ -327,7 +331,11 @@ const Profile = () => {
             {soldListings.length > 0 ? (
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                 {soldListings.map((item) => (
-                  <Card key={item.id} className="overflow-hidden border-border opacity-75">
+                  <Card 
+                    key={item.id} 
+                    className="overflow-hidden border-border opacity-75 cursor-pointer hover:opacity-90 transition-opacity"
+                    onClick={() => navigate(`/edit-listing/${item.id}`)}
+                  >
                     <div className="relative aspect-square overflow-hidden bg-muted">
                       <img
                         src={item.images?.[0] || "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800&auto=format&fit=crop"}

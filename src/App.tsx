@@ -13,6 +13,7 @@ import Checkout from "./pages/Checkout";
 import Chat from "./pages/Chat";
 import Auth from "./pages/Auth";
 import ProfileSetup from "./pages/ProfileSetup";
+import EditListing from "./pages/EditListing";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -34,6 +35,7 @@ const App = () => (
           <Route path="/chat" element={<Chat />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/profile-setup" element={<ProfileSetup />} />
+          <Route path="/edit-listing/:id" element={<EditListing />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
