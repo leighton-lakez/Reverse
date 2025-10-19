@@ -2,6 +2,7 @@ import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import ItemCard from "@/components/ItemCard";
 import BottomNav from "@/components/BottomNav";
+import { useState } from "react";
 
 const mockItems = [
   {
@@ -55,6 +56,14 @@ const mockItems = [
 ];
 
 const Index = () => {
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredItems = mockItems.filter(item =>
+    item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    item.condition.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    item.location.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <div className="min-h-screen bg-background pb-24">
       {/* Header */}
@@ -71,6 +80,8 @@ const Index = () => {
             <Input
               placeholder="Search designer items..."
               className="pl-10 bg-muted border-border"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
         </div>
@@ -83,13 +94,20 @@ const Index = () => {
           <p className="text-muted-foreground">Discover luxury pieces from your community</p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {mockItems.map((item, index) => (
-            <div key={item.id} style={{ animationDelay: `${index * 0.1}s` }}>
-              <ItemCard {...item} />
-            </div>
-          ))}
-        </div>
+        {filteredItems.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredItems.map((item, index) => (
+              <div key={item.id} style={{ animationDelay: `${index * 0.1}s` }}>
+                <ItemCard {...item} />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-12">
+            <p className="text-xl text-muted-foreground">No products found</p>
+            <p className="text-sm text-muted-foreground mt-2">Try searching with different keywords</p>
+          </div>
+        )}
       </main>
 
       {/* Bottom Navigation */}
