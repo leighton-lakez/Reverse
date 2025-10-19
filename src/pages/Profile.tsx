@@ -74,19 +74,9 @@ const Profile = () => {
     <div className="min-h-screen bg-background pb-24">
       {/* Header */}
       <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-lg border-b border-border">
-        <div className="max-w-7xl mx-auto px-4 py-4">
+        <div className="max-w-7xl mx-auto px-4 py-2">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => navigate("/")}
-                className="hover:bg-muted"
-              >
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
-              <h1 className="text-2xl font-bold text-foreground">Profile</h1>
-            </div>
+            <h1 className="text-xl font-bold text-foreground">Profile</h1>
             <Button variant="ghost" size="icon" className="hover:bg-muted">
               <Settings className="h-5 w-5" />
             </Button>
@@ -94,43 +84,36 @@ const Profile = () => {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 py-6">
+      <main className="max-w-7xl mx-auto px-4 py-3">
         {/* Profile Header */}
-        <Card className="p-6 mb-6 animate-fade-in border-border">
-          <div className="flex flex-col md:flex-row gap-6">
-            <Avatar className="h-24 w-24 border-4 border-primary">
+        <Card className="p-4 mb-3 animate-fade-in border-border">
+          <div className="flex items-center gap-4">
+            <Avatar className="h-16 w-16 border-2 border-primary flex-shrink-0">
               <AvatarImage src={profileData.avatar} />
               <AvatarFallback>{profileData.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
             </Avatar>
             
-            <div className="flex-1 space-y-4">
-              <div className="flex items-start justify-between">
-                <div>
-                  <h2 className="text-2xl font-bold text-foreground mb-1">{profileData.name}</h2>
-                  <div className="flex items-center gap-4 text-sm text-muted-foreground mb-2">
+            <div className="flex-1 min-w-0">
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex-1 min-w-0">
+                  <h2 className="text-lg font-bold text-foreground truncate">{profileData.name}</h2>
+                  <div className="flex items-center gap-3 text-xs text-muted-foreground">
                     <div className="flex items-center gap-1">
-                      <MapPin className="h-4 w-4" />
-                      <span>{profileData.location}</span>
+                      <MapPin className="h-3 w-3" />
+                      <span className="truncate">{profileData.location}</span>
                     </div>
                     <div className="flex items-center gap-1">
-                      <Calendar className="h-4 w-4" />
-                      <span>Joined Dec 2024</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="flex items-center gap-1">
-                      <Star className="h-4 w-4 fill-primary text-primary" />
+                      <Star className="h-3 w-3 fill-primary text-primary" />
                       <span className="font-semibold text-foreground">4.9</span>
-                      <span className="text-sm text-muted-foreground">(127 reviews)</span>
                     </div>
                   </div>
                 </div>
                 
                 <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
                   <DialogTrigger asChild>
-                    <Button variant="outline" size="sm" className="gap-2">
-                      <Edit2 className="h-4 w-4" />
-                      Edit Profile
+                    <Button variant="outline" size="sm" className="gap-1 flex-shrink-0">
+                      <Edit2 className="h-3 w-3" />
+                      <span className="hidden sm:inline">Edit</span>
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="bg-card border-border">
@@ -176,36 +159,36 @@ const Profile = () => {
                   </DialogContent>
                 </Dialog>
               </div>
-              
-              <p className="text-foreground">{profileData.bio}</p>
-              
-              <div className="grid grid-cols-3 gap-4 pt-4 border-t border-border">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-foreground">{myListings.length}</div>
-                  <div className="text-sm text-muted-foreground">Listings</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-foreground">1</div>
-                  <div className="text-sm text-muted-foreground">Sold</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-foreground">23</div>
-                  <div className="text-sm text-muted-foreground">Followers</div>
-                </div>
-              </div>
+            </div>
+          </div>
+          
+          <p className="text-sm text-foreground mt-2 line-clamp-2">{profileData.bio}</p>
+          
+          <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-border">
+            <div className="text-center">
+              <div className="text-lg font-bold text-foreground">{myListings.length}</div>
+              <div className="text-xs text-muted-foreground">Listings</div>
+            </div>
+            <div className="text-center">
+              <div className="text-lg font-bold text-foreground">1</div>
+              <div className="text-xs text-muted-foreground">Sold</div>
+            </div>
+            <div className="text-center">
+              <div className="text-lg font-bold text-foreground">23</div>
+              <div className="text-xs text-muted-foreground">Followers</div>
             </div>
           </div>
         </Card>
 
         {/* Listings Tabs */}
         <Tabs defaultValue="active" className="animate-fade-in" style={{ animationDelay: "0.1s" }}>
-          <TabsList className="grid w-full grid-cols-2 mb-6">
-            <TabsTrigger value="active">Active Listings</TabsTrigger>
-            <TabsTrigger value="sold">Sold Items</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-2 mb-3">
+            <TabsTrigger value="active" className="text-sm">Active</TabsTrigger>
+            <TabsTrigger value="sold" className="text-sm">Sold</TabsTrigger>
           </TabsList>
           
           <TabsContent value="active">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
               {myListings.filter(item => item.status === "Active").map((item) => (
                 <Card key={item.id} className="group overflow-hidden border-border hover:shadow-[var(--shadow-glow)] transition-all">
                   <div className="relative aspect-square overflow-hidden">
@@ -214,23 +197,17 @@ const Profile = () => {
                       alt={item.title}
                       className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
                     />
-                    <Badge className="absolute top-2 right-2 bg-primary text-primary-foreground">
+                    <Badge className="absolute top-1 right-1 text-xs bg-primary text-primary-foreground">
                       {item.status}
                     </Badge>
                   </div>
                   
-                  <div className="p-4 space-y-2">
+                  <div className="p-2 space-y-1">
+                    <h3 className="font-semibold text-xs text-foreground line-clamp-1">{item.title}</h3>
                     <div className="flex items-center justify-between">
-                      <h3 className="font-semibold text-foreground line-clamp-1">{item.title}</h3>
-                      <Package className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm font-bold text-primary">${item.price}</span>
+                      <Badge variant="outline" className="text-[10px] px-1 py-0">{item.condition}</Badge>
                     </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-xl font-bold text-primary">${item.price}</span>
-                      <Badge variant="outline" className="text-xs">{item.condition}</Badge>
-                    </div>
-                    <Button variant="outline" className="w-full" size="sm">
-                      Edit Listing
-                    </Button>
                   </div>
                 </Card>
               ))}
@@ -238,7 +215,7 @@ const Profile = () => {
           </TabsContent>
           
           <TabsContent value="sold">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
               {myListings.filter(item => item.status === "Sold").map((item) => (
                 <Card key={item.id} className="overflow-hidden border-border opacity-75">
                   <div className="relative aspect-square overflow-hidden">
@@ -247,16 +224,16 @@ const Profile = () => {
                       alt={item.title}
                       className="h-full w-full object-cover grayscale"
                     />
-                    <Badge className="absolute top-2 right-2 bg-secondary text-secondary-foreground">
+                    <Badge className="absolute top-1 right-1 text-xs bg-secondary text-secondary-foreground">
                       Sold
                     </Badge>
                   </div>
                   
-                  <div className="p-4 space-y-2">
-                    <h3 className="font-semibold text-foreground line-clamp-1">{item.title}</h3>
+                  <div className="p-2 space-y-1">
+                    <h3 className="font-semibold text-xs text-foreground line-clamp-1">{item.title}</h3>
                     <div className="flex items-center justify-between">
-                      <span className="text-xl font-bold text-foreground">${item.price}</span>
-                      <Badge variant="outline" className="text-xs">{item.condition}</Badge>
+                      <span className="text-sm font-bold text-foreground">${item.price}</span>
+                      <Badge variant="outline" className="text-[10px] px-1 py-0">{item.condition}</Badge>
                     </div>
                   </div>
                 </Card>
