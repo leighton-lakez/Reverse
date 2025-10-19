@@ -87,3 +87,38 @@ export const authSchema = z.object({
     .min(8, 'Password must be at least 8 characters')
     .max(128, 'Password must be less than 128 characters'),
 });
+
+// Checkout validation
+export const checkoutSchema = z.object({
+  firstName: z.string()
+    .trim()
+    .min(1, 'First name is required')
+    .max(50, 'First name must be less than 50 characters')
+    .regex(/^[a-zA-Z\s-]+$/, 'First name can only contain letters, spaces, and hyphens'),
+  
+  lastName: z.string()
+    .trim()
+    .min(1, 'Last name is required')
+    .max(50, 'Last name must be less than 50 characters')
+    .regex(/^[a-zA-Z\s-]+$/, 'Last name can only contain letters, spaces, and hyphens'),
+  
+  address: z.string()
+    .trim()
+    .min(5, 'Address must be at least 5 characters')
+    .max(200, 'Address must be less than 200 characters'),
+  
+  city: z.string()
+    .trim()
+    .min(2, 'City must be at least 2 characters')
+    .max(100, 'City must be less than 100 characters')
+    .regex(/^[a-zA-Z\s-]+$/, 'City can only contain letters, spaces, and hyphens'),
+  
+  state: z.string()
+    .trim()
+    .min(2, 'State is required')
+    .max(50, 'State must be less than 50 characters'),
+  
+  zip: z.string()
+    .trim()
+    .regex(/^\d{5}(-\d{4})?$/, 'ZIP code must be in format 12345 or 12345-6789'),
+});

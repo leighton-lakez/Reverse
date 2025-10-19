@@ -21,7 +21,8 @@ import { itemSchema } from "@/lib/validationSchemas";
 
 const Sell = () => {
   const navigate = useNavigate();
-  const [images, setImages] = useState<string[]>([]);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [location, setLocation] = useState("");
   const [category, setCategory] = useState("");
   const [condition, setCondition] = useState("");
@@ -43,13 +44,18 @@ const Sell = () => {
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files) {
-      const newImages = Array.from(files).map((file) => URL.createObjectURL(file));
-      setImages([...images, ...newImages]);
+      const newFiles = Array.from(files);
+      const newPreviews = newFiles.map((file) => URL.createObjectURL(file));
+      setImageFiles([...imageFiles, ...newFiles]);
+      setImagePreviews([...imagePreviews, ...newPreviews]);
     }
   };
 
   const removeImage = (index: number) => {
-    setImages(images.filter((_, i) => i !== index));
+    // Revoke the object URL to free memory
+    URL.revokeObjectURL(imagePreviews[index]);
+    setImageFiles(imageFiles.filter((_, i) => i !== index));
+    setImagePreviews(imagePreviews.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -83,6 +89,30 @@ const Sell = () => {
         return;
       }
 
+      // Upload images to storage bucket
+      const uploadedImageUrls: string[] = [];
+      
+      for (const file of imageFiles) {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${userId}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+        
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('item-images')
+          .upload(fileName, file);
+
+        if (uploadError) {
+          console.error('Error uploading image:', uploadError);
+          throw new Error('Failed to upload images');
+        }
+
+        // Get public URL for the uploaded image
+        const { data: { publicUrl } } = supabase.storage
+          .from('item-images')
+          .getPublicUrl(uploadData.path);
+        
+        uploadedImageUrls.push(publicUrl);
+      }
+
       const { error } = await supabase.from("items").insert({
         user_id: userId,
         title: validationResult.data.title,
@@ -94,7 +124,7 @@ const Sell = () => {
         location: validationResult.data.location,
         size: validationResult.data.size,
         trade_preference: tradePreference,
-        images: images,
+        images: uploadedImageUrls,
       });
 
       if (error) throw error;
@@ -131,9 +161,9 @@ const Sell = () => {
           <div className="space-y-2">
             <Label className="text-sm font-semibold">Photos</Label>
             <div className="grid grid-cols-4 gap-2">
-              {images.map((image, index) => (
+              {imagePreviews.map((preview, index) => (
                 <div key={index} className="relative aspect-square rounded-md overflow-hidden group">
-                  <img src={image} alt={`Upload ${index + 1}`} className="w-full h-full object-cover" />
+                  <img src={preview} alt={`Upload ${index + 1}`} className="w-full h-full object-cover" />
                   <Button
                     type="button"
                     variant="destructive"

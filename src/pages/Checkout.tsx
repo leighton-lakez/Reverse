@@ -9,6 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import BottomNav from "@/components/BottomNav";
 import { supabase } from "@/integrations/supabase/client";
+import { checkoutSchema } from "@/lib/validationSchemas";
 
 const Checkout = () => {
   const navigate = useNavigate();
@@ -49,14 +50,27 @@ const Checkout = () => {
     
     try {
       const formData = new FormData(e.currentTarget);
-      const shippingAddress = {
-        firstName: formData.get('firstName'),
-        lastName: formData.get('lastName'),
-        address: formData.get('address'),
-        city: formData.get('city'),
-        state: formData.get('state'),
-        zip: formData.get('zip'),
+      
+      // Validate shipping address input
+      const validationData = {
+        firstName: formData.get('firstName') as string,
+        lastName: formData.get('lastName') as string,
+        address: formData.get('address') as string,
+        city: formData.get('city') as string,
+        state: formData.get('state') as string,
+        zip: formData.get('zip') as string,
       };
+
+      const validationResult = checkoutSchema.safeParse(validationData);
+
+      if (!validationResult.success) {
+        const firstError = validationResult.error.errors[0];
+        toast.error(firstError.message);
+        setLoading(false);
+        return;
+      }
+
+      const shippingAddress = validationResult.data;
 
       // Create transaction record
       const { error: transactionError } = await supabase

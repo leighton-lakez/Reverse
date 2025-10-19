@@ -1,26 +1,66 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ArrowLeft, MapPin, Heart, Share2, ShieldCheck } from "lucide-react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import BottomNav from "@/components/BottomNav";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const ItemDetail = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const item = location.state?.item || {};
+  const params = useParams();
+  const [item, setItem] = useState<any>(location.state?.item || null);
   const [liked, setLiked] = useState(false);
+  const [loading, setLoading] = useState(!location.state?.item);
 
-  const seller = {
-    name: "Sarah Chen",
-    avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150",
-    rating: 4.9,
-    reviews: 87,
-    verified: true
-  };
+  useEffect(() => {
+    // Fetch real item data with seller information from database
+    const fetchItemDetails = async () => {
+      if (location.state?.item?.id) {
+        // If we have item data from navigation state, fetch fresh data with seller info
+        const itemId = location.state.item.id;
+        
+        const { data, error } = await supabase
+          .from('items')
+          .select(`
+            *,
+            seller:profiles!items_user_id_fkey(id, display_name, avatar_url)
+          `)
+          .eq('id', itemId)
+          .single();
+
+        if (error) {
+          console.error('Error fetching item:', error);
+          toast.error('Failed to load item details');
+          navigate('/');
+          return;
+        }
+
+        setItem(data);
+        setLoading(false);
+      } else {
+        toast.error('Item not found');
+        navigate('/');
+      }
+    };
+
+    fetchItemDetails();
+  }, [location.state?.item, navigate]);
+
+  if (loading || !item) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <p className="text-muted-foreground">Loading...</p>
+      </div>
+    );
+  }
+
+  const seller = item.seller || { display_name: 'Unknown Seller', avatar_url: null };
 
   return (
     <div className="min-h-screen bg-background pb-24">
@@ -110,19 +150,16 @@ const ItemDetail = () => {
             <Card className="p-3 border-border bg-gradient-to-br from-muted/50 to-muted/30">
               <div className="flex items-center gap-3">
                 <Avatar className="h-10 w-10 border-2 border-primary">
-                  <AvatarImage src={seller.avatar} />
-                  <AvatarFallback>{seller.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                  <AvatarImage src={seller.avatar_url || undefined} />
+                  <AvatarFallback>
+                    {seller.display_name ? seller.display_name.split(' ').map((n: string) => n[0]).join('') : 'U'}
+                  </AvatarFallback>
                 </Avatar>
                 <div className="flex-1">
                   <div className="flex items-center gap-1.5">
-                    <h4 className="font-semibold text-foreground text-sm">{seller.name}</h4>
-                    {seller.verified && (
-                      <ShieldCheck className="h-3 w-3 text-primary" />
-                    )}
+                    <h4 className="font-semibold text-foreground text-sm">{seller.display_name || 'Seller'}</h4>
                   </div>
-                  <p className="text-xs text-muted-foreground">
-                    ⭐ {seller.rating} ({seller.reviews} reviews)
-                  </p>
+                  <p className="text-xs text-muted-foreground">View profile for reviews</p>
                 </div>
                 <Button
                   variant="outline"
