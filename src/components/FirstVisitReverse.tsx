@@ -16,11 +16,11 @@ const FirstVisitReverse = () => {
       // Trigger animation after a brief delay
       setTimeout(() => setAnimate(true), 100);
 
-      // Hide after 3 seconds
+      // Hide after 4 seconds to give users more time to enjoy the animation
       const timer = setTimeout(() => {
         setShow(false);
         localStorage.setItem("hasVisitedBefore", "true");
-      }, 3500);
+      }, 4000);
 
       return () => clearTimeout(timer);
     }
