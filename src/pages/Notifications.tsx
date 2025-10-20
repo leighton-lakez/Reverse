@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import BottomNav from "@/components/BottomNav";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
 
 // Friends Section Component
 const FriendsSection = ({ currentUserId }: { currentUserId: string }) => {
@@ -103,6 +104,10 @@ const Notifications = () => {
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session) {
+        toast({
+          title: "Sign in required",
+          description: "Please sign in to view notifications",
+        });
         navigate("/auth");
         return;
       }

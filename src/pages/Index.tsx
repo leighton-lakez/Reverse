@@ -36,47 +36,46 @@ const Index = () => {
     // Check auth status
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       setUser(session?.user ?? null);
-      if (!session) {
-        navigate("/auth");
-        return;
-      }
 
-      // Check if profile is complete
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("display_name, location")
-        .eq("id", session.user.id)
-        .maybeSingle();
+      if (session) {
+        // Check if profile is complete
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("display_name, location")
+          .eq("id", session.user.id)
+          .maybeSingle();
 
-      if (!profile?.display_name || !profile?.location) {
-        navigate("/profile-setup");
+        if (!profile?.display_name || !profile?.location) {
+          navigate("/profile-setup");
+        }
       }
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null);
-      if (!session) {
-        navigate("/auth");
-      }
     });
 
     return () => subscription.unsubscribe();
   }, [navigate]);
 
   useEffect(() => {
-    if (user) {
-      fetchItems();
-    }
+    fetchItems();
   }, [user]);
 
   const fetchItems = async () => {
     setLoading(true);
-    const { data, error } = await supabase
+    let query = supabase
       .from("items")
       .select("*")
       .eq("status", "available")
-      .neq("user_id", user.id) // Don't show user's own items
       .order("created_at", { ascending: false });
+
+    // If user is logged in, don't show their own items
+    if (user) {
+      query = query.neq("user_id", user.id);
+    }
+
+    const { data, error } = await query;
 
     if (!error && data) {
       setItems(data);
@@ -86,7 +85,11 @@ const Index = () => {
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
-    navigate("/auth");
+    toast({
+      title: "Signed out",
+      description: "You've been signed out successfully",
+    });
+    // Stay on browse page after sign out
   };
 
   const sendInterestedMessage = async (item: Item) => {
@@ -120,6 +123,17 @@ const Index = () => {
     if (currentIndex >= items.length) return;
 
     const currentItem = items[currentIndex];
+
+    // If swiping right and user not authenticated, redirect to auth
+    if (direction === "right" && !user) {
+      toast({
+        title: "Sign in required",
+        description: "Please sign in to message sellers",
+      });
+      navigate("/auth");
+      return;
+    }
+
     setSwipeDirection(direction);
 
     // If swiping right, send message
@@ -229,15 +243,25 @@ const Index = () => {
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tighter text-gradient">
               DesignX
             </h1>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleSignOut}
-              title="Sign out"
-              className="hover:bg-primary/10 transition-all h-9 w-9 sm:h-10 sm:w-10"
-            >
-              <LogOut className="h-4 w-4 sm:h-5 sm:w-5" />
-            </Button>
+            {user ? (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleSignOut}
+                title="Sign out"
+                className="hover:bg-primary/10 transition-all h-9 w-9 sm:h-10 sm:w-10"
+              >
+                <LogOut className="h-4 w-4 sm:h-5 sm:w-5" />
+              </Button>
+            ) : (
+              <Button
+                variant="default"
+                onClick={() => navigate("/auth")}
+                className="h-9 sm:h-10 text-xs sm:text-sm gradient-primary"
+              >
+                Sign In
+              </Button>
+            )}
           </div>
         </div>
       </header>

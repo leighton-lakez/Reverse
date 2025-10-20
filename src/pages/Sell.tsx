@@ -77,6 +77,10 @@ const Sell = () => {
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session) {
+        toast({
+          title: "Sign in required",
+          description: "Please sign in to list items for sale",
+        });
         navigate("/auth");
       } else {
         setUserId(session.user.id);

@@ -71,6 +71,10 @@ const Profile = () => {
     // Check auth status
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (!session) {
+        toast({
+          title: "Sign in required",
+          description: "Please sign in to view your profile",
+        });
         navigate("/auth");
       } else {
         setUser(session.user);

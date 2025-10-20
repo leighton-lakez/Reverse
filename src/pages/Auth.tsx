@@ -9,6 +9,7 @@ import { toast } from "@/hooks/use-toast";
 import { getUserFriendlyError } from "@/lib/errorHandler";
 import { authSchema } from "@/lib/validationSchemas";
 import { createClient } from "@supabase/supabase-js";
+import { X } from "lucide-react";
 
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
@@ -128,7 +129,18 @@ export default function Auth() {
   };
 
   return (
-    <div className="min-h-screen bg-background gradient-mesh flex items-center justify-center px-4 sm:px-6">
+    <div className="min-h-screen bg-background gradient-mesh flex items-center justify-center px-4 sm:px-6 relative">
+      {/* Skip button */}
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={() => navigate("/")}
+        className="absolute top-4 right-4 hover:bg-primary/10 transition-all h-10 w-10"
+        title="Browse without signing in"
+      >
+        <X className="h-5 w-5" />
+      </Button>
+
       <div className="w-full max-w-md space-y-6 sm:space-y-8">
         <div className="text-center">
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tighter text-gradient mb-3 sm:mb-4">
