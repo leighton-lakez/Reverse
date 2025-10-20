@@ -10,6 +10,7 @@ import { getUserFriendlyError } from "@/lib/errorHandler";
 import { authSchema } from "@/lib/validationSchemas";
 import { createClient } from "@supabase/supabase-js";
 import { X } from "lucide-react";
+import { ReverseIcon } from "@/components/ReverseIcon";
 
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
@@ -143,9 +144,12 @@ export default function Auth() {
 
       <div className="w-full max-w-md space-y-6 sm:space-y-8">
         <div className="text-center">
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tighter text-gradient mb-3 sm:mb-4">
-            REVERSE
-          </h1>
+          <div className="flex items-center justify-center gap-3 sm:gap-4 mb-3 sm:mb-4">
+            <ReverseIcon className="w-12 h-12 sm:w-16 sm:h-16" />
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tighter text-gradient">
+              REVERSE
+            </h1>
+          </div>
           <p className="text-base sm:text-lg text-muted-foreground px-2">
             {isLogin ? "Welcome back to luxury fashion" : "Discover authentic luxury"}
           </p>

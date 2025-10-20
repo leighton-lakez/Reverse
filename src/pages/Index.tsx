@@ -1,5 +1,6 @@
 import { LogOut, X, Heart, RotateCcw } from "lucide-react";
 import BottomNav from "@/components/BottomNav";
+import { ReverseIcon } from "@/components/ReverseIcon";
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -240,9 +241,12 @@ const Index = () => {
       <header className="sticky top-0 z-50 glass">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4">
           <div className="flex items-center justify-between">
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tighter text-gradient">
-              REVERSE
-            </h1>
+            <div className="flex items-center gap-2 sm:gap-3">
+              <ReverseIcon className="w-8 h-8 sm:w-10 sm:h-10" />
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tighter text-gradient">
+                REVERSE
+              </h1>
+            </div>
             {user ? (
               <Button
                 variant="ghost"
