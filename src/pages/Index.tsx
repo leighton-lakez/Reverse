@@ -125,32 +125,23 @@ const Index = () => {
 
     const currentItem = items[currentIndex];
 
-    // If swiping right and user not authenticated, redirect to auth
-    if (direction === "right" && !user) {
-      toast({
-        title: "Sign in required",
-        description: "Please sign in to message sellers",
-      });
-      navigate("/auth");
-      return;
-    }
-
     setSwipeDirection(direction);
 
-    // If swiping right, send message
+    // If swiping right, navigate to product detail page
     if (direction === "right") {
-      await sendInterestedMessage(currentItem);
+      // Navigate to item detail page with item data
+      navigate("/item-detail", { state: { item: currentItem } });
     } else {
       // If swiping left, add to skipped items
       setSkippedItems([...skippedItems, currentItem]);
-    }
 
-    // Wait for animation to complete
-    setTimeout(() => {
-      setCurrentIndex(currentIndex + 1);
-      setSwipeDirection(null);
-      setDragOffset({ x: 0, y: 0 });
-    }, 300);
+      // Wait for animation to complete
+      setTimeout(() => {
+        setCurrentIndex(currentIndex + 1);
+        setSwipeDirection(null);
+        setDragOffset({ x: 0, y: 0 });
+      }, 300);
+    }
   };
 
   const handleUndo = () => {

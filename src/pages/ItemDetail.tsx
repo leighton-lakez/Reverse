@@ -137,7 +137,7 @@ const ItemDetail = () => {
                 <div>
                   <h3 className="text-sm font-semibold text-foreground mb-2">Description</h3>
                   <p className="text-xs text-muted-foreground leading-relaxed">
-                    Authentic designer piece in excellent condition. Carefully maintained, smoke-free home. Includes original packaging.
+                    {item.description || "No description provided."}
                   </p>
                 </div>
                 <div>
@@ -145,12 +145,24 @@ const ItemDetail = () => {
                   <div className="grid grid-cols-2 gap-2">
                     <div>
                       <span className="text-[10px] text-muted-foreground uppercase">Brand</span>
-                      <p className="text-xs text-foreground font-semibold">{item.title?.split(' ')[0]}</p>
+                      <p className="text-xs text-foreground font-semibold">{item.brand || 'N/A'}</p>
                     </div>
                     <div>
                       <span className="text-[10px] text-muted-foreground uppercase">Category</span>
-                      <p className="text-xs text-foreground font-semibold">Accessories</p>
+                      <p className="text-xs text-foreground font-semibold">{item.category || 'N/A'}</p>
                     </div>
+                    {item.size && (
+                      <div>
+                        <span className="text-[10px] text-muted-foreground uppercase">Size</span>
+                        <p className="text-xs text-foreground font-semibold">{item.size}</p>
+                      </div>
+                    )}
+                    {item.trade_preference && (
+                      <div>
+                        <span className="text-[10px] text-muted-foreground uppercase">Trade</span>
+                        <p className="text-xs text-foreground font-semibold">{item.trade_preference}</p>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
