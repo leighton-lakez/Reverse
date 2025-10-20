@@ -331,7 +331,16 @@ Create a `.env` file in the root:
 ```env
 VITE_SUPABASE_URL=https://[your-project-id].supabase.co
 VITE_SUPABASE_PUBLISHABLE_KEY=your_anon_key_here
+VITE_STRIPE_PUBLISHABLE_KEY=pk_test_your_stripe_publishable_key_here
 ```
+
+**Stripe Setup:**
+1. Create a Stripe account at https://stripe.com
+2. Get your publishable key from https://dashboard.stripe.com/apikeys
+3. Add your secret key to Supabase secrets:
+   ```bash
+   supabase secrets set STRIPE_SECRET_KEY=sk_test_your_secret_key_here
+   ```
 
 ### 4. Set Up Supabase Database
 Go to your Supabase SQL Editor and run the complete database setup (see Database Schema section above).
@@ -348,13 +357,24 @@ Go to your Supabase SQL Editor and run the complete database setup (see Database
 - Go to Authentication → Providers → Email
 - Make sure it's enabled
 
-### 6. Start Development Server
+### 6. Deploy Supabase Edge Functions
+Deploy the Stripe checkout session Edge Function:
+```bash
+supabase functions deploy create-checkout-session
+```
+
+Set the Stripe secret key in Supabase:
+```bash
+supabase secrets set STRIPE_SECRET_KEY=sk_test_your_secret_key_here
+```
+
+### 7. Start Development Server
 ```bash
 npm run dev
 ```
 Server runs at: `http://localhost:8080`
 
-### 7. Run Tests (Optional)
+### 8. Run Tests (Optional)
 ```bash
 npm run test           # Run all tests
 npm run test:ui        # Interactive UI mode
@@ -380,6 +400,7 @@ npm run test:headed    # See browser
    ```
    VITE_SUPABASE_URL = https://[your-project-id].supabase.co
    VITE_SUPABASE_PUBLISHABLE_KEY = your_anon_key
+   VITE_STRIPE_PUBLISHABLE_KEY = pk_test_your_stripe_key
    ```
 
 4. **Deploy**

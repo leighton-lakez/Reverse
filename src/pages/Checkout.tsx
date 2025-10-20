@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ArrowLeft, Lock } from "lucide-react";
+import { ArrowLeft, Lock, CreditCard } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import BottomNav from "@/components/BottomNav";
 import { supabase } from "@/integrations/supabase/client";
 import { checkoutSchema } from "@/lib/validationSchemas";
+import { getStripe } from "@/lib/stripe";
 
 const Checkout = () => {
   const navigate = useNavigate();
@@ -34,7 +35,7 @@ const Checkout = () => {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    
+
     if (!userId) {
       toast.error("Authentication required");
       navigate('/auth');
@@ -47,10 +48,10 @@ const Checkout = () => {
     }
 
     setLoading(true);
-    
+
     try {
       const formData = new FormData(e.currentTarget);
-      
+
       // Validate shipping address input
       const validationData = {
         firstName: formData.get('firstName') as string,
@@ -70,36 +71,40 @@ const Checkout = () => {
         return;
       }
 
-      const shippingAddress = validationResult.data;
+      // Call Supabase Edge Function to create Stripe checkout session
+      const { data: { session: authSession } } = await supabase.auth.getSession();
 
-      // Create transaction record
-      const { error: transactionError } = await supabase
-        .from('transactions')
-        .insert({
-          buyer_id: userId,
-          seller_id: item.user_id,
-          item_id: item.id,
-          amount: subtotal,
-          status: 'pending',
-          shipping_address: shippingAddress as any,
-        } as any);
+      if (!authSession) {
+        toast.error("Please sign in to continue");
+        navigate('/auth');
+        return;
+      }
 
-      if (transactionError) throw transactionError;
+      const response = await supabase.functions.invoke('create-checkout-session', {
+        body: {
+          itemId: item.id,
+          itemTitle: item.title,
+          itemPrice: subtotal,
+          buyerId: userId,
+          sellerId: item.user_id,
+        },
+      });
 
-      // Mark item as pending
-      const { error: itemError } = await supabase
-        .from('items')
-        .update({ status: 'pending' })
-        .eq('id', item.id);
+      if (response.error) {
+        throw new Error(response.error.message);
+      }
 
-      if (itemError) throw itemError;
+      const { url } = response.data;
 
-      toast.success("Order placed successfully! Payment will be processed separately.");
-      navigate("/");
+      if (url) {
+        // Redirect to Stripe Checkout
+        window.location.href = url;
+      } else {
+        throw new Error("Failed to create checkout session");
+      }
     } catch (error: any) {
       console.error('Checkout error:', error);
-      toast.error(error.message || "Failed to process order. Please try again.");
-    } finally {
+      toast.error(error.message || "Failed to process checkout. Please try again.");
       setLoading(false);
     }
   };
@@ -177,13 +182,19 @@ const Checkout = () => {
               {/* Payment Information */}
               <Card className="p-6 border-border animate-fade-in" style={{ animationDelay: "0.1s" }}>
                 <h2 className="text-xl font-semibold text-foreground mb-4 flex items-center gap-2">
-                  <Lock className="h-5 w-5" />
-                  Payment
+                  <CreditCard className="h-5 w-5" />
+                  Secure Payment with Stripe
                 </h2>
                 <div className="text-sm text-muted-foreground space-y-2">
-                  <p>Your order will be held pending payment arrangement with the seller.</p>
-                  <p className="font-medium text-foreground">No payment information is collected at this time.</p>
-                  <p>The seller will contact you to arrange secure payment and delivery.</p>
+                  <p className="font-medium text-foreground flex items-center gap-2">
+                    <Lock className="h-4 w-4 text-primary" />
+                    Powered by Stripe - Industry-leading payment security
+                  </p>
+                  <p>After submitting your order, you'll be redirected to Stripe's secure checkout to complete payment.</p>
+                  <div className="flex items-center gap-2 text-xs pt-2">
+                    <div className="bg-muted px-2 py-1 rounded">💳 All major cards</div>
+                    <div className="bg-muted px-2 py-1 rounded">🔒 SSL encrypted</div>
+                  </div>
                 </div>
               </Card>
 
@@ -193,11 +204,11 @@ const Checkout = () => {
                 className="w-full h-14 text-lg font-semibold bg-primary hover:bg-primary/90 text-primary-foreground"
               >
                 {loading ? (
-                  <span className="flex items-center gap-2">Processing...</span>
+                  <span className="flex items-center gap-2">Redirecting to Stripe...</span>
                 ) : (
                   <span className="flex items-center gap-2">
-                    <Lock className="h-5 w-5" />
-                    Complete Purchase
+                    <CreditCard className="h-5 w-5" />
+                    Proceed to Secure Payment
                   </span>
                 )}
               </Button>
