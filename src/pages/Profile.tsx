@@ -192,16 +192,11 @@ const Profile = () => {
 
   return (
     <div className="min-h-screen bg-background pb-24 relative">
-      {/* Decorative Pepe characters */}
-      <div className="fixed top-24 left-6 text-3xl opacity-15 pointer-events-none z-10 animate-pulse">🐸</div>
-      <div className="fixed top-56 right-6 text-4xl opacity-20 pointer-events-none z-10 animate-pulse" style={{ animationDelay: '0.7s' }}>🐸</div>
-
       {/* Header */}
       <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-lg border-b border-border">
         <div className="max-w-7xl mx-auto px-4 py-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="text-xl animate-bounce">🐸</span>
               <h1 className="text-xl font-bold text-foreground">Profile</h1>
             </div>
             <Button 
