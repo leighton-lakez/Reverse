@@ -79,7 +79,7 @@ export default function ProfileSetup() {
 
       toast({
         title: "Profile complete!",
-        description: "Welcome to DesignX!",
+        description: "Welcome to stob.",
       });
 
       navigate("/");
