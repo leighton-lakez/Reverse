@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ArrowLeft, Lock, CreditCard } from "lucide-react";
+import { ArrowLeft, Lock } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +11,8 @@ import BottomNav from "@/components/BottomNav";
 import { supabase } from "@/integrations/supabase/client";
 import { checkoutSchema } from "@/lib/validationSchemas";
 import { getStripe } from "@/lib/stripe";
+import { Elements } from "@stripe/react-stripe-js";
+import PaymentForm from "@/components/PaymentForm";
 
 const Checkout = () => {
   const navigate = useNavigate();
@@ -18,6 +20,9 @@ const Checkout = () => {
   const item = location.state?.item || {};
   const [loading, setLoading] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+  const [clientSecret, setClientSecret] = useState<string>("");
+  const [shippingComplete, setShippingComplete] = useState(false);
+  const stripePromise = getStripe();
 
   // Require authentication for checkout
   useEffect(() => {
@@ -33,7 +38,7 @@ const Checkout = () => {
     checkAuth();
   }, [navigate, item]);
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleShippingSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (!userId) {
@@ -71,20 +76,12 @@ const Checkout = () => {
         return;
       }
 
-      // Call Supabase Edge Function to create Stripe checkout session
-      const { data: { session: authSession } } = await supabase.auth.getSession();
-
-      if (!authSession) {
-        toast.error("Please sign in to continue");
-        navigate('/auth');
-        return;
-      }
-
-      const response = await supabase.functions.invoke('create-checkout-session', {
+      // Create PaymentIntent via Supabase Edge Function
+      const response = await supabase.functions.invoke('create-payment-intent', {
         body: {
+          amount: total,
           itemId: item.id,
           itemTitle: item.title,
-          itemPrice: subtotal,
           buyerId: userId,
           sellerId: item.user_id,
         },
@@ -94,19 +91,26 @@ const Checkout = () => {
         throw new Error(response.error.message);
       }
 
-      const { url } = response.data;
+      const { clientSecret: secret } = response.data;
 
-      if (url) {
-        // Redirect to Stripe Checkout
-        window.location.href = url;
+      if (secret) {
+        setClientSecret(secret);
+        setShippingComplete(true);
+        toast.success("Shipping information saved. Please enter your payment details.");
       } else {
-        throw new Error("Failed to create checkout session");
+        throw new Error("Failed to initialize payment");
       }
     } catch (error: any) {
       console.error('Checkout error:', error);
       toast.error(error.message || "Failed to process checkout. Please try again.");
+    } finally {
       setLoading(false);
     }
+  };
+
+  const handlePaymentSuccess = () => {
+    toast.success("Payment successful! Your order has been placed.");
+    navigate("/");
   };
 
   const subtotal = item.price || 0;
@@ -143,7 +147,7 @@ const Checkout = () => {
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Checkout Form */}
           <div className="lg:col-span-2 space-y-6">
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleShippingSubmit} className="space-y-6">
               {/* Shipping Information */}
               <Card className="p-6 border-border animate-fade-in">
                 <h2 className="text-xl font-semibold text-foreground mb-4">Shipping Information</h2>
@@ -179,40 +183,49 @@ const Checkout = () => {
                 </div>
               </Card>
 
-              {/* Payment Information */}
-              <Card className="p-6 border-border animate-fade-in" style={{ animationDelay: "0.1s" }}>
-                <h2 className="text-xl font-semibold text-foreground mb-4 flex items-center gap-2">
-                  <CreditCard className="h-5 w-5" />
-                  Secure Payment with Stripe
-                </h2>
-                <div className="text-sm text-muted-foreground space-y-2">
-                  <p className="font-medium text-foreground flex items-center gap-2">
-                    <Lock className="h-4 w-4 text-primary" />
-                    Powered by Stripe - Industry-leading payment security
-                  </p>
-                  <p>After submitting your order, you'll be redirected to Stripe's secure checkout to complete payment.</p>
-                  <div className="flex items-center gap-2 text-xs pt-2">
-                    <div className="bg-muted px-2 py-1 rounded">💳 All major cards</div>
-                    <div className="bg-muted px-2 py-1 rounded">🔒 SSL encrypted</div>
-                  </div>
-                </div>
-              </Card>
-
               <Button
                 type="submit"
-                disabled={loading}
+                disabled={loading || shippingComplete}
                 className="w-full h-14 text-lg font-semibold bg-primary hover:bg-primary/90 text-primary-foreground"
               >
                 {loading ? (
-                  <span className="flex items-center gap-2">Redirecting to Stripe...</span>
+                  <span className="flex items-center gap-2">Processing...</span>
+                ) : shippingComplete ? (
+                  <span className="flex items-center gap-2">
+                    <Lock className="h-5 w-5" />
+                    Shipping Information Saved
+                  </span>
                 ) : (
                   <span className="flex items-center gap-2">
-                    <CreditCard className="h-5 w-5" />
-                    Proceed to Secure Payment
+                    <Lock className="h-5 w-5" />
+                    Continue to Payment
                   </span>
                 )}
               </Button>
             </form>
+
+            {/* Payment Form - Only show after shipping is complete */}
+            {shippingComplete && clientSecret && (
+              <Card className="p-6 border-border animate-fade-in">
+                <h2 className="text-xl font-semibold text-foreground mb-4 flex items-center gap-2">
+                  <Lock className="h-5 w-5 text-primary" />
+                  Secure Payment
+                </h2>
+                <div className="text-sm text-muted-foreground mb-6">
+                  <p className="font-medium text-foreground flex items-center gap-2 mb-2">
+                    <Lock className="h-4 w-4 text-primary" />
+                    Powered by Stripe - Industry-leading payment security
+                  </p>
+                  <div className="flex items-center gap-2 text-xs">
+                    <div className="bg-muted px-2 py-1 rounded">💳 All major cards</div>
+                    <div className="bg-muted px-2 py-1 rounded">🔒 SSL encrypted</div>
+                  </div>
+                </div>
+                <Elements stripe={stripePromise} options={{ clientSecret }}>
+                  <PaymentForm onSuccess={handlePaymentSuccess} amount={total} />
+                </Elements>
+              </Card>
+            )}
           </div>
 
           {/* Order Summary */}

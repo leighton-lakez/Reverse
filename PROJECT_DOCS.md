@@ -358,9 +358,9 @@ Go to your Supabase SQL Editor and run the complete database setup (see Database
 - Make sure it's enabled
 
 ### 6. Deploy Supabase Edge Functions
-Deploy the Stripe checkout session Edge Function:
+Deploy the Stripe PaymentIntent Edge Function:
 ```bash
-supabase functions deploy create-checkout-session
+supabase functions deploy create-payment-intent
 ```
 
 Set the Stripe secret key in Supabase:
