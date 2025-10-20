@@ -241,7 +241,7 @@ const Index = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4">
           <div className="flex items-center justify-between">
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tighter text-gradient">
-              stob.
+              REVERSE
             </h1>
             {user ? (
               <Button

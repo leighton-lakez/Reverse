@@ -144,7 +144,7 @@ export default function Auth() {
       <div className="w-full max-w-md space-y-6 sm:space-y-8">
         <div className="text-center">
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tighter text-gradient mb-3 sm:mb-4">
-            stob.
+            REVERSE
           </h1>
           <p className="text-base sm:text-lg text-muted-foreground px-2">
             {isLogin ? "Welcome back to luxury fashion" : "Discover authentic luxury"}
