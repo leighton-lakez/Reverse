@@ -19,6 +19,7 @@ import Settings from "./pages/Settings";
 import FollowersList from "./pages/FollowersList";
 import FollowingList from "./pages/FollowingList";
 import NotFound from "./pages/NotFound";
+import FirstVisitReverse from "./components/FirstVisitReverse";
 
 const queryClient = new QueryClient();
 
@@ -27,6 +28,7 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
+      <FirstVisitReverse />
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
