@@ -8,7 +8,11 @@ const BottomNav = () => {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-lg border-t border-border safe-area-bottom">
-      <div className="max-w-7xl mx-auto px-2 sm:px-4">
+      <div className="max-w-7xl mx-auto px-2 sm:px-4 relative">
+        {/* Pepe decorations on nav */}
+        <div className="absolute -top-3 left-1/4 text-sm opacity-30">🐸</div>
+        <div className="absolute -top-3 right-1/4 text-sm opacity-30">🐸</div>
+
         <div className="grid grid-cols-4 gap-0.5 sm:gap-1 py-1.5 sm:py-2">
           <Button
             variant="ghost"

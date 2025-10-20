@@ -236,16 +236,24 @@ const Index = () => {
   const opacity = Math.min(Math.abs(dragOffset.x) / 100, 1);
 
   return (
-    <div className="min-h-screen bg-background pb-20 sm:pb-24 flex flex-col overflow-hidden">
+    <div className="min-h-screen bg-background pb-20 sm:pb-24 flex flex-col overflow-hidden relative">
+      {/* Decorative Pepe characters */}
+      <div className="fixed top-20 left-4 text-4xl opacity-20 pointer-events-none z-10 animate-pulse">🐸</div>
+      <div className="fixed top-40 right-8 text-3xl opacity-15 pointer-events-none z-10 animate-pulse" style={{ animationDelay: '0.5s' }}>🐸</div>
+      <div className="fixed bottom-32 left-8 text-5xl opacity-10 pointer-events-none z-10 animate-pulse" style={{ animationDelay: '1s' }}>🐸</div>
+      <div className="fixed top-1/2 right-4 text-2xl opacity-20 pointer-events-none z-10 animate-pulse" style={{ animationDelay: '1.5s' }}>🐸</div>
+
       {/* Header */}
       <header className="sticky top-0 z-50 glass">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 sm:gap-3">
+              <span className="text-2xl sm:text-3xl animate-bounce">🐸</span>
               <ReverseIcon className="w-8 h-8 sm:w-10 sm:h-10" />
               <h1 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tighter text-gradient">
                 REVERSE
               </h1>
+              <span className="text-2xl sm:text-3xl animate-bounce" style={{ animationDelay: '0.2s' }}>🐸</span>
             </div>
             {user ? (
               <Button

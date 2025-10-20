@@ -432,13 +432,21 @@ const Sell = () => {
   const canSubmitInput = currentStep !== "images" && currentStep !== "summary" && currentStep !== "welcome";
 
   return (
-    <div className="min-h-screen bg-background pb-20 sm:pb-24 flex flex-col overflow-hidden">
+    <div className="min-h-screen bg-background pb-20 sm:pb-24 flex flex-col overflow-hidden relative">
+      {/* Decorative Pepe characters */}
+      <div className="fixed top-28 left-4 text-3xl opacity-20 pointer-events-none z-10 animate-pulse">🐸</div>
+      <div className="fixed bottom-40 right-4 text-4xl opacity-15 pointer-events-none z-10 animate-pulse" style={{ animationDelay: '0.8s' }}>🐸</div>
+
       {/* Header */}
       <header className="sticky top-0 z-50 glass">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 py-3 sm:py-4">
-          <h1 className="text-xl sm:text-2xl font-black tracking-tighter text-gradient">
-            List Your Item
-          </h1>
+          <div className="flex items-center gap-2 justify-center">
+            <span className="text-xl sm:text-2xl animate-bounce">🐸</span>
+            <h1 className="text-xl sm:text-2xl font-black tracking-tighter text-gradient">
+              List Your Item
+            </h1>
+            <span className="text-xl sm:text-2xl animate-bounce" style={{ animationDelay: '0.3s' }}>🐸</span>
+          </div>
         </div>
       </header>
 
