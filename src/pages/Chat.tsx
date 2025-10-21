@@ -111,6 +111,16 @@ const Chat = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
+  const markMessagesAsRead = async (userId: string, otherUserId: string) => {
+    // Mark all unread messages from the other user as read
+    await supabase
+      .from("messages")
+      .update({ read: true })
+      .eq('receiver_id', userId)
+      .eq('sender_id', otherUserId)
+      .eq('read', false);
+  };
+
   const fetchMessages = async (userId: string, otherUserId: string, itemId?: string) => {
     // Use .in() method to avoid string interpolation - safer and more readable
     const { data, error } = await supabase
@@ -128,6 +138,9 @@ const Chat = () => {
         timestamp: new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         imageUrl: msg.image_url
       })));
+
+      // Mark messages as read after fetching
+      markMessagesAsRead(userId, otherUserId);
     }
   };
 

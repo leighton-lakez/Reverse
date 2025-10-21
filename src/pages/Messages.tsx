@@ -15,6 +15,7 @@ interface Conversation {
   lastMessage: string;
   lastMessageTime: string;
   unread: boolean;
+  unreadCount: number;
   itemTitle?: string;
 }
 
@@ -24,6 +25,8 @@ const Messages = () => {
   const [currentUserId, setCurrentUserId] = useState<string>("");
 
   useEffect(() => {
+    let channel: any = null;
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session) {
         navigate("/auth");
@@ -31,7 +34,30 @@ const Messages = () => {
       }
       setCurrentUserId(session.user.id);
       fetchConversations(session.user.id);
+
+      // Set up realtime subscription to refresh when messages are read
+      channel = supabase
+        .channel('messages-list')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'messages'
+          },
+          () => {
+            // Refresh conversations when any message changes
+            fetchConversations(session.user.id);
+          }
+        )
+        .subscribe();
     });
+
+    return () => {
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
+    };
   }, [navigate]);
 
   const fetchConversations = async (userId: string) => {
@@ -57,16 +83,24 @@ const Messages = () => {
       const otherUser = msg.sender_id === userId ? msg.receiver : msg.sender;
 
       if (!conversationMap.has(otherUserId)) {
+        // Count unread messages for this conversation
+        const unreadCount = messages.filter((m: any) =>
+          m.receiver_id === userId &&
+          m.sender_id === otherUserId &&
+          !m.read
+        ).length;
+
         conversationMap.set(otherUserId, {
           userId: otherUserId,
           userName: otherUser?.display_name || "User",
           userAvatar: otherUser?.avatar_url || "",
           lastMessage: msg.content,
-          lastMessageTime: new Date(msg.created_at).toLocaleTimeString([], { 
-            hour: '2-digit', 
-            minute: '2-digit' 
+          lastMessageTime: new Date(msg.created_at).toLocaleTimeString([], {
+            hour: '2-digit',
+            minute: '2-digit'
           }),
-          unread: msg.receiver_id === userId && !msg.read,
+          unread: unreadCount > 0,
+          unreadCount: unreadCount,
           itemTitle: msg.item?.title
         });
       }
@@ -131,7 +165,7 @@ const Messages = () => {
                         </span>
                         {conversation.unread && (
                           <Badge variant="default" className="h-4 px-1.5 text-xs">
-                            New
+                            {conversation.unreadCount} new
                           </Badge>
                         )}
                       </div>
