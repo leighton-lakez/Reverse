@@ -227,10 +227,10 @@ const Index = () => {
   const opacity = Math.min(Math.abs(dragOffset.x) / 100, 1);
 
   return (
-    <div className="min-h-screen bg-background pb-20 sm:pb-24 flex flex-col overflow-hidden">
+    <div className="h-screen bg-background flex flex-col overflow-hidden">
       {/* Header */}
-      <header className="sticky top-0 z-50 glass">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4">
+      <header className="flex-shrink-0 z-50 glass">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2 sm:py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 sm:gap-3">
               <ReverseIcon className="w-8 h-8 sm:w-10 sm:h-10" />
@@ -262,7 +262,7 @@ const Index = () => {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 max-w-md mx-auto w-full px-3 sm:px-4 py-4 sm:py-6 flex flex-col items-center justify-center">
+      <main className="flex-1 max-w-md mx-auto w-full px-3 sm:px-4 py-2 sm:py-6 flex flex-col items-center justify-center overflow-hidden">
         {loading ? (
           <div className="text-center py-12">
             <p className="text-xl text-muted-foreground">Loading items...</p>
@@ -280,8 +280,8 @@ const Index = () => {
         ) : (
           <>
             {/* Swipe Instructions */}
-            <div className="text-center mb-4 animate-fade-in">
-              <p className="text-sm sm:text-base text-muted-foreground flex items-center justify-center gap-2">
+            <div className="text-center mb-2 sm:mb-4 animate-fade-in">
+              <p className="text-xs sm:text-base text-muted-foreground flex items-center justify-center gap-2">
                 <span className="text-red-500">← Swipe left to pass</span>
                 <span>•</span>
                 <span className="text-green-500">Swipe right to like →</span>
@@ -289,7 +289,7 @@ const Index = () => {
             </div>
 
             {/* Card Stack */}
-            <div className="relative w-full aspect-[3/4] max-h-[420px] sm:max-h-[600px]">
+            <div className="relative w-full aspect-[3/4] max-h-[340px] sm:max-h-[600px]">
               {/* Next card (behind) */}
               {nextItem && (
                 <div className="absolute inset-0 w-full h-full">
@@ -375,7 +375,7 @@ const Index = () => {
             </div>
 
             {/* Action Buttons */}
-            <div className="flex items-center justify-center gap-4 sm:gap-6 mt-6 sm:mt-8">
+            <div className="flex items-center justify-center gap-4 sm:gap-6 mt-4 sm:mt-8">
               <Button
                 size="icon"
                 variant="outline"
@@ -407,7 +407,7 @@ const Index = () => {
             </div>
 
             {/* Counter */}
-            <div className="mt-3 sm:mt-4 text-center text-xs sm:text-sm text-muted-foreground">
+            <div className="mt-2 sm:mt-4 text-center text-xs sm:text-sm text-muted-foreground">
               {currentIndex + 1} / {items.length}
             </div>
           </>
