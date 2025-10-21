@@ -262,7 +262,7 @@ const Index = () => {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 max-w-md mx-auto w-full px-3 sm:px-4 py-2 sm:py-6 flex flex-col items-center justify-center overflow-hidden">
+      <main className="flex-1 max-w-md mx-auto w-full px-3 sm:px-4 pt-2 pb-1 sm:py-6 flex flex-col items-center justify-start overflow-hidden">
         {loading ? (
           <div className="text-center py-12">
             <p className="text-xl text-muted-foreground">Loading items...</p>
