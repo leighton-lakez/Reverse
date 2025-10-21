@@ -280,7 +280,7 @@ const Index = () => {
         ) : (
           <>
             {/* Card Stack */}
-            <div className="relative w-full aspect-[3/4] max-h-[500px] sm:max-h-[600px]">
+            <div className="relative w-full aspect-[3/4] max-h-[420px] sm:max-h-[600px]">
               {/* Next card (behind) */}
               {nextItem && (
                 <div className="absolute inset-0 w-full h-full">
