@@ -33,6 +33,7 @@ const Chat = () => {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let channel: any = null;
@@ -106,6 +107,10 @@ const Chat = () => {
     }
   };
 
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
   const fetchMessages = async (userId: string, otherUserId: string, itemId?: string) => {
     // Use .in() method to avoid string interpolation - safer and more readable
     const { data, error } = await supabase
@@ -125,6 +130,11 @@ const Chat = () => {
       })));
     }
   };
+
+  // Scroll to bottom whenever messages change
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -352,9 +362,9 @@ const Chat = () => {
               }`}
             >
               {message.imageUrl ? (
-                <img 
-                  src={message.imageUrl} 
-                  alt="Shared image" 
+                <img
+                  src={message.imageUrl}
+                  alt="Shared image"
                   className="rounded-lg max-w-[200px] max-h-[200px] object-cover mb-2 cursor-pointer hover:opacity-90 transition-opacity"
                   onClick={() => window.open(message.imageUrl, '_blank')}
                 />
@@ -368,6 +378,8 @@ const Chat = () => {
             </div>
           </div>
         ))}
+        {/* Invisible div to scroll to */}
+        <div ref={messagesEndRef} />
       </div>
 
       {/* Input */}
