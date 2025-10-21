@@ -227,7 +227,7 @@ const Index = () => {
   const opacity = Math.min(Math.abs(dragOffset.x) / 100, 1);
 
   return (
-    <div className="h-screen bg-background flex flex-col overflow-hidden">
+    <div className="h-screen bg-background flex flex-col overflow-hidden" style={{ position: 'relative', height: '100vh', maxHeight: '100vh', overscrollBehavior: 'none' }}>
       {/* Header */}
       <header className="flex-shrink-0 z-50 glass">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2 sm:py-4">
