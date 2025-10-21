@@ -279,6 +279,15 @@ const Index = () => {
           </div>
         ) : (
           <>
+            {/* Swipe Instructions */}
+            <div className="text-center mb-4 animate-fade-in">
+              <p className="text-sm sm:text-base text-muted-foreground flex items-center justify-center gap-2">
+                <span className="text-red-500">← Swipe left to pass</span>
+                <span>•</span>
+                <span className="text-green-500">Swipe right to like →</span>
+              </p>
+            </div>
+
             {/* Card Stack */}
             <div className="relative w-full aspect-[3/4] max-h-[420px] sm:max-h-[600px]">
               {/* Next card (behind) */}
