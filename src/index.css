@@ -120,11 +120,33 @@
     /* Prevent horizontal overflow */
     overflow-x: hidden;
     max-width: 100vw;
+    /* Fix mobile scrolling issues */
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    overscroll-behavior: none;
+    -webkit-overflow-scrolling: touch;
   }
 
   html {
     overflow-x: hidden;
     max-width: 100vw;
+    /* Fix mobile scrolling issues */
+    height: 100%;
+    overflow: hidden;
+    position: fixed;
+    width: 100%;
+    overscroll-behavior: none;
+  }
+
+  #root {
+    height: 100vh;
+    height: 100dvh; /* Dynamic viewport height for mobile */
+    overflow-y: auto;
+    overflow-x: hidden;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    position: relative;
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -213,6 +235,18 @@
     body, html {
       overflow-x: hidden !important;
       max-width: 100vw !important;
+    }
+
+    /* Prevent pull-to-refresh and bounce scrolling */
+    body {
+      overscroll-behavior-y: none;
+      touch-action: pan-y;
+    }
+
+    /* Ensure root container handles all scrolling */
+    #root {
+      overscroll-behavior: contain;
+      touch-action: pan-y;
     }
   }
 }
