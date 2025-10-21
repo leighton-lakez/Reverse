@@ -79,43 +79,18 @@
     @apply border-border;
   }
 
-  /* Glowing gold effect for ALL elements with borders/outlines */
-  *[class*="border"],
-  *[class*="outline"],
-  *[style*="border"],
-  *[style*="outline"],
-  button,
-  input,
-  textarea,
-  select,
-  [class*="card"],
-  [role="button"],
-  [role="dialog"],
-  nav,
-  header,
-  footer,
-  aside,
-  section[class],
-  div[class*="border"],
-  div[class*="rounded"],
-  a[class],
-  img[class] {
-    box-shadow: 0 0 8px hsl(var(--primary) / 0.15),
-                0 0 16px hsl(var(--primary) / 0.08);
-  }
-
-  /* Extra glow for specific UI components */
-  [class*="btn"],
-  [class*="input"],
-  [class*="card"],
-  [class*="dialog"],
-  [class*="modal"],
-  [class*="sheet"],
-  [class*="popover"],
-  [class*="dropdown"],
-  [class*="menu"] {
-    box-shadow: 0 0 12px hsl(var(--primary) / 0.2),
-                0 0 20px hsl(var(--primary) / 0.1);
+  /* Subtle glow only for elements that actually have visible borders */
+  .border,
+  .border-t,
+  .border-b,
+  .border-l,
+  .border-r,
+  [class*="border-"][class*="border-border"],
+  .rounded-xl[class*="border"],
+  .rounded-2xl[class*="border"],
+  .rounded-3xl[class*="border"] {
+    box-shadow: 0 0 6px hsl(var(--primary) / 0.1),
+                0 0 12px hsl(var(--primary) / 0.05);
   }
 
   /* Enhanced glowing gold/orange outline effect for focused elements */
@@ -181,8 +156,7 @@
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border: 1px solid var(--glass-border);
-    box-shadow: 0 0 8px hsl(var(--primary) / 0.2),
-                0 0 16px hsl(var(--primary) / 0.1),
+    box-shadow: 0 0 4px hsl(var(--primary) / 0.08),
                 0 4px 16px hsl(0 0% 0% / 0.4);
   }
 
@@ -192,8 +166,6 @@
 
   .gradient-primary {
     background: var(--gradient-primary);
-    box-shadow: 0 0 20px hsl(var(--primary) / 0.4),
-                0 0 40px hsl(var(--primary) / 0.2);
   }
 
   .gradient-mesh {
@@ -201,15 +173,11 @@
   }
 
   .shadow-glow {
-    box-shadow: var(--shadow-glow),
-                0 0 8px hsl(var(--primary) / 0.3),
-                0 0 16px hsl(var(--primary) / 0.15);
+    box-shadow: var(--shadow-glow);
   }
 
   .shadow-glow-secondary {
-    box-shadow: var(--shadow-glow-secondary),
-                0 0 8px hsl(var(--secondary) / 0.3),
-                0 0 16px hsl(var(--secondary) / 0.15);
+    box-shadow: var(--shadow-glow-secondary);
   }
 
   .text-gradient {
