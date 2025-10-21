@@ -380,6 +380,7 @@ const Sell = () => {
         size: validationResult.data.size,
         trade_preference: itemData.tradePreference,
         images: uploadedImageUrls,
+        status: 'available',
       });
 
       if (error) throw error;
@@ -396,10 +397,12 @@ const Sell = () => {
         }, 1500);
       }, 1000);
     } catch (error: any) {
-      addMessage(`Oops! ${getUserFriendlyError(error)} Please try again.`, "bot");
+      console.error('Listing submission error:', error);
+      const errorMessage = getUserFriendlyError(error);
+      addMessage(`Oops! ${errorMessage} Please try again.`, "bot");
       toast({
         title: "Error",
-        description: getUserFriendlyError(error),
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
