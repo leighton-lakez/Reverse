@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Settings, MapPin, Calendar, Star, Package, Edit2, Eye, MessageCircle, CheckCircle, MoreVertical, RotateCcw } from "lucide-react";
+import { Settings, MapPin, Calendar, Star, Package, Edit2, Eye, MessageCircle, CheckCircle, MoreVertical, RotateCcw, Upload, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -67,6 +67,9 @@ const Profile = () => {
   const [editLocation, setEditLocation] = useState("");
   const [followersCount, setFollowersCount] = useState(0);
   const [followingCount, setFollowingCount] = useState(0);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string>("");
+  const [uploading, setUploading] = useState(false);
   const [profileData, setProfileData] = useState({
     name: "",
     bio: "",
@@ -236,21 +239,102 @@ const Profile = () => {
     setFollowingCount(following || 0);
   };
 
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (!file.type.startsWith('image/')) {
+        toast({
+          title: "Invalid file type",
+          description: "Please select an image file",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (file.size > 5 * 1024 * 1024) { // 5MB limit
+        toast({
+          title: "File too large",
+          description: "Please select an image smaller than 5MB",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setSelectedFile(file);
+      const url = URL.createObjectURL(file);
+      setPreviewUrl(url);
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setSelectedFile(null);
+    setPreviewUrl("");
+  };
+
+  const uploadProfilePicture = async (file: File): Promise<string | null> => {
+    try {
+      setUploading(true);
+
+      // Create unique filename
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}-${Date.now()}.${fileExt}`;
+      const filePath = `avatars/${fileName}`;
+
+      // Upload to Supabase storage
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: true
+        });
+
+      if (uploadError) throw uploadError;
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath);
+
+      return publicUrl;
+    } catch (error: any) {
+      console.error('Upload error:', error);
+      toast({
+        title: "Upload failed",
+        description: getUserFriendlyError(error),
+        variant: "destructive",
+      });
+      return null;
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const handleSaveProfile = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    
+
     if (!user) return;
-    
+
     const formData = new FormData(e.currentTarget);
     const name = formData.get("name") as string;
     const bio = formData.get("bio") as string;
 
     try {
+      let avatarUrl = profileData.avatar;
+
+      // Upload new profile picture if selected
+      if (selectedFile) {
+        const uploadedUrl = await uploadProfilePicture(selectedFile);
+        if (uploadedUrl) {
+          avatarUrl = uploadedUrl;
+        }
+      }
+
       // Validate profile data
       const validationResult = profileSchema.safeParse({
         display_name: name,
         location: editLocation,
         bio,
+        avatar_url: avatarUrl,
       });
 
       if (!validationResult.success) {
@@ -274,9 +358,13 @@ const Profile = () => {
         name: validationResult.data.display_name,
         bio: validationResult.data.bio || "",
         location: validationResult.data.location,
-        avatar: profileData.avatar
+        avatar: avatarUrl
       });
-      
+
+      // Reset file selection
+      setSelectedFile(null);
+      setPreviewUrl("");
+
       setIsEditOpen(false);
       toast({
         title: "Success",
@@ -356,6 +444,52 @@ const Profile = () => {
                       </DialogDescription>
                     </DialogHeader>
                     <form onSubmit={handleSaveProfile} className="space-y-4">
+                      {/* Profile Picture Upload */}
+                      <div className="space-y-2">
+                        <Label>Profile Picture</Label>
+                        <div className="flex items-center gap-4">
+                          <Avatar className="h-20 w-20 border-2 border-primary">
+                            <AvatarImage src={previewUrl || profileData.avatar} />
+                            <AvatarFallback>{profileData.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 space-y-2">
+                            <div className="flex gap-2">
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                className="relative overflow-hidden"
+                                disabled={uploading}
+                              >
+                                <Upload className="h-4 w-4 mr-2" />
+                                {uploading ? "Uploading..." : "Upload Photo"}
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  onChange={handleFileSelect}
+                                  className="absolute inset-0 opacity-0 cursor-pointer"
+                                  disabled={uploading}
+                                />
+                              </Button>
+                              {(previewUrl || selectedFile) && (
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={handleRemoveImage}
+                                  disabled={uploading}
+                                >
+                                  <X className="h-4 w-4" />
+                                </Button>
+                              )}
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                              JPG, PNG or GIF. Max 5MB.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
                       <div className="space-y-2">
                         <Label htmlFor="name">Name</Label>
                         <Input

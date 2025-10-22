@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Home, PlusCircle, Bell, User } from "lucide-react";
+import { Home, PlusCircle, Bell, User, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -95,7 +95,7 @@ const BottomNav = () => {
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-lg border-t border-border safe-area-bottom">
       <div className="max-w-7xl mx-auto px-2 sm:px-4 relative">
-        <div className="grid grid-cols-4 gap-0.5 sm:gap-1 py-1.5 sm:py-2">
+        <div className="grid grid-cols-5 gap-0.5 sm:gap-1 py-1.5 sm:py-2">
           <Button
             variant="ghost"
             onClick={() => navigate("/")}
@@ -137,6 +137,18 @@ const BottomNav = () => {
               )}
             </div>
             <span className="text-[10px] sm:text-xs font-medium">Alerts</span>
+          </Button>
+
+          <Button
+            variant="ghost"
+            onClick={() => navigate("/ai-assistant")}
+            className={`flex flex-col items-center gap-0.5 sm:gap-1 h-auto py-1.5 sm:py-2 hover:text-primary hover:bg-primary/10 rounded-xl transition-all ${getActiveStyles(
+              "/ai-assistant"
+            )}`}
+            style={getActiveGlow("/ai-assistant")}
+          >
+            <Sparkles className="h-5 w-5 sm:h-6 sm:w-6" />
+            <span className="text-[10px] sm:text-xs font-medium">AI Price</span>
           </Button>
 
           <Button
