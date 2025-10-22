@@ -28,6 +28,8 @@ const Index = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [skippedItems, setSkippedItems] = useState<Item[]>([]);
+  const [showWelcomeCard, setShowWelcomeCard] = useState(false);
+  const [welcomeCardAnimating, setWelcomeCardAnimating] = useState(false);
 
   const navigate = useNavigate();
   const cardRef = useRef<HTMLDivElement>(null);
@@ -63,6 +65,14 @@ const Index = () => {
     fetchItems();
   }, [user]);
 
+  useEffect(() => {
+    // Check if user has started browsing before
+    const hasStartedBrowsing = localStorage.getItem("hasStartedBrowsing");
+    if (!hasStartedBrowsing) {
+      setShowWelcomeCard(true);
+    }
+  }, []);
+
   const fetchItems = async () => {
     setLoading(true);
     let query = supabase
@@ -91,6 +101,14 @@ const Index = () => {
       description: "You've been signed out successfully",
     });
     // Stay on browse page after sign out
+  };
+
+  const handleStartBrowsing = () => {
+    setWelcomeCardAnimating(true);
+    setTimeout(() => {
+      setShowWelcomeCard(false);
+      localStorage.setItem("hasStartedBrowsing", "true");
+    }, 800); // Match animation duration
   };
 
   const sendInterestedMessage = async (item: Item) => {
@@ -263,7 +281,50 @@ const Index = () => {
 
       {/* Main Content */}
       <main className="flex-1 max-w-md mx-auto w-full px-3 sm:px-4 pt-2 pb-1 sm:py-6 flex flex-col items-center justify-start overflow-hidden">
-        {loading ? (
+        {showWelcomeCard ? (
+          <>
+            {/* Welcome Card - UNO Reverse */}
+            <div className="relative w-full aspect-[3/4] max-h-[340px] sm:max-h-[600px] flex items-center justify-center">
+              <div
+                className={`relative w-full h-full rounded-3xl overflow-hidden shadow-2xl cursor-pointer transition-all duration-700 ${
+                  welcomeCardAnimating
+                    ? 'rotate-[720deg] scale-0 opacity-0 translate-x-[200%]'
+                    : 'rotate-0 scale-100 opacity-100'
+                }`}
+                onClick={handleStartBrowsing}
+                style={{
+                  background: 'linear-gradient(135deg, #D4AF37 0%, #8B0000 100%)',
+                  transformOrigin: 'center center'
+                }}
+              >
+                {/* Glowing ring effect */}
+                <div className="absolute inset-0 blur-2xl opacity-30 animate-pulse bg-gradient-to-br from-primary via-secondary to-primary" />
+
+                {/* Card content */}
+                <div className="relative w-full h-full flex flex-col items-center justify-center p-8 gap-6">
+                  {/* UNO Reverse Icon */}
+                  <div className="transform scale-150">
+                    <ReverseIcon className="w-32 h-32 sm:w-40 sm:h-40 drop-shadow-2xl" />
+                  </div>
+
+                  {/* Text */}
+                  <div className="text-center space-y-3 animate-pulse">
+                    <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tight drop-shadow-lg">
+                      START BROWSING
+                    </h2>
+                    <p className="text-white/80 text-sm sm:text-base font-medium">
+                      Tap to explore luxury fashion
+                    </p>
+                  </div>
+                </div>
+
+                {/* Shimmer effect */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-shimmer"
+                     style={{ animation: 'shimmer 3s infinite' }} />
+              </div>
+            </div>
+          </>
+        ) : loading ? (
           <div className="text-center py-12">
             <p className="text-xl text-muted-foreground">Loading items...</p>
           </div>

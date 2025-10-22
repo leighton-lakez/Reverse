@@ -229,4 +229,18 @@
       top: 0;
     }
   }
+
+  /* Shimmer animation for welcome card */
+  @keyframes shimmer {
+    0% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(100%);
+    }
+  }
+
+  .animate-shimmer {
+    animation: shimmer 3s infinite;
+  }
 }
