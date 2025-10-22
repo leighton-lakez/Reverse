@@ -146,7 +146,11 @@ const Chat = () => {
 
   // Scroll to bottom whenever messages change
   useEffect(() => {
-    scrollToBottom();
+    // Add a small delay to ensure DOM has rendered
+    const timer = setTimeout(() => {
+      scrollToBottom();
+    }, 100);
+    return () => clearTimeout(timer);
   }, [messages]);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
