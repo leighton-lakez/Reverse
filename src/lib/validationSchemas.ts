@@ -88,12 +88,11 @@ export const authSchema = z.object({
     .max(128, 'Password must be less than 128 characters'),
 });
 
-// Email OTP authentication validation
-export const emailOtpSchema = z.object({
-  email: z.string()
+// Phone authentication validation
+export const phoneAuthSchema = z.object({
+  phone: z.string()
     .trim()
-    .email('Invalid email address')
-    .max(255, 'Email must be less than 255 characters'),
+    .regex(/^\+1\d{10}$/, 'Phone number must be in format +1XXXXXXXXXX (US only)'),
 });
 
 // OTP verification validation

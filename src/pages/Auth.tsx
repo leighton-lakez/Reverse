@@ -6,12 +6,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
 import { getUserFriendlyError } from "@/lib/errorHandler";
-import { emailOtpSchema, otpSchema } from "@/lib/validationSchemas";
+import { phoneAuthSchema, otpSchema } from "@/lib/validationSchemas";
 import { X, ArrowLeft } from "lucide-react";
 import { ReverseIcon } from "@/components/ReverseIcon";
 
 export default function Auth() {
-  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
@@ -47,13 +47,28 @@ export default function Auth() {
     return () => subscription.unsubscribe();
   }, [navigate]);
 
+  const formatPhoneNumber = (value: string) => {
+    // Remove all non-digits
+    const digits = value.replace(/\D/g, '');
+
+    // Ensure it starts with country code
+    if (digits.length === 0) return '';
+    if (digits.length <= 10) return '+1' + digits;
+    return '+1' + digits.slice(-10);
+  };
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatPhoneNumber(e.target.value);
+    setPhone(formatted);
+  };
+
   const handleSendOTP = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      // Validate email
-      const validationResult = emailOtpSchema.safeParse({ email });
+      // Validate phone number
+      const validationResult = phoneAuthSchema.safeParse({ phone });
 
       if (!validationResult.success) {
         const firstError = validationResult.error.errors[0];
@@ -68,10 +83,7 @@ export default function Auth() {
 
       // Send OTP via Supabase
       const { error } = await supabase.auth.signInWithOtp({
-        email: validationResult.data.email,
-        options: {
-          shouldCreateUser: true,
-        },
+        phone: validationResult.data.phone,
       });
 
       if (error) throw error;
@@ -79,7 +91,7 @@ export default function Auth() {
       setOtpSent(true);
       toast({
         title: "Code Sent!",
-        description: "Check your email for the verification code.",
+        description: "Check your phone for the verification code.",
       });
     } catch (error: any) {
       toast({
@@ -113,9 +125,9 @@ export default function Auth() {
 
       // Verify OTP with Supabase
       const { error } = await supabase.auth.verifyOtp({
-        email,
+        phone,
         token: validationResult.data.otp,
-        type: 'email',
+        type: 'sms',
       });
 
       if (error) throw error;
@@ -162,25 +174,25 @@ export default function Auth() {
             </h1>
           </div>
           <p className="text-base sm:text-lg text-muted-foreground px-2">
-            {otpSent ? "Enter verification code" : "Sign in with your email"}
+            {otpSent ? "Enter verification code" : "Sign in with your phone number"}
           </p>
         </div>
 
         {!otpSent ? (
           <form onSubmit={handleSendOTP} className="space-y-5 sm:space-y-6 glass p-6 sm:p-8 rounded-2xl shadow-glow">
             <div className="space-y-2">
-              <Label htmlFor="email">Email Address</Label>
+              <Label htmlFor="phone">Phone Number</Label>
               <Input
-                id="email"
-                type="email"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                id="phone"
+                type="tel"
+                placeholder="+1 (555) 123-4567"
+                value={phone}
+                onChange={handlePhoneChange}
                 required
                 className="text-base"
               />
               <p className="text-xs text-muted-foreground">
-                We'll send you a verification code to sign in.
+                US numbers only. We'll send you a verification code.
               </p>
             </div>
 
@@ -208,7 +220,7 @@ export default function Auth() {
                 className="text-center text-2xl tracking-widest font-mono"
               />
               <p className="text-xs text-muted-foreground">
-                Enter the 6-digit code sent to {email}
+                Enter the 6-digit code sent to {phone}
               </p>
             </div>
 
@@ -228,7 +240,7 @@ export default function Auth() {
                 className="w-full text-xs sm:text-sm gap-2"
               >
                 <ArrowLeft className="h-4 w-4" />
-                Use different email
+                Use different number
               </Button>
 
               <button
