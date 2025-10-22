@@ -6,14 +6,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
 import { getUserFriendlyError } from "@/lib/errorHandler";
-import { emailOtpSchema } from "@/lib/validationSchemas";
-import { X, Mail, CheckCircle } from "lucide-react";
+import { emailOtpSchema, otpSchema } from "@/lib/validationSchemas";
+import { X, ArrowLeft } from "lucide-react";
 import { ReverseIcon } from "@/components/ReverseIcon";
 
 export default function Auth() {
   const [email, setEmail] = useState("");
+  const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
-  const [linkSent, setLinkSent] = useState(false);
+  const [otpSent, setOtpSent] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -46,7 +47,7 @@ export default function Auth() {
     return () => subscription.unsubscribe();
   }, [navigate]);
 
-  const handleSendMagicLink = async (e: React.FormEvent) => {
+  const handleSendOTP = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
@@ -65,7 +66,7 @@ export default function Auth() {
         return;
       }
 
-      // Send magic link via Supabase
+      // Send OTP via Supabase
       const { error } = await supabase.auth.signInWithOtp({
         email: validationResult.data.email,
         options: {
@@ -75,13 +76,13 @@ export default function Auth() {
 
       if (error) throw error;
 
-      setLinkSent(true);
+      setOtpSent(true);
       toast({
-        title: "Check Your Email!",
-        description: "We've sent you a sign-in link.",
+        title: "Code Sent!",
+        description: "Check your email for the verification code.",
       });
     } catch (error: any) {
-      console.error('Magic Link Error:', error);
+      console.error('OTP Send Error:', error);
       toast({
         title: "Error",
         description: error?.message || getUserFriendlyError(error),
@@ -90,6 +91,55 @@ export default function Auth() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleVerifyOTP = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      // Validate OTP
+      const validationResult = otpSchema.safeParse({ otp });
+
+      if (!validationResult.success) {
+        const firstError = validationResult.error.errors[0];
+        toast({
+          title: "Validation Error",
+          description: firstError.message,
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
+
+      // Verify OTP with Supabase
+      const { error } = await supabase.auth.verifyOtp({
+        email,
+        token: validationResult.data.otp,
+        type: 'email',
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Success!",
+        description: "You've been verified.",
+      });
+    } catch (error: any) {
+      console.error('OTP Verify Error:', error);
+      toast({
+        title: "Error",
+        description: error?.message || getUserFriendlyError(error),
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleBack = () => {
+    setOtpSent(false);
+    setOtp("");
   };
 
   return (
@@ -114,12 +164,12 @@ export default function Auth() {
             </h1>
           </div>
           <p className="text-base sm:text-lg text-muted-foreground px-2">
-            {linkSent ? "Check your email" : "Sign in to continue"}
+            {otpSent ? "Enter verification code" : "Sign in with your email"}
           </p>
         </div>
 
-        {!linkSent ? (
-          <form onSubmit={handleSendMagicLink} className="space-y-5 sm:space-y-6 glass p-6 sm:p-8 rounded-2xl shadow-glow">
+        {!otpSent ? (
+          <form onSubmit={handleSendOTP} className="space-y-5 sm:space-y-6 glass p-6 sm:p-8 rounded-2xl shadow-glow">
             <div className="space-y-2">
               <Label htmlFor="email">Email Address</Label>
               <Input
@@ -132,7 +182,7 @@ export default function Auth() {
                 className="text-base"
               />
               <p className="text-xs text-muted-foreground">
-                We'll send you a secure link to sign in.
+                We'll send you a 6-digit verification code.
               </p>
             </div>
 
@@ -141,55 +191,58 @@ export default function Auth() {
               className="w-full h-11 sm:h-12 text-sm sm:text-base gradient-primary shadow-glow hover:shadow-glow-secondary transition-all"
               disabled={loading}
             >
-              {loading ? "Sending..." : "Continue with Email"}
+              {loading ? "Sending..." : "Send Verification Code"}
             </Button>
           </form>
         ) : (
-          <div className="glass p-6 sm:p-8 rounded-2xl shadow-glow space-y-4 text-center">
-            <div className="flex justify-center">
-              <div className="rounded-full bg-primary/10 p-4">
-                <Mail className="h-12 w-12 text-primary" />
-              </div>
-            </div>
-
+          <form onSubmit={handleVerifyOTP} className="space-y-5 sm:space-y-6 glass p-6 sm:p-8 rounded-2xl shadow-glow">
             <div className="space-y-2">
-              <h3 className="text-lg font-bold text-foreground">Check Your Inbox</h3>
-              <p className="text-sm text-muted-foreground">
-                We sent a sign-in link to
+              <Label htmlFor="otp">Verification Code</Label>
+              <Input
+                id="otp"
+                type="text"
+                inputMode="numeric"
+                placeholder="123456"
+                value={otp}
+                onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                required
+                maxLength={6}
+                className="text-center text-2xl tracking-widest font-mono"
+              />
+              <p className="text-xs text-muted-foreground">
+                Enter the 6-digit code sent to {email}
               </p>
-              <p className="text-sm font-semibold text-foreground">{email}</p>
             </div>
 
-            <div className="bg-muted/30 rounded-lg p-4 space-y-3 text-left">
-              <div className="flex items-start gap-3">
-                <CheckCircle className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-                <div className="space-y-1">
-                  <p className="text-sm font-medium text-foreground">Click the button in the email</p>
-                  <p className="text-xs text-muted-foreground">Look for "Log In" button in your inbox</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <CheckCircle className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-                <div className="space-y-1">
-                  <p className="text-sm font-medium text-foreground">You'll be signed in automatically</p>
-                  <p className="text-xs text-muted-foreground">The link is valid for 60 minutes</p>
-                </div>
-              </div>
-            </div>
+            <Button
+              type="submit"
+              className="w-full h-11 sm:h-12 text-sm sm:text-base gradient-primary shadow-glow hover:shadow-glow-secondary transition-all"
+              disabled={loading}
+            >
+              {loading ? "Verifying..." : "Verify & Continue"}
+            </Button>
 
-            <div className="pt-4 border-t border-border">
+            <div className="flex flex-col gap-2">
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={handleBack}
+                className="w-full text-xs sm:text-sm gap-2"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Use different email
+              </Button>
+
               <button
                 type="button"
-                onClick={() => {
-                  setLinkSent(false);
-                  setEmail("");
-                }}
-                className="text-sm text-primary hover:underline"
+                onClick={handleSendOTP}
+                className="text-xs sm:text-sm text-primary hover:underline"
+                disabled={loading}
               >
-                Use a different email
+                Resend code
               </button>
             </div>
-          </div>
+          </form>
         )}
       </div>
     </div>
