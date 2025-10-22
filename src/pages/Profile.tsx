@@ -253,8 +253,8 @@ const Profile = () => {
     }
   };
 
-  const activeListings = myListings;
-  const soldListings: any[] = [];
+  const activeListings = myListings.filter((item: any) => item.status === 'available');
+  const soldListings = myListings.filter((item: any) => item.status === 'sold');
 
   return (
     <div className="min-h-screen bg-background pb-24 relative">
