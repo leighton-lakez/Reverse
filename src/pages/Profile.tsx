@@ -372,14 +372,14 @@ const Profile = () => {
                         <span className="text-sm font-bold text-primary">${parseFloat(item.price)}</span>
                         <Badge variant="outline" className="text-[10px] px-1 py-0">{item.condition}</Badge>
                       </div>
-                      <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-                        <div className="flex items-center gap-0.5">
-                          <Eye className="h-3 w-3" />
-                          <span>{item.viewCount || 0}</span>
+                      <div className="flex items-center gap-2 mt-1">
+                        <div className="flex items-center gap-1 bg-primary/10 px-2 py-1 rounded-md">
+                          <Eye className="h-4 w-4 text-primary" />
+                          <span className="text-sm font-bold text-primary">{item.viewCount || 0}</span>
                         </div>
-                        <div className="flex items-center gap-0.5">
-                          <MessageCircle className="h-3 w-3" />
-                          <span>{item.conversationCount || 0}</span>
+                        <div className="flex items-center gap-1 bg-primary/10 px-2 py-1 rounded-md">
+                          <MessageCircle className="h-4 w-4 text-primary" />
+                          <span className="text-sm font-bold text-primary">{item.conversationCount || 0}</span>
                         </div>
                       </div>
                     </div>
