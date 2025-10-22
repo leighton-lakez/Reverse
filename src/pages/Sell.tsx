@@ -408,11 +408,24 @@ const Sell = () => {
       }, 1000);
     } catch (error: any) {
       console.error('Listing submission error:', error);
-      const errorMessage = getUserFriendlyError(error);
-      addMessage(`Oops! ${errorMessage} Please try again.`, "bot");
+      console.error('Error details:', {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint,
+        full: error
+      });
+
+      // Show actual error in development, friendly error in production
+      const errorMessage = error.message || getUserFriendlyError(error);
+      const displayMessage = process.env.NODE_ENV === 'development'
+        ? errorMessage
+        : getUserFriendlyError(error);
+
+      addMessage(`Oops! ${displayMessage} Please try again.`, "bot");
       toast({
         title: "Error",
-        description: errorMessage,
+        description: displayMessage,
         variant: "destructive",
       });
     } finally {
