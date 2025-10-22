@@ -8,6 +8,7 @@ import { toast } from "@/hooks/use-toast";
 import BottomNav from "@/components/BottomNav";
 import { ReverseIcon } from "@/components/ReverseIcon";
 import { supabase } from "@/integrations/supabase/client";
+import OpenAI from "openai";
 
 interface Message {
   id: string;
@@ -23,7 +24,7 @@ const AIAssistant = () => {
     {
       id: "welcome",
       role: "assistant",
-      content: "Hey! I'm your AI pricing assistant. Upload a photo of your luxury item and tell me about any damages or wear, and I'll help you find the perfect price! ✨",
+      content: "Hey! I'm your AI pricing assistant powered by ChatGPT. Upload a photo of your luxury item and tell me about any damages or wear, and I'll help you find the perfect resale price based on current market trends! ✨",
       timestamp: new Date(),
     },
   ]);
@@ -72,36 +73,63 @@ const AIAssistant = () => {
   };
 
   const analyzeProduct = async (imageData: string, description: string) => {
-    // This is a mock AI response. In production, you would:
-    // 1. Upload image to storage
-    // 2. Call OpenAI Vision API or similar
-    // 3. Search for similar products online
-    // 4. Return pricing analysis
+    const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
 
-    await new Promise((resolve) => setTimeout(resolve, 2000)); // Simulate API call
-
-    // Mock response based on common luxury items
-    const priceRanges: { [key: string]: string } = {
-      bag: "Based on the condition and any visible wear, I'd suggest pricing this between $800-$1,200. Similar pre-owned luxury bags in good condition typically sell in this range. If there are scratches on the hardware or leather scuffs, aim for the lower end.",
-      watch: "For a luxury watch in this condition, I recommend $2,500-$4,000. Minor scratches on the case are normal for pre-owned pieces. If the movement is functioning perfectly and you have original papers, you could aim higher.",
-      shoes: "Designer shoes in gently used condition typically range from $250-$600 depending on the brand and style. Visible sole wear or scuffs on the leather would put these around $300-$400.",
-      sunglasses: "Pre-owned designer sunglasses usually sell between $150-$400. If there are scratches on the lenses or frame wear, I'd suggest $180-$250 to ensure a quick sale.",
-      jewelry: "Luxury jewelry pieces can vary widely. Based on the materials and brand, I'd estimate $400-$800. If there's tarnishing or missing stones, consider professional restoration before listing.",
-      default: "Based on the image and condition notes, I estimate this item's resale value at $300-$800. Luxury items in good pre-owned condition typically retain 30-60% of their retail value. Consider listing at the higher end if it has minimal wear, original packaging, or authentication papers.",
-    };
-
-    // Simple keyword detection for demo
-    const lowerDesc = description.toLowerCase();
-    let response = priceRanges.default;
-
-    for (const [key, value] of Object.entries(priceRanges)) {
-      if (lowerDesc.includes(key)) {
-        response = value;
-        break;
-      }
+    if (!apiKey || apiKey === "your-openai-api-key-here") {
+      throw new Error("OpenAI API key not configured. Please add VITE_OPENAI_API_KEY to your .env file.");
     }
 
-    return response + "\n\nPro tips:\n• Research similar items on resale platforms\n• Original packaging adds 10-15% value\n• Professional photos increase sale speed by 40%\n• Be transparent about all flaws in your listing";
+    const openai = new OpenAI({
+      apiKey: apiKey,
+      dangerouslyAllowBrowser: true, // Note: In production, use a backend API
+    });
+
+    const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [
+      {
+        role: "system",
+        content: `You are an expert luxury fashion resale pricing assistant. Your job is to analyze pre-owned luxury items and provide accurate pricing recommendations based on:
+- Brand recognition and demand
+- Item condition (scratches, wear, damages)
+- Current resale market trends
+- Comparable sales data
+- Authentication and original packaging status
+
+Provide specific price ranges and explain your reasoning. Be honest about condition impacts on value. Include pro tips for sellers.`,
+      },
+    ];
+
+    if (imageData) {
+      messages.push({
+        role: "user",
+        content: [
+          {
+            type: "text",
+            text: description || "Please analyze this luxury item and suggest a resale price based on its condition.",
+          },
+          {
+            type: "image_url",
+            image_url: {
+              url: imageData,
+              detail: "high",
+            },
+          },
+        ],
+      });
+    } else {
+      messages.push({
+        role: "user",
+        content: description,
+      });
+    }
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o", // Using GPT-4 with vision
+      messages: messages,
+      max_tokens: 1000,
+      temperature: 0.7,
+    });
+
+    return response.choices[0]?.message?.content || "I couldn't analyze the product. Please try again.";
   };
 
   const handleSend = async () => {
@@ -131,12 +159,27 @@ const AIAssistant = () => {
 
       setMessages((prev) => [...prev, assistantMessage]);
       setUploadedImage(null);
-    } catch (error) {
+    } catch (error: any) {
+      console.error("AI Analysis Error:", error);
+
+      let errorMessage = "Failed to analyze product. Please try again.";
+
+      if (error.message?.includes("API key")) {
+        errorMessage = "OpenAI API key not configured. Please add your API key to the .env file.";
+      } else if (error.message?.includes("rate limit")) {
+        errorMessage = "Rate limit exceeded. Please wait a moment and try again.";
+      } else if (error.message?.includes("insufficient_quota")) {
+        errorMessage = "OpenAI API quota exceeded. Please check your OpenAI account.";
+      }
+
       toast({
         title: "Error",
-        description: "Failed to analyze product. Please try again.",
+        description: errorMessage,
         variant: "destructive",
       });
+
+      // Remove the user message since the request failed
+      setMessages((prev) => prev.slice(0, -1));
     } finally {
       setIsLoading(false);
     }
@@ -282,7 +325,7 @@ const AIAssistant = () => {
           </div>
 
           <p className="text-xs text-muted-foreground mt-2 text-center">
-            Upload photos and describe condition for accurate pricing suggestions
+            Powered by ChatGPT-4 Vision • Upload photos and describe condition for accurate pricing
           </p>
         </div>
       </div>

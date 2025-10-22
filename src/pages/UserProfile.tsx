@@ -371,19 +371,21 @@ const UserProfile = () => {
 
         {/* Reviews Section */}
         <div className="animate-fade-in mb-3" style={{ animationDelay: "0.05s" }}>
-          <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center justify-between mb-3">
             <h2 className="text-sm font-semibold text-foreground">Reviews ({reviews.length})</h2>
-            {currentUserId && currentUserId !== userId && (
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => setShowReviewForm(!showReviewForm)}
-                className="text-xs"
-              >
-                {userReview ? "Edit Review" : "Leave Review"}
-              </Button>
-            )}
           </div>
+
+          {/* Leave Review Button - Prominent */}
+          {currentUserId && currentUserId !== userId && !showReviewForm && (
+            <Button
+              onClick={() => setShowReviewForm(true)}
+              className="w-full mb-3 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold py-6 text-base shadow-lg"
+              size="lg"
+            >
+              <Star className="h-5 w-5 mr-2 fill-current" />
+              {userReview ? "Edit Your Review" : "Leave a Review"}
+            </Button>
+          )}
 
           {/* Review Form */}
           {showReviewForm && currentUserId !== userId && (
