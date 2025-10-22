@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ArrowLeft, MapPin, Heart, Share2, ShieldCheck } from "lucide-react";
+import { ArrowLeft, MapPin, Heart, Share2, ShieldCheck, MessageCircle } from "lucide-react";
 import { useNavigate, useLocation, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -192,22 +192,14 @@ const ItemDetail = () => {
               </div>
             </Card>
 
-            {/* Action Buttons */}
-            <div className="grid grid-cols-2 gap-3">
-              <Button
-                onClick={() => navigate("/checkout", { state: { item } })}
-                className="h-11 text-sm font-semibold bg-primary hover:bg-primary/90 text-primary-foreground"
-              >
-                Buy Now
-              </Button>
-              <Button
-                onClick={() => navigate("/chat", { state: { sellerId: item.user_id, item: { id: item.id, title: item.title, price: item.price, image: item.images?.[0] || item.image } } })}
-                variant="outline"
-                className="h-11 text-sm font-semibold border-primary text-primary hover:bg-primary/10"
-              >
-                Offer Trade
-              </Button>
-            </div>
+            {/* Action Button */}
+            <Button
+              onClick={() => navigate("/chat", { state: { sellerId: item.user_id, item: { id: item.id, title: item.title, price: item.price, image: item.images?.[0] || item.image } } })}
+              className="w-full h-12 text-base font-semibold bg-primary hover:bg-primary/90 text-primary-foreground gap-2"
+            >
+              <MessageCircle className="h-5 w-5" />
+              Message Seller
+            </Button>
           </div>
         </div>
       </main>
