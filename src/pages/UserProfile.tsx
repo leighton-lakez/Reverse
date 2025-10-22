@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
 import BottomNav from "@/components/BottomNav";
 import { supabase } from "@/integrations/supabase/client";
@@ -28,6 +29,15 @@ const UserProfile = () => {
     avatar: ""
   });
 
+  // Review state
+  const [reviews, setReviews] = useState<any[]>([]);
+  const [userReview, setUserReview] = useState<any>(null);
+  const [showReviewForm, setShowReviewForm] = useState(false);
+  const [rating, setRating] = useState(5);
+  const [comment, setComment] = useState("");
+  const [submittingReview, setSubmittingReview] = useState(false);
+  const [averageRating, setAverageRating] = useState(0);
+
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (!session) {
@@ -40,6 +50,7 @@ const UserProfile = () => {
         await fetchUserItems(userId);
         await checkFollowStatus(session.user.id, userId);
         await fetchFollowCounts(userId);
+        await fetchReviews(userId, session.user.id);
       }
     });
   }, [navigate, userId]);
@@ -110,6 +121,95 @@ const UserProfile = () => {
 
     setFollowersCount(followers || 0);
     setFollowingCount(following || 0);
+  };
+
+  const fetchReviews = async (targetUserId: string, currentUid: string) => {
+    // Fetch all reviews for this user
+    const { data: reviewsData, error } = await supabase
+      .from("reviews")
+      .select(`
+        *,
+        reviewer:reviewer_id (
+          id,
+          display_name,
+          avatar_url
+        )
+      `)
+      .eq("reviewed_user_id", targetUserId)
+      .order("created_at", { ascending: false });
+
+    if (!error && reviewsData) {
+      setReviews(reviewsData);
+
+      // Calculate average rating
+      if (reviewsData.length > 0) {
+        const avg = reviewsData.reduce((sum, r) => sum + r.rating, 0) / reviewsData.length;
+        setAverageRating(Math.round(avg * 10) / 10);
+      }
+
+      // Check if current user has already reviewed
+      const existingReview = reviewsData.find(r => r.reviewer_id === currentUid);
+      if (existingReview) {
+        setUserReview(existingReview);
+        setRating(existingReview.rating);
+        setComment(existingReview.comment || "");
+      }
+    }
+  };
+
+  const handleSubmitReview = async () => {
+    if (!currentUserId || !userId || currentUserId === userId) return;
+
+    setSubmittingReview(true);
+    try {
+      if (userReview) {
+        // Update existing review
+        const { error } = await supabase
+          .from("reviews")
+          .update({
+            rating,
+            comment,
+            updated_at: new Date().toISOString()
+          })
+          .eq("id", userReview.id);
+
+        if (error) throw error;
+
+        toast({
+          title: "Review Updated",
+          description: "Your review has been updated successfully.",
+        });
+      } else {
+        // Create new review
+        const { error } = await supabase
+          .from("reviews")
+          .insert({
+            reviewer_id: currentUserId,
+            reviewed_user_id: userId,
+            rating,
+            comment
+          });
+
+        if (error) throw error;
+
+        toast({
+          title: "Review Posted",
+          description: "Your review has been posted successfully.",
+        });
+      }
+
+      // Refresh reviews
+      await fetchReviews(userId, currentUserId);
+      setShowReviewForm(false);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: getUserFriendlyError(error),
+        variant: "destructive",
+      });
+    } finally {
+      setSubmittingReview(false);
+    }
   };
 
   const handleFollowToggle = async () => {
@@ -205,7 +305,7 @@ const UserProfile = () => {
                 </div>
                 <div className="flex items-center gap-1">
                   <Star className="h-3 w-3 fill-primary text-primary" />
-                  <span className="font-semibold text-foreground">4.9</span>
+                  <span className="font-semibold text-foreground">{averageRating > 0 ? averageRating.toFixed(1) : "No reviews"}</span>
                 </div>
               </div>
               
@@ -247,6 +347,138 @@ const UserProfile = () => {
             </div>
           </div>
         </Card>
+
+        {/* Reviews Section */}
+        <div className="animate-fade-in mb-3" style={{ animationDelay: "0.05s" }}>
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-sm font-semibold text-foreground">Reviews ({reviews.length})</h2>
+            {currentUserId && currentUserId !== userId && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setShowReviewForm(!showReviewForm)}
+                className="text-xs"
+              >
+                {userReview ? "Edit Review" : "Leave Review"}
+              </Button>
+            )}
+          </div>
+
+          {/* Review Form */}
+          {showReviewForm && currentUserId !== userId && (
+            <Card className="p-4 mb-3 border-border">
+              <div className="space-y-3">
+                <div>
+                  <label className="text-sm font-medium text-foreground mb-2 block">Rating</label>
+                  <div className="flex gap-1">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button
+                        key={star}
+                        onClick={() => setRating(star)}
+                        className="transition-all"
+                      >
+                        <Star
+                          className={`h-6 w-6 ${
+                            star <= rating
+                              ? "fill-primary text-primary"
+                              : "text-muted-foreground"
+                          }`}
+                        />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-foreground mb-2 block">Comment (optional)</label>
+                  <Textarea
+                    placeholder="Share your experience..."
+                    value={comment}
+                    onChange={(e) => setComment(e.target.value)}
+                    className="min-h-[80px]"
+                    maxLength={500}
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">{comment.length}/500</p>
+                </div>
+
+                <div className="flex gap-2">
+                  <Button
+                    onClick={handleSubmitReview}
+                    disabled={submittingReview}
+                    className="flex-1"
+                  >
+                    {submittingReview ? "Posting..." : userReview ? "Update Review" : "Post Review"}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setShowReviewForm(false);
+                      if (userReview) {
+                        setRating(userReview.rating);
+                        setComment(userReview.comment || "");
+                      } else {
+                        setRating(5);
+                        setComment("");
+                      }
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          )}
+
+          {/* Reviews List */}
+          {reviews.length > 0 ? (
+            <div className="space-y-2">
+              {reviews.map((review) => (
+                <Card key={review.id} className="p-3 border-border">
+                  <div className="flex items-start gap-3">
+                    <Avatar className="h-8 w-8 flex-shrink-0">
+                      <AvatarImage src={review.reviewer?.avatar_url} />
+                      <AvatarFallback>
+                        {review.reviewer?.display_name?.split(' ').map((n: string) => n[0]).join('') || 'U'}
+                      </AvatarFallback>
+                    </Avatar>
+
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-2 mb-1">
+                        <h4 className="text-sm font-semibold text-foreground truncate">
+                          {review.reviewer?.display_name || 'Anonymous'}
+                        </h4>
+                        <div className="flex gap-0.5 flex-shrink-0">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <Star
+                              key={star}
+                              className={`h-3 w-3 ${
+                                star <= review.rating
+                                  ? "fill-primary text-primary"
+                                  : "text-muted-foreground"
+                              }`}
+                            />
+                          ))}
+                        </div>
+                      </div>
+
+                      {review.comment && (
+                        <p className="text-sm text-foreground">{review.comment}</p>
+                      )}
+
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {new Date(review.created_at).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <Card className="p-6 text-center border-border">
+              <p className="text-sm text-muted-foreground">No reviews yet</p>
+            </Card>
+          )}
+        </div>
 
         {/* Listings */}
         <div className="animate-fade-in" style={{ animationDelay: "0.1s" }}>
