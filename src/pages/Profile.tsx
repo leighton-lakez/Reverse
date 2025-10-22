@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Settings, MapPin, Calendar, Star, Package, Edit2, Eye, MessageCircle } from "lucide-react";
+import { Settings, MapPin, Calendar, Star, Package, Edit2, Eye, MessageCircle, CheckCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -137,6 +137,35 @@ const Profile = () => {
       setMyListings(itemsWithStats);
     }
     setLoading(false);
+  };
+
+  const handleMarkAsSold = async (itemId: string, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent navigation to edit page
+
+    try {
+      const { error } = await supabase
+        .from("items")
+        .update({ status: "sold" })
+        .eq("id", itemId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Marked as Sold",
+        description: "Your listing has been marked as sold.",
+      });
+
+      // Refresh listings
+      if (user?.id) {
+        await fetchUserItems(user.id);
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: getUserFriendlyError(error),
+        variant: "destructive",
+      });
+    }
   };
 
   const fetchFollowCounts = async (userId: string) => {
@@ -349,8 +378,8 @@ const Profile = () => {
             ) : activeListings.length > 0 ? (
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                 {activeListings.map((item) => (
-                  <Card 
-                    key={item.id} 
+                  <Card
+                    key={item.id}
                     className="group overflow-hidden border-border hover:shadow-[var(--shadow-glow)] transition-all cursor-pointer"
                     onClick={() => navigate(`/edit-listing/${item.id}`)}
                   >
@@ -366,8 +395,17 @@ const Profile = () => {
                       <Badge className="absolute top-1 right-1 text-xs bg-primary text-primary-foreground">
                         Active
                       </Badge>
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        className="absolute bottom-2 right-2 h-7 text-xs gap-1"
+                        onClick={(e) => handleMarkAsSold(item.id, e)}
+                      >
+                        <CheckCircle className="h-3 w-3" />
+                        Sold
+                      </Button>
                     </div>
-                    
+
                     <div className="p-2 space-y-1">
                       <h3 className="font-semibold text-xs text-foreground line-clamp-1">{item.title}</h3>
                       <div className="flex items-center justify-between">

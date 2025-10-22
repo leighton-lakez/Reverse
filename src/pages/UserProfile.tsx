@@ -202,9 +202,17 @@ const UserProfile = () => {
       await fetchReviews(userId, currentUserId);
       setShowReviewForm(false);
     } catch (error: any) {
+      console.error('Review submission error:', error);
+      console.error('Error details:', {
+        message: error?.message,
+        code: error?.code,
+        details: error?.details,
+        hint: error?.hint,
+        full: error
+      });
       toast({
-        title: "Error",
-        description: getUserFriendlyError(error),
+        title: "Error Posting Review",
+        description: error?.message || error?.details || getUserFriendlyError(error),
         variant: "destructive",
       });
     } finally {
