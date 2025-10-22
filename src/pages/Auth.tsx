@@ -27,7 +27,7 @@ export default function Auth() {
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (session && event === 'SIGNED_IN') {
+      if (session && (event === 'SIGNED_IN' || event === 'USER_UPDATED')) {
         // Check if profile exists
         supabase
           .from('profiles')
@@ -68,7 +68,7 @@ export default function Auth() {
 
       if (isSignUp) {
         // Sign up
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email: validationResult.data.email,
           password: validationResult.data.password,
         });
@@ -79,6 +79,21 @@ export default function Auth() {
           title: "Success!",
           description: "Account created successfully.",
         });
+
+        // Check if profile exists and redirect
+        if (data.user) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', data.user.id)
+            .maybeSingle();
+
+          if (!profile || !profile.display_name) {
+            navigate("/profile-setup");
+          } else {
+            navigate("/");
+          }
+        }
       } else {
         // Sign in
         const { error } = await supabase.auth.signInWithPassword({
