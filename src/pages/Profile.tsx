@@ -402,11 +402,11 @@ const Profile = () => {
                         <DropdownMenuTrigger asChild>
                           <Button
                             size="icon"
-                            variant="secondary"
-                            className="absolute top-1 left-1 h-7 w-7"
+                            variant="ghost"
+                            className="absolute top-1 left-1 h-7 w-7 bg-background/80 hover:bg-background/90 backdrop-blur-sm"
                             onClick={(e) => e.stopPropagation()}
                           >
-                            <MoreVertical className="h-4 w-4" />
+                            <MoreVertical className="h-4 w-4 text-primary" />
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="start">
