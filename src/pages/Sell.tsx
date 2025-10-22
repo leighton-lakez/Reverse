@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Upload, X, Send, Loader2 } from "lucide-react";
+import { Upload, X, Send, Loader2, Video } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,6 +30,7 @@ type ItemData = {
   size: string;
   tradePreference: string;
   images: File[];
+  videos: File[];
 };
 
 const conversationSteps = [
@@ -71,9 +72,11 @@ const Sell = () => {
     size: "",
     tradePreference: "",
     images: [],
+    videos: [],
   });
 
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  const [videoPreviews, setVideoPreviews] = useState<string[]>([]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -127,7 +130,7 @@ const Sell = () => {
       300
     );
     setTimeout(() => {
-      addBotMessageWithDelay("First up, let's add some photos of your item. You can upload multiple images. Click the upload button below! 📸", 1000);
+      addBotMessageWithDelay("First up, let's add some photos or videos of your item. You can upload multiple files. Click the upload button below! 📸🎥", 1000);
     }, 1000);
   };
 
@@ -135,19 +138,41 @@ const Sell = () => {
     const files = e.target.files;
     if (files) {
       const newFiles = Array.from(files);
-      const newPreviews = newFiles.map((file) => URL.createObjectURL(file));
 
-      const updatedImages = [...itemData.images, ...newFiles];
-      const updatedPreviews = [...imagePreviews, ...newPreviews];
+      // Separate images and videos
+      const newImages = newFiles.filter(file => file.type.startsWith('image/'));
+      const newVideos = newFiles.filter(file => file.type.startsWith('video/'));
 
-      setItemData({ ...itemData, images: updatedImages });
-      setImagePreviews(updatedPreviews);
+      // Check video file size (max 50MB per video)
+      const oversizedVideos = newVideos.filter(video => video.size > 50 * 1024 * 1024);
+      if (oversizedVideos.length > 0) {
+        toast({
+          title: "Video too large",
+          description: "Videos must be under 50MB each",
+          variant: "destructive",
+        });
+        return;
+      }
 
-      addMessage(`Added ${newFiles.length} photo(s)`, "user");
+      // Create previews
+      const newImagePreviews = newImages.map((file) => URL.createObjectURL(file));
+      const newVideoPreviews = newVideos.map((file) => URL.createObjectURL(file));
 
-      if (updatedImages.length > 0) {
+      const updatedImages = [...itemData.images, ...newImages];
+      const updatedVideos = [...itemData.videos, ...newVideos];
+      const updatedImagePreviews = [...imagePreviews, ...newImagePreviews];
+      const updatedVideoPreviews = [...videoPreviews, ...newVideoPreviews];
+
+      setItemData({ ...itemData, images: updatedImages, videos: updatedVideos });
+      setImagePreviews(updatedImagePreviews);
+      setVideoPreviews(updatedVideoPreviews);
+
+      const totalFiles = updatedImages.length + updatedVideos.length;
+      addMessage(`Added ${newImages.length} photo(s) and ${newVideos.length} video(s)`, "user");
+
+      if (totalFiles > 0) {
         addBotMessageWithDelay(
-          `Great! I've got ${updatedImages.length} photo(s). You can add more or we can move on. What's the title of your item?`,
+          `Great! I've got ${updatedImages.length} photo(s) and ${updatedVideos.length} video(s). You can add more or we can move on. What's the title of your item?`,
           800
         );
         setCurrentStep("title");
@@ -162,6 +187,15 @@ const Sell = () => {
       images: itemData.images.filter((_, i) => i !== index),
     });
     setImagePreviews(imagePreviews.filter((_, i) => i !== index));
+  };
+
+  const removeVideo = (index: number) => {
+    URL.revokeObjectURL(videoPreviews[index]);
+    setItemData({
+      ...itemData,
+      videos: itemData.videos.filter((_, i) => i !== index),
+    });
+    setVideoPreviews(videoPreviews.filter((_, i) => i !== index));
   };
 
   const handleSubmitInput = (value?: string) => {
@@ -268,7 +302,7 @@ const Sell = () => {
 📍 Location: ${data.location}
 📏 Size: ${data.size}
 🔄 Open to trades: ${data.tradePreference}
-📸 ${data.images.length} photo(s)
+📸 ${data.images.length} photo(s)${data.videos.length > 0 ? ` and ${data.videos.length} video(s)` : ''}
       `.trim();
 
       addMessage(summary, "bot");
@@ -298,9 +332,11 @@ const Sell = () => {
   };
 
   const resetConversation = () => {
-    // Clear images
+    // Clear images and videos
     imagePreviews.forEach(preview => URL.revokeObjectURL(preview));
+    videoPreviews.forEach(preview => URL.revokeObjectURL(preview));
     setImagePreviews([]);
+    setVideoPreviews([]);
 
     // Reset state
     setMessages([]);
@@ -315,6 +351,7 @@ const Sell = () => {
       size: "",
       tradePreference: "",
       images: [],
+      videos: [],
     });
     setCurrentStep("welcome");
 
@@ -330,9 +367,9 @@ const Sell = () => {
     addBotMessageWithDelay("Great! Let me create your listing... 🚀", 300);
 
     try {
-      // Check if at least one image is uploaded
-      if (itemData.images.length === 0) {
-        throw new Error('Please upload at least one photo');
+      // Check if at least one image or video is uploaded
+      if (itemData.images.length === 0 && itemData.videos.length === 0) {
+        throw new Error('Please upload at least one photo or video');
       }
 
       // Validate - handle empty strings for optional fields
@@ -375,6 +412,28 @@ const Sell = () => {
         uploadedImageUrls.push(publicUrl);
       }
 
+      // Upload videos
+      const uploadedVideoUrls: string[] = [];
+      for (const file of itemData.videos) {
+        const fileExt = file.name.split(".").pop();
+        const fileName = `${userId}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from("item-images")
+          .upload(fileName, file);
+
+        if (uploadError) {
+          console.error('Video upload error:', uploadError);
+          throw new Error(`Failed to upload videos: ${uploadError.message}`);
+        }
+
+        const {
+          data: { publicUrl },
+        } = supabase.storage.from("item-images").getPublicUrl(uploadData.path);
+
+        uploadedVideoUrls.push(publicUrl);
+      }
+
       // Insert item
       const { error, data: insertedData } = await supabase.from("items").insert({
         user_id: userId,
@@ -388,6 +447,7 @@ const Sell = () => {
         size: validationResult.data.size || null,
         trade_preference: itemData.tradePreference,
         images: uploadedImageUrls,
+        videos: uploadedVideoUrls,
         status: 'available',
       });
 
@@ -522,6 +582,7 @@ const Sell = () => {
           {imagePreviews.length > 0 && currentStep !== "summary" && (
             <div className="flex justify-start">
               <div className="glass rounded-2xl p-3 shadow-md">
+                <p className="text-xs text-muted-foreground mb-2">Photos</p>
                 <div className="grid grid-cols-3 gap-2">
                   {imagePreviews.map((preview, index) => (
                     <div key={index} className="relative aspect-square rounded-md overflow-hidden group">
@@ -532,6 +593,34 @@ const Sell = () => {
                         size="icon"
                         className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
                         onClick={() => removeImage(index)}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Video Previews */}
+          {videoPreviews.length > 0 && currentStep !== "summary" && (
+            <div className="flex justify-start">
+              <div className="glass rounded-2xl p-3 shadow-md">
+                <p className="text-xs text-muted-foreground mb-2">Videos</p>
+                <div className="grid grid-cols-3 gap-2">
+                  {videoPreviews.map((preview, index) => (
+                    <div key={index} className="relative aspect-square rounded-md overflow-hidden group">
+                      <video src={preview} className="w-full h-full object-cover" />
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                        <Video className="h-8 w-8 text-white" />
+                      </div>
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="icon"
+                        className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={() => removeVideo(index)}
                       >
                         <X className="h-3 w-3" />
                       </Button>
@@ -554,7 +643,7 @@ const Sell = () => {
               <input
                 ref={fileInputRef}
                 type="file"
-                accept="image/*"
+                accept="image/*,video/*"
                 multiple
                 className="hidden"
                 onChange={handleImageUpload}
@@ -564,7 +653,7 @@ const Sell = () => {
                 className="flex-1 h-11 sm:h-12 text-sm sm:text-base gradient-primary shadow-glow hover:shadow-glow-secondary transition-all"
               >
                 <Upload className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
-                Upload Photos
+                Upload Photos/Videos
               </Button>
             </div>
           )}
