@@ -79,32 +79,10 @@
     @apply border-border;
   }
 
-  /* Strong glowing gold effect for elements with visible borders */
-  /* Exclude card elements (listings, followers, following) */
-  .border:not([class*="card"]):not(.group),
-  .border-t:not([class*="card"]):not(.group),
-  .border-b:not([class*="card"]):not(.group),
-  .border-l:not([class*="card"]):not(.group),
-  .border-r:not([class*="card"]):not(.group) {
-    box-shadow: 0 0 12px hsl(var(--primary) / 0.35),
-                0 0 24px hsl(var(--primary) / 0.2),
-                0 0 36px hsl(var(--primary) / 0.1);
-  }
-
-  /* Utility class to explicitly disable glow */
-  .no-glow {
-    box-shadow: none !important;
-  }
-
-  /* Intense glowing gold/orange outline effect for focused elements */
-  *:focus,
+  /* Subtle focus state for accessibility - only on keyboard focus */
   *:focus-visible {
     outline: 2px solid hsl(var(--primary));
     outline-offset: 2px;
-    box-shadow: 0 0 0 4px hsl(var(--primary) / 0.3),
-                0 0 16px hsl(var(--primary) / 0.6),
-                0 0 32px hsl(var(--primary) / 0.4),
-                0 0 48px hsl(var(--primary) / 0.2) !important;
   }
 
   body {
@@ -164,9 +142,7 @@
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border: 1px solid var(--glass-border);
-    box-shadow: 0 0 12px hsl(var(--primary) / 0.3),
-                0 0 24px hsl(var(--primary) / 0.15),
-                0 4px 16px hsl(0 0% 0% / 0.4);
+    box-shadow: 0 4px 16px hsl(0 0% 0% / 0.4);
   }
 
   .safe-area-bottom {
