@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Settings, MapPin, Calendar, Star, Package, Edit2, Eye, MessageCircle, CheckCircle, MoreVertical } from "lucide-react";
+import { Settings, MapPin, Calendar, Star, Package, Edit2, Eye, MessageCircle, CheckCircle, MoreVertical, RotateCcw } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -167,6 +167,44 @@ const Profile = () => {
       toast({
         title: "Marked as Sold",
         description: "Your listing has been marked as sold.",
+      });
+
+      // Refresh listings
+      if (user?.id) {
+        await fetchUserItems(user.id);
+      }
+    } catch (error: any) {
+      console.error('Caught error:', error);
+      toast({
+        title: "Error",
+        description: getUserFriendlyError(error),
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleReviveListing = async (itemId: string) => {
+    try {
+      console.log('Reviving listing:', itemId);
+      const { error } = await supabase
+        .from("items")
+        .update({ status: "available" })
+        .eq("id", itemId);
+
+      if (error) {
+        console.error('Revive listing error:', error);
+        console.error('Error details:', {
+          message: error?.message,
+          code: error?.code,
+          details: error?.details,
+          hint: error?.hint
+        });
+        throw error;
+      }
+
+      toast({
+        title: "Listing Revived",
+        description: "Your listing is now active again.",
       });
 
       // Refresh listings
@@ -464,10 +502,9 @@ const Profile = () => {
             {soldListings.length > 0 ? (
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                 {soldListings.map((item) => (
-                  <Card 
-                    key={item.id} 
-                    className="overflow-hidden border-border opacity-75 cursor-pointer hover:opacity-90 transition-opacity"
-                    onClick={() => navigate(`/edit-listing/${item.id}`)}
+                  <Card
+                    key={item.id}
+                    className="group overflow-hidden border-border opacity-75 hover:opacity-90 transition-opacity"
                   >
                     <div className="relative aspect-square overflow-hidden bg-muted">
                       <img
@@ -481,8 +518,30 @@ const Profile = () => {
                       <Badge className="absolute top-1 right-1 text-xs bg-secondary text-secondary-foreground">
                         Sold
                       </Badge>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="absolute top-1 left-1 h-7 w-7 bg-background/80 hover:bg-background/90 backdrop-blur-sm"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <MoreVertical className="h-4 w-4 text-primary" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="start">
+                          <DropdownMenuItem onClick={() => handleReviveListing(item.id)}>
+                            <RotateCcw className="h-4 w-4 mr-2" />
+                            Revive Listing
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => navigate(`/edit-listing/${item.id}`)}>
+                            <Edit2 className="h-4 w-4 mr-2" />
+                            Edit Listing
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
-                    
+
                     <div className="p-2 space-y-1">
                       <h3 className="font-semibold text-xs text-foreground line-clamp-1">{item.title}</h3>
                       <div className="flex items-center justify-between">
