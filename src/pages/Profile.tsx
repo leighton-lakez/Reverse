@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Settings, MapPin, Calendar, Star, Package, Edit2, Eye, MessageCircle, CheckCircle, MoreVertical, RotateCcw, Upload, X } from "lucide-react";
+import { Settings, MapPin, Calendar, Star, Package, Edit2, Eye, MessageCircle, CheckCircle, MoreVertical, RotateCcw, Upload, X, Plus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -26,6 +26,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
 import BottomNav from "@/components/BottomNav";
 import LocationAutocomplete from "@/components/LocationAutocomplete";
+import CreateStory from "@/components/CreateStory";
+import StoryViewer from "@/components/StoryViewer";
 import { supabase } from "@/integrations/supabase/client";
 import { getUserFriendlyError } from "@/lib/errorHandler";
 import { profileSchema } from "@/lib/validationSchemas";
@@ -70,6 +72,9 @@ const Profile = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string>("");
   const [uploading, setUploading] = useState(false);
+  const [createStoryOpen, setCreateStoryOpen] = useState(false);
+  const [storyViewerOpen, setStoryViewerOpen] = useState(false);
+  const [myStories, setMyStories] = useState<any[]>([]);
   const [profileData, setProfileData] = useState({
     name: "",
     bio: "",
@@ -91,6 +96,7 @@ const Profile = () => {
         await fetchUserProfile(session.user.id);
         await fetchUserItems(session.user.id);
         await fetchFollowCounts(session.user.id);
+        await fetchMyStories(session.user.id);
       }
     });
   }, [navigate]);
@@ -237,6 +243,25 @@ const Profile = () => {
 
     setFollowersCount(followers || 0);
     setFollowingCount(following || 0);
+  };
+
+  const fetchMyStories = async (userId: string) => {
+    const { data, error } = await supabase
+      .from("stories")
+      .select(`
+        *,
+        profiles!stories_user_id_fkey (
+          display_name,
+          avatar_url
+        )
+      `)
+      .eq("user_id", userId)
+      .gt("expires_at", new Date().toISOString())
+      .order("created_at", { ascending: false });
+
+    if (!error && data) {
+      setMyStories(data);
+    }
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -550,6 +575,48 @@ const Profile = () => {
           </div>
         </Card>
 
+        {/* Story Section */}
+        <div className="mb-3 animate-fade-in" style={{ animationDelay: "0.05s" }}>
+          <div className="flex items-center gap-3 overflow-x-auto pb-2">
+            {/* Create Story Button */}
+            <div className="flex-shrink-0">
+              <button
+                onClick={() => setCreateStoryOpen(true)}
+                className="flex flex-col items-center gap-1"
+              >
+                <div className="relative">
+                  <Avatar className="h-16 w-16 border-2 border-dashed border-primary">
+                    <AvatarImage src={profileData.avatar} />
+                    <AvatarFallback>{profileData.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                  </Avatar>
+                  <div className="absolute bottom-0 right-0 h-5 w-5 bg-primary rounded-full flex items-center justify-center border-2 border-background">
+                    <Plus className="h-3 w-3 text-primary-foreground" />
+                  </div>
+                </div>
+                <span className="text-xs text-foreground font-medium">Create</span>
+              </button>
+            </div>
+
+            {/* My Stories */}
+            {myStories.length > 0 && (
+              <div className="flex-shrink-0">
+                <button
+                  onClick={() => setStoryViewerOpen(true)}
+                  className="flex flex-col items-center gap-1"
+                >
+                  <div className="p-0.5 rounded-full bg-gradient-to-tr from-primary via-yellow-500 to-primary">
+                    <Avatar className="h-16 w-16 border-2 border-background">
+                      <AvatarImage src={profileData.avatar} />
+                      <AvatarFallback>{profileData.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                    </Avatar>
+                  </div>
+                  <span className="text-xs text-foreground font-medium">My Story</span>
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+
         {/* Listings Tabs */}
         <Tabs defaultValue="active" className="animate-fade-in" style={{ animationDelay: "0.1s" }}>
           <TabsList className="grid w-full grid-cols-2 mb-3">
@@ -694,7 +761,27 @@ const Profile = () => {
           </TabsContent>
         </Tabs>
       </main>
-      
+
+      {/* Story Dialogs */}
+      <CreateStory
+        open={createStoryOpen}
+        onOpenChange={setCreateStoryOpen}
+        onStoryCreated={() => {
+          if (user?.id) {
+            fetchMyStories(user.id);
+          }
+        }}
+      />
+
+      {myStories.length > 0 && (
+        <StoryViewer
+          open={storyViewerOpen}
+          onOpenChange={setStoryViewerOpen}
+          userId={user?.id || ''}
+          stories={myStories}
+        />
+      )}
+
       <BottomNav />
     </div>
   );

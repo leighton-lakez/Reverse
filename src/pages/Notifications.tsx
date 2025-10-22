@@ -6,9 +6,121 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import BottomNav from "@/components/BottomNav";
+import StoryViewer from "@/components/StoryViewer";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { ReverseIcon } from "@/components/ReverseIcon";
+
+// Stories Section Component
+const StoriesSection = ({ currentUserId }: { currentUserId: string }) => {
+  const [storiesWithUsers, setStoriesWithUsers] = useState<any[]>([]);
+  const [selectedUserStories, setSelectedUserStories] = useState<any[]>([]);
+  const [storyViewerOpen, setStoryViewerOpen] = useState(false);
+
+  useEffect(() => {
+    if (currentUserId) {
+      fetchFriendStories();
+    }
+  }, [currentUserId]);
+
+  const fetchFriendStories = async () => {
+    // Get users that current user follows
+    const { data: following } = await supabase
+      .from("follows")
+      .select("following_id")
+      .eq("follower_id", currentUserId);
+
+    if (!following || following.length === 0) {
+      setStoriesWithUsers([]);
+      return;
+    }
+
+    const followingIds = following.map(f => f.following_id);
+
+    // Fetch stories from people you follow
+    const { data: stories } = await supabase
+      .from("stories")
+      .select(`
+        *,
+        profiles!stories_user_id_fkey (
+          id,
+          display_name,
+          avatar_url
+        )
+      `)
+      .in("user_id", followingIds)
+      .gt("expires_at", new Date().toISOString())
+      .order("created_at", { ascending: false });
+
+    if (!stories) {
+      setStoriesWithUsers([]);
+      return;
+    }
+
+    // Group stories by user
+    const groupedByUser = stories.reduce((acc: any, story: any) => {
+      const userId = story.user_id;
+      if (!acc[userId]) {
+        acc[userId] = {
+          userId,
+          profile: story.profiles,
+          stories: []
+        };
+      }
+      acc[userId].stories.push(story);
+      return acc;
+    }, {});
+
+    setStoriesWithUsers(Object.values(groupedByUser));
+  };
+
+  const handleStoryClick = (userStories: any) => {
+    setSelectedUserStories(userStories.stories);
+    setStoryViewerOpen(true);
+  };
+
+  if (storiesWithUsers.length === 0) {
+    return null;
+  }
+
+  return (
+    <>
+      <div className="mb-4">
+        <h2 className="text-sm font-semibold text-foreground mb-2">Stories</h2>
+        <div className="flex gap-3 overflow-x-auto pb-2">
+          {storiesWithUsers.map((userStory) => (
+            <button
+              key={userStory.userId}
+              onClick={() => handleStoryClick(userStory)}
+              className="flex flex-col items-center gap-1 flex-shrink-0"
+            >
+              <div className="p-0.5 rounded-full bg-gradient-to-tr from-primary via-yellow-500 to-primary">
+                <Avatar className="h-16 w-16 border-2 border-background">
+                  <AvatarImage src={userStory.profile?.avatar_url} />
+                  <AvatarFallback>
+                    {userStory.profile?.display_name?.split(' ').map((n: string) => n[0]).join('') || 'U'}
+                  </AvatarFallback>
+                </Avatar>
+              </div>
+              <span className="text-xs text-foreground font-medium max-w-[64px] truncate">
+                {userStory.profile?.display_name || 'User'}
+              </span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {selectedUserStories.length > 0 && (
+        <StoryViewer
+          open={storyViewerOpen}
+          onOpenChange={setStoryViewerOpen}
+          userId={selectedUserStories[0]?.user_id || ''}
+          stories={selectedUserStories}
+        />
+      )}
+    </>
+  );
+};
 
 // Friends Section Component
 const FriendsSection = ({ currentUserId }: { currentUserId: string }) => {
@@ -268,6 +380,11 @@ const Notifications = () => {
               <p className="text-2xl font-bold text-foreground">{unreadCount}</p>
             </div>
           </div>
+        </div>
+
+        {/* Stories Section */}
+        <div className="animate-fade-in" style={{ animationDelay: "0.05s" }}>
+          <StoriesSection currentUserId={currentUserId} />
         </div>
 
         {/* Message Notifications */}

@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
 import BottomNav from "@/components/BottomNav";
+import StoryViewer from "@/components/StoryViewer";
 import { supabase } from "@/integrations/supabase/client";
 import { getUserFriendlyError } from "@/lib/errorHandler";
 import { ReverseIcon } from "@/components/ReverseIcon";
@@ -38,6 +39,10 @@ const UserProfile = () => {
   const [submittingReview, setSubmittingReview] = useState(false);
   const [averageRating, setAverageRating] = useState(0);
 
+  // Story state
+  const [userStories, setUserStories] = useState<any[]>([]);
+  const [storyViewerOpen, setStoryViewerOpen] = useState(false);
+
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (!session) {
@@ -51,6 +56,7 @@ const UserProfile = () => {
         await checkFollowStatus(session.user.id, userId);
         await fetchFollowCounts(userId);
         await fetchReviews(userId, session.user.id);
+        await fetchUserStories(userId);
       }
     });
   }, [navigate, userId]);
@@ -121,6 +127,25 @@ const UserProfile = () => {
 
     setFollowersCount(followers || 0);
     setFollowingCount(following || 0);
+  };
+
+  const fetchUserStories = async (uid: string) => {
+    const { data, error } = await supabase
+      .from("stories")
+      .select(`
+        *,
+        profiles!stories_user_id_fkey (
+          display_name,
+          avatar_url
+        )
+      `)
+      .eq("user_id", uid)
+      .gt("expires_at", new Date().toISOString())
+      .order("created_at", { ascending: false });
+
+    if (!error && data) {
+      setUserStories(data);
+    }
   };
 
   const fetchReviews = async (targetUserId: string, currentUid: string) => {
@@ -369,6 +394,28 @@ const UserProfile = () => {
           </div>
         </Card>
 
+        {/* Story Section */}
+        {userStories.length > 0 && (
+          <div className="mb-3 animate-fade-in" style={{ animationDelay: "0.05s" }}>
+            <div className="flex items-center gap-3 overflow-x-auto pb-2">
+              <div className="flex-shrink-0">
+                <button
+                  onClick={() => setStoryViewerOpen(true)}
+                  className="flex flex-col items-center gap-1"
+                >
+                  <div className="p-0.5 rounded-full bg-gradient-to-tr from-primary via-yellow-500 to-primary">
+                    <Avatar className="h-16 w-16 border-2 border-background">
+                      <AvatarImage src={profileData.avatar} />
+                      <AvatarFallback>{profileData.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                    </Avatar>
+                  </div>
+                  <span className="text-xs text-foreground font-medium">View Story</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Reviews Section */}
         <div className="animate-fade-in mb-3" style={{ animationDelay: "0.05s" }}>
           <div className="flex items-center justify-between mb-3">
@@ -546,7 +593,17 @@ const UserProfile = () => {
           )}
         </div>
       </main>
-      
+
+      {/* Story Viewer */}
+      {userStories.length > 0 && (
+        <StoryViewer
+          open={storyViewerOpen}
+          onOpenChange={setStoryViewerOpen}
+          userId={userId || ''}
+          stories={userStories}
+        />
+      )}
+
       <BottomNav />
     </div>
   );
