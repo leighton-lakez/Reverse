@@ -30,6 +30,7 @@ const Index = () => {
   const [skippedItems, setSkippedItems] = useState<Item[]>([]);
   const [showWelcomeCard, setShowWelcomeCard] = useState(false);
   const [welcomeCardAnimating, setWelcomeCardAnimating] = useState(false);
+  const [showContent, setShowContent] = useState(false);
 
   const navigate = useNavigate();
   const cardRef = useRef<HTMLDivElement>(null);
@@ -70,6 +71,9 @@ const Index = () => {
     const hasStartedBrowsing = localStorage.getItem("hasStartedBrowsing");
     if (!hasStartedBrowsing) {
       setShowWelcomeCard(true);
+      setShowContent(false);
+    } else {
+      setShowContent(true);
     }
   }, []);
 
@@ -108,7 +112,10 @@ const Index = () => {
     setTimeout(() => {
       setShowWelcomeCard(false);
       localStorage.setItem("hasStartedBrowsing", "true");
-    }, 800); // Match animation duration
+    }, 800); // Match spin animation duration
+    setTimeout(() => {
+      setShowContent(true);
+    }, 600); // Start fading in content slightly before card is gone
   };
 
   const sendInterestedMessage = async (item: Item) => {
@@ -339,9 +346,15 @@ const Index = () => {
             </Button>
           </div>
         ) : (
-          <>
+          <div
+            className={`w-full transition-all duration-700 ${
+              showContent
+                ? 'opacity-100 translate-y-0'
+                : 'opacity-0 translate-y-8'
+            }`}
+          >
             {/* Swipe Instructions */}
-            <div className="text-center mb-2 sm:mb-4 animate-fade-in">
+            <div className="text-center mb-2 sm:mb-4">
               <p className="text-xs sm:text-base text-muted-foreground flex items-center justify-center gap-2">
                 <span className="text-red-500">← Swipe left to pass</span>
                 <span>•</span>
@@ -471,7 +484,7 @@ const Index = () => {
             <div className="mt-2 sm:mt-4 text-center text-xs sm:text-sm text-muted-foreground">
               {currentIndex + 1} / {items.length}
             </div>
-          </>
+          </div>
         )}
       </main>
 
