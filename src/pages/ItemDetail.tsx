@@ -10,6 +10,7 @@ import BottomNav from "@/components/BottomNav";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ReverseIcon } from "@/components/ReverseIcon";
+import LocationMap from "@/components/LocationMap";
 
 const ItemDetail = () => {
   const navigate = useNavigate();
@@ -200,6 +201,17 @@ const ItemDetail = () => {
               <MessageCircle className="h-5 w-5" />
               Message Seller
             </Button>
+
+            {/* Location Map */}
+            {item.location && (
+              <Card className="p-3 border-border">
+                <h3 className="text-sm font-semibold text-foreground mb-2 flex items-center gap-1">
+                  <MapPin className="h-4 w-4 text-primary" />
+                  Seller Location
+                </h3>
+                <LocationMap location={item.location} />
+              </Card>
+            )}
           </div>
         </div>
       </main>
