@@ -471,8 +471,8 @@ const Sell = () => {
       </header>
 
       {/* Chat Messages */}
-      <main className="flex-1 max-w-3xl mx-auto w-full px-3 sm:px-4 py-4 sm:py-6 overflow-y-auto">
-        <div className="space-y-4">
+      <main className="flex-1 max-w-3xl mx-auto w-full px-3 sm:px-4 py-4 sm:py-6 overflow-y-auto pb-32 sm:pb-24">
+        <div className="space-y-4 pb-8">
           {messages.map((message) => (
             <div
               key={message.id}
