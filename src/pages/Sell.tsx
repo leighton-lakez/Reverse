@@ -329,20 +329,26 @@ const Sell = () => {
     addBotMessageWithDelay("Great! Let me create your listing... 🚀", 300);
 
     try {
-      // Validate
+      // Check if at least one image is uploaded
+      if (itemData.images.length === 0) {
+        throw new Error('Please upload at least one photo');
+      }
+
+      // Validate - handle empty strings for optional fields
       const validationResult = itemSchema.safeParse({
         title: itemData.title,
-        brand: itemData.brand,
+        brand: itemData.brand || '',
         category: itemData.category,
         description: itemData.description,
         condition: itemData.condition,
         price: parseFloat(itemData.price),
         location: itemData.location,
-        size: itemData.size,
+        size: itemData.size || '',
       });
 
       if (!validationResult.success) {
         const firstError = validationResult.error.errors[0];
+        console.error('Validation errors:', validationResult.error.errors);
         throw new Error(firstError.message);
       }
 
@@ -357,7 +363,8 @@ const Sell = () => {
           .upload(fileName, file);
 
         if (uploadError) {
-          throw new Error("Failed to upload images");
+          console.error('Image upload error:', uploadError);
+          throw new Error(`Failed to upload images: ${uploadError.message}`);
         }
 
         const {
@@ -368,22 +375,25 @@ const Sell = () => {
       }
 
       // Insert item
-      const { error } = await supabase.from("items").insert({
+      const { error, data: insertedData } = await supabase.from("items").insert({
         user_id: userId,
         title: validationResult.data.title,
-        brand: validationResult.data.brand,
+        brand: validationResult.data.brand || null,
         category: validationResult.data.category,
         description: validationResult.data.description,
         condition: validationResult.data.condition,
         price: validationResult.data.price,
         location: validationResult.data.location,
-        size: validationResult.data.size,
+        size: validationResult.data.size || null,
         trade_preference: itemData.tradePreference,
         images: uploadedImageUrls,
         status: 'available',
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Database insert error:', error);
+        throw error;
+      }
 
       setTimeout(() => {
         addMessage("Your item is now live! ✨", "bot");
