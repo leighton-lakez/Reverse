@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Settings, MapPin, Calendar, Star, Package, Edit2 } from "lucide-react";
+import { Settings, MapPin, Calendar, Star, Package, Edit2, Eye, MessageCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -112,7 +112,28 @@ const Profile = () => {
       .order("created_at", { ascending: false });
 
     if (!error && data) {
-      setMyListings(data);
+      // Fetch conversation counts for each item
+      const itemsWithStats = await Promise.all(
+        data.map(async (item) => {
+          // Count unique conversations (distinct senders) for this item
+          const { data: messages } = await supabase
+            .from("messages")
+            .select("sender_id")
+            .eq("item_id", item.id)
+            .eq("receiver_id", userId);
+
+          const uniqueSenders = new Set(messages?.map(m => m.sender_id) || []);
+          const conversationCount = uniqueSenders.size;
+
+          return {
+            ...item,
+            conversationCount,
+            viewCount: 0 // Placeholder for views (not tracked yet)
+          };
+        })
+      );
+
+      setMyListings(itemsWithStats);
     }
     setLoading(false);
   };
@@ -350,6 +371,16 @@ const Profile = () => {
                       <div className="flex items-center justify-between">
                         <span className="text-sm font-bold text-primary">${parseFloat(item.price)}</span>
                         <Badge variant="outline" className="text-[10px] px-1 py-0">{item.condition}</Badge>
+                      </div>
+                      <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                        <div className="flex items-center gap-0.5">
+                          <Eye className="h-3 w-3" />
+                          <span>{item.viewCount || 0}</span>
+                        </div>
+                        <div className="flex items-center gap-0.5">
+                          <MessageCircle className="h-3 w-3" />
+                          <span>{item.conversationCount || 0}</span>
+                        </div>
                       </div>
                     </div>
                   </Card>
