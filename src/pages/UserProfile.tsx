@@ -129,7 +129,7 @@ const UserProfile = () => {
       .from("reviews")
       .select(`
         *,
-        reviewer:reviewer_id (
+        profiles!reviews_reviewer_id_fkey (
           id,
           display_name,
           avatar_url
@@ -138,17 +138,30 @@ const UserProfile = () => {
       .eq("reviewed_user_id", targetUserId)
       .order("created_at", { ascending: false });
 
+    console.log('Fetching reviews for user:', targetUserId);
+    console.log('Reviews query result:', { data: reviewsData, error });
+
+    if (error) {
+      console.error('Error fetching reviews:', error);
+    }
+
     if (!error && reviewsData) {
-      setReviews(reviewsData);
+      // Transform the data to match expected format
+      const transformedReviews = reviewsData.map(review => ({
+        ...review,
+        reviewer: review.profiles
+      }));
+
+      setReviews(transformedReviews);
 
       // Calculate average rating
-      if (reviewsData.length > 0) {
-        const avg = reviewsData.reduce((sum, r) => sum + r.rating, 0) / reviewsData.length;
+      if (transformedReviews.length > 0) {
+        const avg = transformedReviews.reduce((sum, r) => sum + r.rating, 0) / transformedReviews.length;
         setAverageRating(Math.round(avg * 10) / 10);
       }
 
       // Check if current user has already reviewed
-      const existingReview = reviewsData.find(r => r.reviewer_id === currentUid);
+      const existingReview = transformedReviews.find(r => r.reviewer_id === currentUid);
       if (existingReview) {
         setUserReview(existingReview);
         setRating(existingReview.rating);
