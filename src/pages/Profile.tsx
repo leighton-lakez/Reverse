@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Settings, MapPin, Calendar, Star, Package, Edit2, Eye, MessageCircle, CheckCircle } from "lucide-react";
+import { Settings, MapPin, Calendar, Star, Package, Edit2, Eye, MessageCircle, CheckCircle, MoreVertical } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -14,6 +14,12 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -139,9 +145,7 @@ const Profile = () => {
     setLoading(false);
   };
 
-  const handleMarkAsSold = async (itemId: string, e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent navigation to edit page
-
+  const handleMarkAsSold = async (itemId: string) => {
     try {
       const { error } = await supabase
         .from("items")
@@ -380,8 +384,7 @@ const Profile = () => {
                 {activeListings.map((item) => (
                   <Card
                     key={item.id}
-                    className="group overflow-hidden border-border hover:shadow-[var(--shadow-glow)] transition-all cursor-pointer"
-                    onClick={() => navigate(`/edit-listing/${item.id}`)}
+                    className="group overflow-hidden border-border hover:shadow-[var(--shadow-glow)] transition-all"
                   >
                     <div className="relative aspect-square overflow-hidden bg-muted">
                       <img
@@ -395,15 +398,28 @@ const Profile = () => {
                       <Badge className="absolute top-1 right-1 text-xs bg-primary text-primary-foreground">
                         Active
                       </Badge>
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        className="absolute bottom-2 right-2 h-7 text-xs gap-1"
-                        onClick={(e) => handleMarkAsSold(item.id, e)}
-                      >
-                        <CheckCircle className="h-3 w-3" />
-                        Sold
-                      </Button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            size="icon"
+                            variant="secondary"
+                            className="absolute top-1 left-1 h-7 w-7"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="start">
+                          <DropdownMenuItem onClick={() => navigate(`/edit-listing/${item.id}`)}>
+                            <Edit2 className="h-4 w-4 mr-2" />
+                            Edit Listing
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleMarkAsSold(item.id)}>
+                            <CheckCircle className="h-4 w-4 mr-2" />
+                            Mark as Sold
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
 
                     <div className="p-2 space-y-1">
