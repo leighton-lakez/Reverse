@@ -547,7 +547,7 @@ const Sell = () => {
       </main>
 
       {/* Input Area */}
-      <div className="sticky bottom-0 sm:bottom-16 glass safe-area-bottom">
+      <div className="sticky bottom-0 sm:bottom-16 safe-area-bottom">
         <div className="max-w-3xl mx-auto px-3 sm:px-6 py-3 sm:py-4">
           {currentStep === "images" && (
             <div className="flex gap-2">
