@@ -147,12 +147,22 @@ const Profile = () => {
 
   const handleMarkAsSold = async (itemId: string) => {
     try {
+      console.log('Marking item as sold:', itemId);
       const { error } = await supabase
         .from("items")
         .update({ status: "sold" })
         .eq("id", itemId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Mark as sold error:', error);
+        console.error('Error details:', {
+          message: error?.message,
+          code: error?.code,
+          details: error?.details,
+          hint: error?.hint
+        });
+        throw error;
+      }
 
       toast({
         title: "Marked as Sold",
@@ -164,9 +174,10 @@ const Profile = () => {
         await fetchUserItems(user.id);
       }
     } catch (error: any) {
+      console.error('Caught error:', error);
       toast({
-        title: "Error",
-        description: getUserFriendlyError(error),
+        title: "Error Marking as Sold",
+        description: error?.message || error?.details || getUserFriendlyError(error),
         variant: "destructive",
       });
     }
