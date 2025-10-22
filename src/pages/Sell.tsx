@@ -8,6 +8,7 @@ import BottomNav from "@/components/BottomNav";
 import { supabase } from "@/integrations/supabase/client";
 import { getUserFriendlyError } from "@/lib/errorHandler";
 import { itemSchema } from "@/lib/validationSchemas";
+import { ReverseIcon } from "@/components/ReverseIcon";
 
 type Message = {
   id: string;
@@ -462,10 +463,9 @@ const Sell = () => {
       {/* Header */}
       <header className="sticky top-0 z-50 glass">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 py-3 sm:py-4">
-          <div className="flex items-center gap-2 justify-center">
-            <h1 className="text-xl sm:text-2xl font-black tracking-tighter text-gradient">
-              List Your Item
-            </h1>
+          <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate("/")}>
+            <ReverseIcon className="w-8 h-8" />
+            <h1 className="text-xl font-black tracking-tighter text-gradient">REVERSE</h1>
           </div>
         </div>
       </header>

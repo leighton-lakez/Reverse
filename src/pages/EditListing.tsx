@@ -28,6 +28,7 @@ import { supabase } from "@/integrations/supabase/client";
 import LocationAutocomplete from "@/components/LocationAutocomplete";
 import { getUserFriendlyError } from "@/lib/errorHandler";
 import { itemSchema } from "@/lib/validationSchemas";
+import { ReverseIcon } from "@/components/ReverseIcon";
 
 const EditListing = () => {
   const navigate = useNavigate();
@@ -273,15 +274,10 @@ const EditListing = () => {
       <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-lg border-b border-border">
         <div className="max-w-3xl mx-auto px-4 py-2">
           <div className="flex items-center justify-between">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => navigate("/profile")}
-              className="hover:bg-muted"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <h1 className="text-xl font-bold text-foreground">Edit Listing</h1>
+            <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate("/")}>
+              <ReverseIcon className="w-8 h-8" />
+              <h1 className="text-xl font-black tracking-tighter text-gradient">REVERSE</h1>
+            </div>
             <Button
               variant="ghost"
               size="icon"

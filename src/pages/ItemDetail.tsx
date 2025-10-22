@@ -9,6 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import BottomNav from "@/components/BottomNav";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { ReverseIcon } from "@/components/ReverseIcon";
 
 const ItemDetail = () => {
   const navigate = useNavigate();
@@ -76,14 +77,10 @@ const ItemDetail = () => {
       <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-lg border-b border-border">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => navigate("/")}
-              className="hover:bg-muted"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
+            <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate("/")}>
+              <ReverseIcon className="w-8 h-8" />
+              <h1 className="text-xl font-black tracking-tighter text-gradient">REVERSE</h1>
+            </div>
             <div className="flex gap-2">
               <Button
                 variant="ghost"

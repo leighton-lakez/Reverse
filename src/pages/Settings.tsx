@@ -30,6 +30,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { ReverseIcon } from "@/components/ReverseIcon";
 
 const Settings = () => {
   const navigate = useNavigate();
@@ -110,7 +111,11 @@ const Settings = () => {
       {/* Header */}
       <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-lg border-b border-border">
         <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate("/")}>
+              <ReverseIcon className="w-8 h-8" />
+              <h1 className="text-xl font-black tracking-tighter text-gradient">REVERSE</h1>
+            </div>
             <Button
               variant="ghost"
               size="icon"
@@ -119,7 +124,6 @@ const Settings = () => {
             >
               <ArrowLeft className="h-5 w-5" />
             </Button>
-            <h1 className="text-2xl font-bold text-foreground">Settings</h1>
           </div>
         </div>
       </header>

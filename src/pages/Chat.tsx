@@ -12,6 +12,7 @@ import { toast } from "@/hooks/use-toast";
 import { getUserFriendlyError } from "@/lib/errorHandler";
 import { messageSchema } from "@/lib/validationSchemas";
 import EmojiPicker from "emoji-picker-react";
+import { ReverseIcon } from "@/components/ReverseIcon";
 
 interface Message {
   id: number;
@@ -316,33 +317,21 @@ const Chat = () => {
       <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-lg border-b border-border">
         <div className="max-w-7xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => {
-                  if (window.history.length > 1) {
-                    navigate(-1);
-                  } else {
-                    navigate("/messages");
-                  }
-                }}
-                className="hover:bg-muted"
-              >
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
-              <div 
-                className="flex items-center gap-3 cursor-pointer hover:bg-muted/50 rounded-lg p-2 -m-2 transition-colors"
-                onClick={() => navigate(`/user/${sellerId}`)}
-              >
-                <Avatar className="h-10 w-10 border-2 border-primary">
-                  <AvatarImage src={seller?.avatar} />
-                  <AvatarFallback>{seller?.name?.split(' ').map((n: string) => n[0]).join('')}</AvatarFallback>
-                </Avatar>
-                <div>
-                  <h2 className="font-semibold text-foreground">{seller?.name}</h2>
-                  <p className="text-xs text-muted-foreground">Online</p>
-                </div>
+            <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate("/")}>
+              <ReverseIcon className="w-8 h-8" />
+              <h1 className="text-xl font-black tracking-tighter text-gradient">REVERSE</h1>
+            </div>
+            <div
+              className="flex items-center gap-3 cursor-pointer hover:bg-muted/50 rounded-lg p-2 -m-2 transition-colors"
+              onClick={() => navigate(`/user/${sellerId}`)}
+            >
+              <Avatar className="h-10 w-10 border-2 border-primary">
+                <AvatarImage src={seller?.avatar} />
+                <AvatarFallback>{seller?.name?.split(' ').map((n: string) => n[0]).join('')}</AvatarFallback>
+              </Avatar>
+              <div>
+                <h2 className="font-semibold text-foreground">{seller?.name}</h2>
+                <p className="text-xs text-muted-foreground">Online</p>
               </div>
             </div>
           </div>

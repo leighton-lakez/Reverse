@@ -23,6 +23,7 @@ import LocationAutocomplete from "@/components/LocationAutocomplete";
 import { supabase } from "@/integrations/supabase/client";
 import { getUserFriendlyError } from "@/lib/errorHandler";
 import { profileSchema } from "@/lib/validationSchemas";
+import { ReverseIcon } from "@/components/ReverseIcon";
 
 const myListings = [
   {
@@ -217,12 +218,13 @@ const Profile = () => {
       <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-lg border-b border-border">
         <div className="max-w-7xl mx-auto px-4 py-2">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <h1 className="text-xl font-bold text-foreground">Profile</h1>
+            <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate("/")}>
+              <ReverseIcon className="w-7 h-7" />
+              <h1 className="text-lg font-black tracking-tighter text-gradient">REVERSE</h1>
             </div>
-            <Button 
-              variant="ghost" 
-              size="icon" 
+            <Button
+              variant="ghost"
+              size="icon"
               className="hover:bg-muted"
               onClick={() => navigate("/settings")}
             >

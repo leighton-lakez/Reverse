@@ -13,6 +13,7 @@ import { checkoutSchema } from "@/lib/validationSchemas";
 import { getStripe } from "@/lib/stripe";
 import { Elements } from "@stripe/react-stripe-js";
 import PaymentForm from "@/components/PaymentForm";
+import { ReverseIcon } from "@/components/ReverseIcon";
 
 const Checkout = () => {
   const navigate = useNavigate();
@@ -123,22 +124,9 @@ const Checkout = () => {
       {/* Header */}
       <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-lg border-b border-border">
         <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="flex items-center gap-3">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => {
-                if (window.history.length > 1) {
-                  navigate(-1);
-                } else {
-                  navigate("/");
-                }
-              }}
-              className="hover:bg-muted"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <h1 className="text-2xl font-bold text-foreground">Checkout</h1>
+          <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate("/")}>
+            <ReverseIcon className="w-8 h-8" />
+            <h1 className="text-xl font-black tracking-tighter text-gradient">REVERSE</h1>
           </div>
         </div>
       </header>

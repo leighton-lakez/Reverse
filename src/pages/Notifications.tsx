@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/card";
 import BottomNav from "@/components/BottomNav";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { ReverseIcon } from "@/components/ReverseIcon";
 
 // Friends Section Component
 const FriendsSection = ({ currentUserId }: { currentUserId: string }) => {
@@ -240,7 +241,10 @@ const Notifications = () => {
       {/* Header */}
       <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-lg border-b border-border">
         <div className="max-w-7xl mx-auto px-4 py-4">
-          <h1 className="text-2xl font-bold text-foreground">Notifications</h1>
+          <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate("/")}>
+            <ReverseIcon className="w-8 h-8" />
+            <h1 className="text-xl font-black tracking-tighter text-gradient">REVERSE</h1>
+          </div>
         </div>
       </header>
 
