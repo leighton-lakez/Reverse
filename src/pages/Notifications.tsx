@@ -100,6 +100,7 @@ const Notifications = () => {
   const [messageNotifications, setMessageNotifications] = useState<any[]>([]);
   const [listingCount, setListingCount] = useState<number>(0);
   const [currentUserId, setCurrentUserId] = useState<string>("");
+  const [loadingMessages, setLoadingMessages] = useState<boolean>(true);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -150,13 +151,17 @@ const Notifications = () => {
   };
 
   const fetchMessageNotifications = async (userId: string) => {
+    setLoadingMessages(true);
     const { data: messages, error } = await supabase
       .from("messages")
       .select("*")
       .eq("receiver_id", userId)
       .order("created_at", { ascending: false });
 
-    if (error || !messages) return;
+    if (error || !messages) {
+      setLoadingMessages(false);
+      return;
+    }
 
     // Group messages by sender
     const groupedBySender = messages.reduce((acc, msg) => {
@@ -212,8 +217,9 @@ const Notifications = () => {
       const bTime = new Date(groupedBySender[b.senderId].latestMessage.created_at).getTime();
       return bTime - aTime;
     });
-    
+
     setMessageNotifications(notifications);
+    setLoadingMessages(false);
   };
 
   const getTimeAgo = (date: Date) => {
@@ -263,15 +269,21 @@ const Notifications = () => {
         {/* Message Notifications */}
         <div className="animate-fade-in" style={{ animationDelay: "0.1s" }}>
           <h2 className="text-xs font-semibold text-muted-foreground mb-2">Messages</h2>
-          {messageNotifications.length > 0 ? (
+          {loadingMessages ? (
+            <Card className="p-6 text-center border-border">
+              <div className="flex items-center justify-center">
+                <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+              </div>
+            </Card>
+          ) : messageNotifications.length > 0 ? (
             <div className="space-y-1.5">
               {messageNotifications.map((notification) => (
                 <Card
                   key={notification.id}
-                  onClick={() => navigate("/chat", { 
-                    state: { 
+                  onClick={() => navigate("/chat", {
+                    state: {
                       sellerId: notification.senderId
-                    } 
+                    }
                   })}
                   className={`p-2.5 border-border hover:bg-muted/50 transition-all cursor-pointer ${
                     notification.unread ? 'bg-primary/5 border-l-2 border-l-primary' : ''
