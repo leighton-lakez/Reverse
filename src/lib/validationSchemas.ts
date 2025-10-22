@@ -82,10 +82,25 @@ export const authSchema = z.object({
     .trim()
     .email('Invalid email address')
     .max(255, 'Email must be less than 255 characters'),
-  
+
   password: z.string()
     .min(8, 'Password must be at least 8 characters')
     .max(128, 'Password must be less than 128 characters'),
+});
+
+// Phone authentication validation
+export const phoneAuthSchema = z.object({
+  phone: z.string()
+    .trim()
+    .regex(/^\+1\d{10}$/, 'Phone number must be in format +1XXXXXXXXXX (US only)'),
+});
+
+// OTP verification validation
+export const otpSchema = z.object({
+  otp: z.string()
+    .trim()
+    .length(6, 'Verification code must be 6 digits')
+    .regex(/^\d{6}$/, 'Verification code must contain only numbers'),
 });
 
 // Checkout validation
