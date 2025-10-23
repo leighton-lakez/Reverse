@@ -356,13 +356,22 @@ const UserProfile = () => {
             {userStories.length > 0 ? (
               <button
                 onClick={() => setStoryViewerOpen(true)}
-                className="flex-shrink-0 group"
+                className="flex-shrink-0 group relative"
               >
-                <div className="p-0.5 rounded-full bg-gradient-to-tr from-primary via-yellow-500 to-primary story-pulse">
-                  <Avatar className="h-16 w-16 border-[3px] border-background ring-2 ring-primary/20 group-hover:ring-primary/40 transition-all">
+                {/* Animated glow effect */}
+                <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-primary via-yellow-500 to-primary blur-xl opacity-40 group-hover:opacity-60 animate-pulse" />
+
+                {/* Main story ring with thicker border and stronger gradient */}
+                <div className="relative p-1 rounded-full bg-gradient-to-tr from-primary via-yellow-400 to-primary shadow-lg shadow-primary/50 group-hover:shadow-xl group-hover:shadow-primary/70 transition-all duration-300">
+                  <Avatar className="h-16 w-16 border-[4px] border-background ring-2 ring-white/50 group-hover:ring-white/80 group-hover:scale-105 transition-all duration-300">
                     <AvatarImage src={profileData.avatar} />
                     <AvatarFallback>{profileData.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
                   </Avatar>
+                </div>
+
+                {/* "NEW" badge */}
+                <div className="absolute -top-1 -right-1 bg-gradient-to-r from-primary to-yellow-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full shadow-lg animate-bounce">
+                  NEW
                 </div>
               </button>
             ) : (
