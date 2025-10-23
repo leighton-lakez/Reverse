@@ -615,12 +615,21 @@ const UnoGame = () => {
       setPlayerHand(newPlayerHand);
       setIsPlayerTurn(false);
 
-      // Update database
-      const opponentId = gameRoom.host_id === currentUserId ? gameRoom.guest_id : gameRoom.host_id;
+      // Fetch latest game state to avoid conflicts
+      const { data: latestRoom } = await supabase
+        .from('uno_game_rooms')
+        .select('*')
+        .eq('id', gameRoom.id)
+        .single();
+
+      if (!latestRoom) return;
+
+      // Update database with latest state
+      const opponentId = latestRoom.host_id === currentUserId ? latestRoom.guest_id : latestRoom.host_id;
       const gameState = {
-        ...gameRoom.game_state,
+        ...latestRoom.game_state,
         playerHands: {
-          ...gameRoom.game_state.playerHands,
+          ...latestRoom.game_state.playerHands,
           [currentUserId]: newPlayerHand
         },
         currentTurn: opponentId
@@ -629,7 +638,7 @@ const UnoGame = () => {
       await supabase
         .from('uno_game_rooms')
         .update({ game_state: gameState })
-        .eq('id', gameRoom.id);
+        .eq('id', latestRoom.id);
     } else {
       // Single player
       setPlayerHand(newPlayerHand);
