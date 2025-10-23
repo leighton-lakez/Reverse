@@ -117,12 +117,27 @@ const UnoGame = () => {
 
   useEffect(() => {
     const init = async () => {
-      await fetchCurrentUserAndFriends();
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        if (roomCode) {
+          toast({
+            title: "Sign in required",
+            description: "Please sign in to join multiplayer games",
+            variant: "destructive",
+          });
+          navigate("/auth");
+        }
+        return;
+      }
+
+      const userId = session.user.id;
+      setCurrentUserId(userId);
+      await fetchFriends(userId);
 
       if (roomCode) {
         // Multiplayer mode
         setIsMultiplayer(true);
-        await joinGameRoom(roomCode);
+        await joinGameRoom(roomCode, userId);
       } else {
         // Single player mode against bot
         setIsMultiplayer(false);
@@ -161,7 +176,7 @@ const UnoGame = () => {
     };
   }, [isMultiplayer, roomCode]);
 
-  const joinGameRoom = async (code: string) => {
+  const joinGameRoom = async (code: string, userId: string) => {
     try {
       const { data: room, error } = await supabase
         .from('uno_game_rooms')
@@ -184,7 +199,7 @@ const UnoGame = () => {
       setGameRoom(room);
 
       // Fetch opponent profile
-      const opponentId = room.host_id === currentUserId ? room.guest_id : room.host_id;
+      const opponentId = room.host_id === userId ? room.guest_id : room.host_id;
       if (opponentId) {
         const { data: profile } = await supabase
           .from('profiles')
@@ -196,7 +211,7 @@ const UnoGame = () => {
       }
 
       // If game hasn't started yet, initialize it
-      if (room.status === 'waiting' && room.host_id === currentUserId) {
+      if (room.status === 'waiting' && room.host_id === userId) {
         setWaitingForOpponent(true);
         await initializeMultiplayerGame(room);
       } else if (room.status === 'waiting') {
@@ -204,7 +219,7 @@ const UnoGame = () => {
         await startMultiplayerGame(room);
       } else if (room.status === 'playing') {
         // Load existing game state
-        loadGameState(room.game_state);
+        loadGameState(room.game_state, userId);
       }
     } catch (error: any) {
       console.error('Join room error:', error);
@@ -251,13 +266,14 @@ const UnoGame = () => {
     loadGameState(room.game_state);
   };
 
-  const loadGameState = (gameState: any) => {
-    setPlayerHand(gameState.playerHands[currentUserId] || []);
-    const opponentId = gameRoom.host_id === currentUserId ? gameRoom.guest_id : gameRoom.host_id;
+  const loadGameState = (gameState: any, userId?: string) => {
+    const playerId = userId || currentUserId;
+    setPlayerHand(gameState.playerHands[playerId] || []);
+    const opponentId = gameRoom.host_id === playerId ? gameRoom.guest_id : gameRoom.host_id;
     setOpponentHand(gameState.playerHands[opponentId] || []);
     setDiscardPile(gameState.discardPile || []);
     setCurrentColor(gameState.currentColor || 'red');
-    setIsPlayerTurn(gameState.currentTurn === currentUserId);
+    setIsPlayerTurn(gameState.currentTurn === playerId);
     setIsReversed(gameState.isReversed || false);
   };
 
@@ -277,14 +293,6 @@ const UnoGame = () => {
         setWinner(opponentProfile?.display_name || "Opponent");
       }
     }
-  };
-
-  const fetchCurrentUserAndFriends = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) return;
-
-    setCurrentUserId(session.user.id);
-    await fetchFriends(session.user.id);
   };
 
   const fetchFriends = async (userId: string) => {
