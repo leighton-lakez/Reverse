@@ -568,10 +568,10 @@ const UserProfile = () => {
           ) : userListings.length > 0 ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
               {userListings.map((item) => (
-                <Card 
-                  key={item.id} 
+                <Card
+                  key={item.id}
                   className="group overflow-hidden border-border hover:shadow-[var(--shadow-glow)] transition-all cursor-pointer"
-                  onClick={() => navigate(`/item/${item.id}`)}
+                  onClick={() => navigate('/item-detail', { state: { item } })}
                 >
                   <div className="relative aspect-square overflow-hidden bg-muted">
                     <img
