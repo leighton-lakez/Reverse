@@ -7,6 +7,7 @@ import { ReverseIcon } from "@/components/ReverseIcon";
 import { toast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { supabase } from "@/integrations/supabase/client";
+import { useUnoSounds } from "@/hooks/use-uno-sounds";
 import {
   Dialog,
   DialogContent,
@@ -28,6 +29,7 @@ const UnoGame = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const roomCode = searchParams.get('room');
+  const sounds = useUnoSounds();
 
   const [playerHand, setPlayerHand] = useState<UnoCard[]>([]);
   const [botHand, setBotHand] = useState<UnoCard[]>([]);
@@ -297,8 +299,10 @@ const UnoGame = () => {
     } else if (room.status === 'finished') {
       setGameOver(true);
       if (room.winner_id === currentUserId) {
+        sounds.playWin();
         setWinner("You");
       } else {
+        sounds.playLose();
         setWinner(opponentProfile?.display_name || "Opponent");
       }
     }
@@ -434,6 +438,22 @@ const UnoGame = () => {
     const newDiscardPile = [...discardPile, card];
     const newColor = card.color === "wild" ? (chosenColor || "red") : card.color;
 
+    // Play sound effect based on card type
+    if (card.color === "wild") {
+      sounds.playWild();
+    } else if (card.value === "skip") {
+      sounds.playSkip();
+    } else if (card.value === "reverse") {
+      sounds.playReverse();
+    } else if (card.value === "draw2") {
+      sounds.playDraw2();
+    } else if (card.value === "wild4") {
+      sounds.playWild();
+      setTimeout(() => sounds.playDraw2(), 200);
+    } else {
+      sounds.playCardPlace();
+    }
+
     if (isMultiplayer && gameRoom) {
       // Multiplayer: Update database
       const opponentId = gameRoom.host_id === currentUserId ? gameRoom.guest_id : gameRoom.host_id;
@@ -451,6 +471,7 @@ const UnoGame = () => {
 
       // Check for winner
       if (newPlayerHand.length === 0) {
+        sounds.playWin();
         await supabase
           .from('uno_game_rooms')
           .update({
@@ -522,6 +543,7 @@ const UnoGame = () => {
   };
 
   const drawCard = () => {
+    sounds.playCardDraw();
     drawCards(playerHand, setPlayerHand, 1);
     setIsPlayerTurn(false);
   };
@@ -593,10 +615,20 @@ const UnoGame = () => {
   const checkWinner = (player: string) => {
     setGameOver(true);
     setWinner(player);
-    toast({
-      title: player === "Player" ? "🎉 You Won!" : "🤖 Bot Wins!",
-      description: player === "Player" ? "Congratulations!" : "Better luck next time!",
-    });
+
+    if (player === "Player" || player === "You") {
+      sounds.playWin();
+      toast({
+        title: "🎉 You Won!",
+        description: "Congratulations!",
+      });
+    } else {
+      sounds.playLose();
+      toast({
+        title: "🤖 " + player + " Wins!",
+        description: "Better luck next time!",
+      });
+    }
   };
 
   const handleCardClick = (card: UnoCard) => {
