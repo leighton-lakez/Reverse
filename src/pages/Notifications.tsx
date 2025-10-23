@@ -448,42 +448,42 @@ const Notifications = () => {
                       sellerId: notification.senderId
                     }
                   })}
-                  className={`group relative overflow-hidden bg-card/80 backdrop-blur-sm rounded-2xl p-4 border transition-all cursor-pointer hover:shadow-lg hover:scale-[1.02] ${
+                  className={`group relative overflow-hidden bg-card/80 backdrop-blur-sm rounded-xl p-2.5 border transition-all cursor-pointer hover:shadow-lg hover:scale-[1.02] ${
                     notification.unread
                       ? 'border-primary/50 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent shadow-md shadow-primary/10'
                       : 'border-border/50 hover:border-border'
                   }`}
                 >
                   {notification.unread && (
-                    <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-primary/20 to-transparent rounded-bl-full opacity-50" />
+                    <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-primary/20 to-transparent rounded-bl-full opacity-50" />
                   )}
-                  <div className="relative flex gap-3">
+                  <div className="relative flex gap-2.5">
                     <div className="relative flex-shrink-0">
-                      <Avatar className="h-12 w-12 border-2 border-background ring-2 ring-primary/20">
+                      <Avatar className="h-10 w-10 border-2 border-background ring-2 ring-primary/20">
                         <AvatarImage src={notification.avatar} />
-                        <AvatarFallback className="font-bold">{notification.name.split(' ').map((n: string) => n[0]).join('')}</AvatarFallback>
+                        <AvatarFallback className="text-xs font-bold">{notification.name.split(' ').map((n: string) => n[0]).join('')}</AvatarFallback>
                       </Avatar>
                       {notification.unread && (
-                        <div className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center border-2 border-background animate-pulse">
+                        <div className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-[10px] font-bold rounded-full h-4 w-4 flex items-center justify-center border-2 border-background animate-pulse">
                           {notification.unreadCount}
                         </div>
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-2 mb-1">
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-bold text-foreground">{notification.name}</span>
+                      <div className="flex items-start justify-between gap-2 mb-0.5">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-xs font-bold text-foreground">{notification.name}</span>
                           {notification.unread && (
-                            <Badge variant="default" className="h-5 px-2 text-xs bg-primary text-primary-foreground shadow-sm">
+                            <Badge variant="default" className="h-4 px-1.5 text-[10px] bg-primary text-primary-foreground shadow-sm">
                               New
                             </Badge>
                           )}
                         </div>
-                        <span className="text-xs text-muted-foreground flex-shrink-0">{notification.timeAgo}</span>
+                        <span className="text-[10px] text-muted-foreground flex-shrink-0">{notification.timeAgo}</span>
                       </div>
-                      <p className="text-sm text-foreground/80 line-clamp-2 mb-2">{notification.message}</p>
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <MessageCircle className="h-3.5 w-3.5" />
+                      <p className="text-xs text-foreground/80 line-clamp-2 mb-1">{notification.message}</p>
+                      <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+                        <MessageCircle className="h-3 w-3" />
                         <span>{notification.messageCount} {notification.messageCount === 1 ? 'message' : 'messages'}</span>
                       </div>
                     </div>

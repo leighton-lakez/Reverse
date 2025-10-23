@@ -670,7 +670,9 @@ Please provide a price suggestion considering any visible damage or wear in the 
                     : "glass text-foreground border border-border/50 backdrop-blur-xl"
                 }`}
               >
-                <p className="text-[11px] sm:text-xs whitespace-pre-line leading-snug font-medium">{message.content}</p>
+                <p className={`whitespace-pre-line leading-snug font-medium ${
+                  message.type === "bot" ? "text-sm sm:text-base" : "text-[11px] sm:text-xs"
+                }`}>{message.content}</p>
 
                 {message.options && (
                   <div className="flex flex-wrap gap-1 sm:gap-1.5 mt-1.5 sm:mt-2">
