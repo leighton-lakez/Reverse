@@ -192,6 +192,18 @@ export default function StoryViewer({
             </div>
           </div>
 
+          {/* Left tap area for previous */}
+          <div
+            className="absolute left-0 top-0 bottom-0 w-1/3 cursor-pointer z-20"
+            onClick={handlePrevious}
+          />
+
+          {/* Right tap area for next */}
+          <div
+            className="absolute right-0 top-0 bottom-0 w-1/3 cursor-pointer z-20"
+            onClick={handleNext}
+          />
+
           {/* Media */}
           {currentStory.media_type === 'image' ? (
             <img
@@ -209,27 +221,29 @@ export default function StoryViewer({
             />
           )}
 
-          {/* Navigation */}
-          {currentIndex > 0 && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute left-2 text-white hover:bg-white/20"
-              onClick={handlePrevious}
-            >
-              <ChevronLeft className="h-8 w-8" />
-            </Button>
-          )}
-          {currentIndex < stories.length - 1 && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute right-2 text-white hover:bg-white/20"
-              onClick={handleNext}
-            >
-              <ChevronRight className="h-8 w-8" />
-            </Button>
-          )}
+          {/* Navigation Arrows - Always visible */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className={`absolute left-2 top-1/2 -translate-y-1/2 text-white hover:bg-white/20 z-30 transition-opacity ${
+              currentIndex === 0 ? 'opacity-30 cursor-not-allowed' : 'opacity-70 hover:opacity-100'
+            }`}
+            onClick={handlePrevious}
+            disabled={currentIndex === 0}
+          >
+            <ChevronLeft className="h-10 w-10" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className={`absolute right-2 top-1/2 -translate-y-1/2 text-white hover:bg-white/20 z-30 transition-opacity ${
+              currentIndex === stories.length - 1 ? 'opacity-30 cursor-not-allowed' : 'opacity-70 hover:opacity-100'
+            }`}
+            onClick={handleNext}
+            disabled={currentIndex === stories.length - 1}
+          >
+            <ChevronRight className="h-10 w-10" />
+          </Button>
         </div>
       </DialogContent>
     </Dialog>
