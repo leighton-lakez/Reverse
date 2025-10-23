@@ -323,12 +323,11 @@ const Profile = () => {
   };
 
   const fetchMyStories = async (userId: string) => {
-    // Fetch active stories
+    // Fetch active stories (not expired)
     const { data: storiesData, error: storiesError } = await supabase
       .from("stories")
       .select("*")
       .eq("user_id", userId)
-      .is("deleted_at", null)
       .gt("expires_at", new Date().toISOString())
       .order("created_at", { ascending: false });
 
@@ -337,14 +336,20 @@ const Profile = () => {
       return;
     }
 
-    // Fetch past stories (expired or deleted)
+    // Filter active stories (exclude deleted ones if deleted_at column exists)
+    const activeStories = (storiesData || []).filter(story => !story.deleted_at);
+
+    // Fetch past stories (expired)
     const { data: pastStoriesData } = await supabase
       .from("stories")
       .select("*")
       .eq("user_id", userId)
-      .or(`deleted_at.not.is.null,expires_at.lt.${new Date().toISOString()}`)
+      .lt("expires_at", new Date().toISOString())
       .order("created_at", { ascending: false })
       .limit(20);
+
+    // Combine with deleted stories if they exist in active query
+    const deletedStories = (storiesData || []).filter(story => story.deleted_at);
 
     // Fetch profile data separately
     const { data: profileData } = await supabase
@@ -353,30 +358,42 @@ const Profile = () => {
       .eq("id", userId)
       .single();
 
-    // Combine stories with profile data
-    const storiesWithProfile = (storiesData || []).map(story => ({
+    // Combine active stories with profile data
+    const activeStoriesWithProfile = activeStories.map(story => ({
       ...story,
       profiles: profileData
     }));
 
-    const pastStoriesWithProfile = (pastStoriesData || []).map(story => ({
+    // Combine past stories (expired + deleted) with profile data
+    const allPastStories = [...(pastStoriesData || []), ...deletedStories];
+    const pastStoriesWithProfile = allPastStories.map(story => ({
       ...story,
       profiles: profileData
     }));
 
-    console.log('Fetched stories:', storiesWithProfile);
-    setMyStories(storiesWithProfile);
+    console.log('Fetched active stories:', activeStoriesWithProfile);
+    console.log('Fetched past stories:', pastStoriesWithProfile);
+    setMyStories(activeStoriesWithProfile);
     setPastStories(pastStoriesWithProfile);
   };
 
   const handleDeleteStory = async (storyId: string) => {
     try {
-      const { error } = await supabase
+      // Try to soft delete first (if deleted_at column exists)
+      const { error: updateError } = await supabase
         .from("stories")
         .update({ deleted_at: new Date().toISOString() })
         .eq("id", storyId);
 
-      if (error) throw error;
+      // If soft delete fails (column doesn't exist), do hard delete
+      if (updateError) {
+        const { error: deleteError } = await supabase
+          .from("stories")
+          .delete()
+          .eq("id", storyId);
+
+        if (deleteError) throw deleteError;
+      }
 
       toast({
         title: "Story deleted",
