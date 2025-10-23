@@ -259,8 +259,11 @@ const Profile = () => {
       .gt("expires_at", new Date().toISOString())
       .order("created_at", { ascending: false });
 
-    if (!error && data) {
-      setMyStories(data);
+    if (error) {
+      console.error('Error fetching stories:', error);
+    } else {
+      console.log('Fetched stories:', data);
+      setMyStories(data || []);
     }
   };
 
