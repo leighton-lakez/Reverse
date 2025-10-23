@@ -23,7 +23,7 @@ const AIAssistant = () => {
     {
       id: "welcome",
       role: "assistant",
-      content: "Hey! I'm your AI pricing assistant powered by ChatGPT. Upload a photo of your luxury item and tell me about any damages or wear, and I'll help you find the perfect resale price based on current market trends! ✨",
+      content: "Hey! I'm your AI pricing assistant. Upload a photo of your luxury item and tell me about any damages or wear, and I'll help you find the perfect price! ✨",
       timestamp: new Date(),
     },
   ]);
@@ -127,26 +127,11 @@ const AIAssistant = () => {
       setMessages((prev) => [...prev, assistantMessage]);
       setUploadedImage(null);
     } catch (error: any) {
-      console.error("AI Analysis Error:", error);
-
-      let errorMessage = "Failed to analyze product. Please try again.";
-
-      if (error.message?.includes("API key")) {
-        errorMessage = "OpenAI API key not configured. Please add your API key to the .env file.";
-      } else if (error.message?.includes("rate limit")) {
-        errorMessage = "Rate limit exceeded. Please wait a moment and try again.";
-      } else if (error.message?.includes("insufficient_quota")) {
-        errorMessage = "OpenAI API quota exceeded. Please check your OpenAI account.";
-      }
-
       toast({
         title: "Error",
-        description: errorMessage,
+        description: "Failed to analyze product. Please try again.",
         variant: "destructive",
       });
-
-      // Remove the user message since the request failed
-      setMessages((prev) => prev.slice(0, -1));
     } finally {
       setIsLoading(false);
     }
@@ -292,7 +277,7 @@ const AIAssistant = () => {
           </div>
 
           <p className="text-xs text-muted-foreground mt-2 text-center">
-            Powered by ChatGPT-4 Vision • Upload photos and describe condition for accurate pricing
+            Upload photos and describe condition for accurate pricing suggestions
           </p>
         </div>
       </div>
