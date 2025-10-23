@@ -608,7 +608,6 @@ const UnoGame = () => {
               );
             })}
           </div>
-          </div>
         </div>
       </main>
     </div>
