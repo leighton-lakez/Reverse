@@ -437,12 +437,13 @@ const UnoGame = () => {
   };
 
   useEffect(() => {
-    if (!isPlayerTurn && !gameOver) {
+    // Only run bot AI in single-player mode
+    if (!isMultiplayer && !isPlayerTurn && !gameOver) {
       setTimeout(() => {
         botPlay();
       }, 1000);
     }
-  }, [isPlayerTurn, gameOver]);
+  }, [isPlayerTurn, gameOver, isMultiplayer]);
 
   const canPlayCard = (card: UnoCard): boolean => {
     const topCard = discardPile[discardPile.length - 1];
