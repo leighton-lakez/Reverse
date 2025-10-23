@@ -33,20 +33,27 @@ const Debug = () => {
 
         <h3 style={{ marginTop: '30px' }}>Test Supabase Client:</h3>
         <button
-          onClick={async () => {
-            try {
-              const { createClient } = await import('@supabase/supabase-js');
-              const cleanUrl = url?.trim().replace(/["']/g, '').replace(/\/$/, '');
-              const cleanKey = key?.trim().replace(/["']/g, '');
-              console.log('Testing with cleanUrl:', cleanUrl);
-              console.log('Testing with cleanKey length:', cleanKey?.length);
-              const client = createClient(cleanUrl!, cleanKey!);
-              const { data, error } = await client.auth.getSession();
-              alert(error ? `Error: ${error.message}` : 'Success! Client works!');
-            } catch (err: any) {
-              alert(`Error creating client: ${err.message}`);
-              console.error(err);
+          onClick={() => {
+            console.log('Button clicked!');
+            const cleanUrl = url?.trim().replace(/["']/g, '').replace(/\/$/, '');
+            const cleanKey = key?.trim().replace(/["']/g, '');
+            console.log('Clean URL:', cleanUrl);
+            console.log('Clean Key length:', cleanKey?.length);
+            console.log('URL type:', typeof cleanUrl);
+            console.log('Key type:', typeof cleanKey);
+
+            // Check for invalid characters
+            if (cleanUrl?.includes('undefined') || cleanUrl?.includes('null')) {
+              alert('⚠️ URL contains undefined/null!');
+              return;
             }
+
+            if (!cleanUrl?.startsWith('https://')) {
+              alert(`⚠️ URL doesn't start with https://. Actual value: "${cleanUrl}"`);
+              return;
+            }
+
+            alert(`✅ Values look good!\nURL: ${cleanUrl}\nKey length: ${cleanKey?.length}\n\nCheck console for details.`);
           }}
           style={{
             padding: '10px 20px',
@@ -57,8 +64,16 @@ const Debug = () => {
             fontSize: '16px'
           }}
         >
-          Test Supabase Connection
+          Test Values
         </button>
+
+        <h3 style={{ marginTop: '30px' }}>Character Analysis:</h3>
+        <div style={{ background: '#f0f0f0', padding: '10px', fontSize: '12px' }}>
+          <p><strong>URL character codes:</strong></p>
+          <code style={{ display: 'block', wordBreak: 'break-all' }}>
+            {url?.split('').map((char, i) => `${char}(${char.charCodeAt(0)})`).join(' ')}
+          </code>
+        </div>
       </div>
     </div>
   );
