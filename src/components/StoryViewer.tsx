@@ -4,7 +4,10 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -130,6 +133,12 @@ export default function StoryViewer({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="bg-black border-0 p-0 max-w-md h-[80vh] sm:h-[90vh]">
+        <VisuallyHidden>
+          <DialogTitle>Story Viewer</DialogTitle>
+          <DialogDescription>
+            Viewing story from {currentStory.profiles?.display_name || 'User'}
+          </DialogDescription>
+        </VisuallyHidden>
         <div
           className="relative w-full h-full flex items-center justify-center"
           onTouchStart={onTouchStart}
