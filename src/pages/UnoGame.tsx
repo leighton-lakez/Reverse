@@ -227,8 +227,9 @@ const UnoGame = () => {
         setWaitingForOpponent(true);
         await initializeMultiplayerGame(room);
       } else if (room.status === 'waiting') {
-        // Guest joined, start the game
-        await startMultiplayerGame(room);
+        // Guest joined - wait for host to initialize, then start
+        setWaitingForOpponent(true);
+        // Don't call startMultiplayerGame here - wait for the host to initialize first
       } else if (room.status === 'playing') {
         // Load existing game state
         loadGameState(room.game_state, userId, room);
@@ -261,10 +262,18 @@ const UnoGame = () => {
       isReversed: false
     };
 
+    // Update game state and set status to playing
     await supabase
       .from('uno_game_rooms')
-      .update({ game_state: gameState })
+      .update({
+        game_state: gameState,
+        status: 'playing'
+      })
       .eq('id', room.id);
+
+    // Load the game state for the host
+    setWaitingForOpponent(false);
+    loadGameState(gameState, currentUserId, room);
   };
 
   const startMultiplayerGame = async (room: any) => {
