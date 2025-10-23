@@ -19,6 +19,7 @@ import Settings from "./pages/Settings";
 import FollowersList from "./pages/FollowersList";
 import FollowingList from "./pages/FollowingList";
 import AIAssistant from "./pages/AIAssistant";
+import Debug from "./pages/Debug";
 import NotFound from "./pages/NotFound";
 import FirstVisitReverse from "./components/FirstVisitReverse";
 
@@ -50,6 +51,7 @@ const App = () => (
           <Route path="/following" element={<FollowingList />} />
           <Route path="/following/:userId" element={<FollowingList />} />
           <Route path="/ai-assistant" element={<AIAssistant />} />
+          <Route path="/debug" element={<Debug />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
