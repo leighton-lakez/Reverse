@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowLeft, RotateCcw, Users, Copy, Share2, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -26,8 +26,12 @@ interface UnoCard {
 
 const UnoGame = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const roomCode = searchParams.get('room');
+
   const [playerHand, setPlayerHand] = useState<UnoCard[]>([]);
   const [botHand, setBotHand] = useState<UnoCard[]>([]);
+  const [opponentHand, setOpponentHand] = useState<UnoCard[]>([]);
   const [discardPile, setDiscardPile] = useState<UnoCard[]>([]);
   const [currentColor, setCurrentColor] = useState<CardColor>("red");
   const [isPlayerTurn, setIsPlayerTurn] = useState(true);
@@ -38,6 +42,12 @@ const UnoGame = () => {
   const [friends, setFriends] = useState<any[]>([]);
   const [currentUserId, setCurrentUserId] = useState<string>("");
   const [sendingInvites, setSendingInvites] = useState<Set<string>>(new Set());
+
+  // Multiplayer state
+  const [isMultiplayer, setIsMultiplayer] = useState(false);
+  const [gameRoom, setGameRoom] = useState<any>(null);
+  const [opponentProfile, setOpponentProfile] = useState<any>(null);
+  const [waitingForOpponent, setWaitingForOpponent] = useState(false);
 
   const colors: CardColor[] = ["red", "blue", "green", "yellow"];
   const values: CardValue[] = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "skip", "reverse", "draw2"];
@@ -106,9 +116,168 @@ const UnoGame = () => {
   };
 
   useEffect(() => {
-    startGame();
-    fetchCurrentUserAndFriends();
-  }, []);
+    const init = async () => {
+      await fetchCurrentUserAndFriends();
+
+      if (roomCode) {
+        // Multiplayer mode
+        setIsMultiplayer(true);
+        await joinGameRoom(roomCode);
+      } else {
+        // Single player mode against bot
+        setIsMultiplayer(false);
+        startGame();
+      }
+    };
+
+    init();
+  }, [roomCode]);
+
+  // Real-time subscription for multiplayer
+  useEffect(() => {
+    if (!isMultiplayer || !roomCode) return;
+
+    const channel = supabase
+      .channel(`game-room-${roomCode}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'uno_game_rooms',
+          filter: `room_code=eq.${roomCode}`
+        },
+        (payload) => {
+          console.log('Game room updated:', payload);
+          if (payload.new) {
+            handleGameRoomUpdate(payload.new);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [isMultiplayer, roomCode]);
+
+  const joinGameRoom = async (code: string) => {
+    try {
+      const { data: room, error } = await supabase
+        .from('uno_game_rooms')
+        .select('*')
+        .eq('room_code', code)
+        .single();
+
+      if (error) throw error;
+
+      if (!room) {
+        toast({
+          title: "Room Not Found",
+          description: "This game room doesn't exist",
+          variant: "destructive",
+        });
+        navigate('/uno');
+        return;
+      }
+
+      setGameRoom(room);
+
+      // Fetch opponent profile
+      const opponentId = room.host_id === currentUserId ? room.guest_id : room.host_id;
+      if (opponentId) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('display_name, avatar_url')
+          .eq('id', opponentId)
+          .single();
+
+        setOpponentProfile(profile);
+      }
+
+      // If game hasn't started yet, initialize it
+      if (room.status === 'waiting' && room.host_id === currentUserId) {
+        setWaitingForOpponent(true);
+        await initializeMultiplayerGame(room);
+      } else if (room.status === 'waiting') {
+        // Guest joined, start the game
+        await startMultiplayerGame(room);
+      } else if (room.status === 'playing') {
+        // Load existing game state
+        loadGameState(room.game_state);
+      }
+    } catch (error: any) {
+      console.error('Join room error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to join game room",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const initializeMultiplayerGame = async (room: any) => {
+    const deck = createDeck();
+    const hostCards = deck.splice(0, 7);
+    const guestCards = deck.splice(0, 7);
+    const firstCard = deck.pop()!;
+
+    const gameState = {
+      deck: deck,
+      playerHands: {
+        [room.host_id]: hostCards,
+        [room.guest_id]: guestCards
+      },
+      discardPile: [firstCard],
+      currentColor: firstCard.color === "wild" ? "red" : firstCard.color,
+      currentTurn: room.host_id,
+      isReversed: false
+    };
+
+    await supabase
+      .from('uno_game_rooms')
+      .update({ game_state: gameState })
+      .eq('id', room.id);
+  };
+
+  const startMultiplayerGame = async (room: any) => {
+    setWaitingForOpponent(false);
+
+    await supabase
+      .from('uno_game_rooms')
+      .update({ status: 'playing' })
+      .eq('id', room.id);
+
+    loadGameState(room.game_state);
+  };
+
+  const loadGameState = (gameState: any) => {
+    setPlayerHand(gameState.playerHands[currentUserId] || []);
+    const opponentId = gameRoom.host_id === currentUserId ? gameRoom.guest_id : gameRoom.host_id;
+    setOpponentHand(gameState.playerHands[opponentId] || []);
+    setDiscardPile(gameState.discardPile || []);
+    setCurrentColor(gameState.currentColor || 'red');
+    setIsPlayerTurn(gameState.currentTurn === currentUserId);
+    setIsReversed(gameState.isReversed || false);
+  };
+
+  const handleGameRoomUpdate = (room: any) => {
+    setGameRoom(room);
+
+    if (room.status === 'playing' && waitingForOpponent) {
+      setWaitingForOpponent(false);
+      loadGameState(room.game_state);
+    } else if (room.status === 'playing') {
+      loadGameState(room.game_state);
+    } else if (room.status === 'finished') {
+      setGameOver(true);
+      if (room.winner_id === currentUserId) {
+        setWinner("You");
+      } else {
+        setWinner(opponentProfile?.display_name || "Opponent");
+      }
+    }
+  };
 
   const fetchCurrentUserAndFriends = async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -168,26 +337,56 @@ const UnoGame = () => {
     setSendingInvites(prev => new Set(prev).add(friendId));
 
     try {
-      // Send a message invite
+      // Generate a unique room code
+      const roomCode = `UNO-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+      // Create a new game room
+      const { data: room, error: roomError } = await supabase
+        .from("uno_game_rooms")
+        .insert({
+          room_code: roomCode,
+          host_id: currentUserId,
+          guest_id: friendId,
+          status: 'waiting',
+          game_state: {
+            deck: [],
+            playerHands: {},
+            discardPile: [],
+            currentColor: 'red',
+            currentTurn: currentUserId,
+            isReversed: false
+          }
+        })
+        .select()
+        .single();
+
+      if (roomError) throw roomError;
+
+      // Send a message invite with the room code
       const { error } = await supabase
         .from("messages")
         .insert({
           sender_id: currentUserId,
           receiver_id: friendId,
-          content: `🎮 Hey! Let's play UNO together! Click here to join: ${window.location.origin}/uno`,
+          content: `🎮 Hey! Let's play UNO together! Join my game room: ${window.location.origin}/uno?room=${roomCode}`,
           read: false,
         });
 
       if (error) throw error;
 
       toast({
-        title: "Invite Sent! 🎮",
-        description: `${friendName} will receive your UNO invite`,
+        title: "Game Room Created! 🎮",
+        description: `${friendName} will receive your invite. Waiting for them to join...`,
       });
+
+      // Close modal and navigate to the game room
+      setInviteModalOpen(false);
+      window.location.href = `/uno?room=${roomCode}`;
     } catch (error: any) {
+      console.error('Invite error:', error);
       toast({
         title: "Error",
-        description: "Failed to send invite",
+        description: "Failed to create game room",
         variant: "destructive",
       });
     } finally {
@@ -213,51 +412,84 @@ const UnoGame = () => {
     return card.color === currentColor || card.value === topCard.value;
   };
 
-  const playCard = (card: UnoCard, chosenColor?: CardColor) => {
-    setDiscardPile([...discardPile, card]);
-    setPlayerHand(playerHand.filter((c) => c.id !== card.id));
+  const playCard = async (card: UnoCard, chosenColor?: CardColor) => {
+    const newPlayerHand = playerHand.filter((c) => c.id !== card.id);
+    const newDiscardPile = [...discardPile, card];
+    const newColor = card.color === "wild" ? (chosenColor || "red") : card.color;
 
-    if (card.color === "wild") {
-      setCurrentColor(chosenColor || "red");
+    if (isMultiplayer && gameRoom) {
+      // Multiplayer: Update database
+      const opponentId = gameRoom.host_id === currentUserId ? gameRoom.guest_id : gameRoom.host_id;
+      const gameState = {
+        ...gameRoom.game_state,
+        playerHands: {
+          ...gameRoom.game_state.playerHands,
+          [currentUserId]: newPlayerHand
+        },
+        discardPile: newDiscardPile,
+        currentColor: newColor,
+        currentTurn: opponentId,
+        isReversed: card.value === "reverse" ? !gameRoom.game_state.isReversed : gameRoom.game_state.isReversed
+      };
+
+      // Check for winner
+      if (newPlayerHand.length === 0) {
+        await supabase
+          .from('uno_game_rooms')
+          .update({
+            game_state: gameState,
+            status: 'finished',
+            winner_id: currentUserId
+          })
+          .eq('id', gameRoom.id);
+        return;
+      }
+
+      await supabase
+        .from('uno_game_rooms')
+        .update({ game_state: gameState })
+        .eq('id', gameRoom.id);
+
+      // Show toast for special cards
+      if (card.value === "skip") {
+        toast({ title: "⏭️ Skip!", description: "Opponent's turn skipped!" });
+      } else if (card.value === "reverse") {
+        toast({ title: "🔄 Reverse!", description: "Direction reversed!" });
+      } else if (card.value === "draw2") {
+        toast({ title: "➕ Draw 2!", description: "Opponent draws 2 cards!" });
+      } else if (card.value === "wild4") {
+        toast({ title: "➕ Wild Draw 4!", description: "Opponent draws 4 cards!" });
+      }
     } else {
-      setCurrentColor(card.color);
-    }
+      // Single player: Local state updates
+      setDiscardPile(newDiscardPile);
+      setPlayerHand(newPlayerHand);
+      setCurrentColor(newColor);
 
-    // Handle special cards
-    if (card.value === "reverse") {
-      setIsReversed(!isReversed);
-      toast({
-        title: "🔄 Reverse!",
-        description: "Direction reversed!",
-      });
-    } else if (card.value === "skip") {
-      toast({
-        title: "⏭️ Skip!",
-        description: "Bot's turn skipped!",
-      });
-      return; // Player gets another turn
-    } else if (card.value === "draw2") {
-      drawCards(botHand, setBotHand, 2);
-      toast({
-        title: "➕ Draw 2!",
-        description: "Bot draws 2 cards!",
-      });
-      return;
-    } else if (card.value === "wild4") {
-      drawCards(botHand, setBotHand, 4);
-      toast({
-        title: "➕ Wild Draw 4!",
-        description: "Bot draws 4 cards!",
-      });
-      return;
-    }
+      // Handle special cards for bot
+      if (card.value === "reverse") {
+        setIsReversed(!isReversed);
+        toast({ title: "🔄 Reverse!", description: "Direction reversed!" });
+      } else if (card.value === "skip") {
+        toast({ title: "⏭️ Skip!", description: "Bot's turn skipped!" });
+        return; // Player gets another turn
+      } else if (card.value === "draw2") {
+        drawCards(botHand, setBotHand, 2);
+        toast({ title: "➕ Draw 2!", description: "Bot draws 2 cards!" });
+        return;
+      } else if (card.value === "wild4") {
+        drawCards(botHand, setBotHand, 4);
+        toast({ title: "➕ Wild Draw 4!", description: "Bot draws 4 cards!" });
+        return;
+      }
 
-    if (playerHand.length === 1) {
-      checkWinner("Player");
-      return;
-    }
+      if (newPlayerHand.length === 0) {
+        checkWinner("Player");
+        return;
+      }
 
-    setIsPlayerTurn(false);
+      setIsPlayerTurn(false);
+    }
   };
 
   const drawCards = (hand: UnoCard[], setHand: (cards: UnoCard[]) => void, count: number) => {
@@ -427,15 +659,30 @@ const UnoGame = () => {
       </header>
 
       <main className="max-w-6xl mx-auto px-4 py-6 relative z-10">
-        {/* Bot Hand */}
+        {/* Waiting for opponent overlay */}
+        {waitingForOpponent && (
+          <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center">
+            <div className="bg-card border border-primary/30 rounded-2xl p-8 max-w-md text-center">
+              <div className="h-16 w-16 mx-auto mb-4 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+              <h2 className="text-2xl font-bold text-foreground mb-2">Waiting for {opponentProfile?.display_name || 'opponent'}...</h2>
+              <p className="text-sm text-muted-foreground">They will join shortly</p>
+            </div>
+          </div>
+        )}
+
+        {/* Opponent/Bot Hand */}
         <div className="mb-8">
           <div className="flex items-center justify-center gap-2 mb-4">
             <div className="px-4 py-2 rounded-full bg-black/40 backdrop-blur-sm border border-white/20">
-              <p className="text-sm font-semibold text-white">Bot: {botHand.length} cards</p>
+              <p className="text-sm font-semibold text-white">
+                {isMultiplayer
+                  ? `${opponentProfile?.display_name || 'Opponent'}: ${opponentHand.length} cards`
+                  : `Bot: ${botHand.length} cards`}
+              </p>
             </div>
           </div>
           <div className="flex justify-center gap-1 flex-wrap" style={{ perspective: '1000px' }}>
-            {botHand.map((card, index) => {
+            {(isMultiplayer ? opponentHand : botHand).map((card, index) => {
               const rotation = (index - botHand.length / 2) * 2.5;
               const yOffset = Math.abs(index - botHand.length / 2) * 3;
               return (
