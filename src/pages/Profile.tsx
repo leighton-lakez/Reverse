@@ -667,6 +667,7 @@ const Profile = () => {
                 </Dialog>
               </div>
             </div>
+            </div>
 
             {profileData.bio && (
               <p className="text-base text-foreground/80 leading-relaxed line-clamp-3 mb-4">{profileData.bio}</p>
