@@ -706,24 +706,24 @@ Please provide a price suggestion considering any visible damage or wear in the 
           {/* Image Previews */}
           {imagePreviews.length > 0 && currentStep !== "summary" && (
             <div className="flex justify-start animate-fade-in">
-              <div className="glass rounded-2xl p-3 sm:p-3.5 shadow-lg border border-border/50 backdrop-blur-xl max-w-[85%] sm:max-w-[75%]">
-                <div className="flex items-center gap-1.5 mb-2">
-                  <div className="h-1.5 w-1.5 bg-primary rounded-full" />
-                  <p className="text-[10px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-wider">Your Photos</p>
+              <div className="glass rounded-xl p-2 sm:p-2.5 shadow-lg border border-border/50 backdrop-blur-xl max-w-[85%] sm:max-w-[75%]">
+                <div className="flex items-center gap-1 mb-1.5">
+                  <div className="h-1 w-1 bg-primary rounded-full" />
+                  <p className="text-[9px] sm:text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Photos</p>
                 </div>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-3 gap-1.5">
                   {imagePreviews.map((preview, index) => (
-                    <div key={index} className="relative aspect-square rounded-lg overflow-hidden group ring-1 ring-border/50 hover:ring-primary/50 transition-all">
+                    <div key={index} className="relative aspect-square rounded-md overflow-hidden group ring-1 ring-border/50 hover:ring-primary/50 transition-all">
                       <img src={preview} alt={`Upload ${index + 1}`} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                       <Button
                         type="button"
                         variant="destructive"
                         size="icon"
-                        className="absolute top-1.5 right-1.5 h-6 w-6 rounded-full opacity-0 group-hover:opacity-100 transition-all shadow-lg hover:scale-110"
+                        className="absolute top-1 right-1 h-5 w-5 rounded-full opacity-0 group-hover:opacity-100 transition-all shadow-lg hover:scale-110"
                         onClick={() => removeImage(index)}
                       >
-                        <X className="h-3 w-3" />
+                        <X className="h-2.5 w-2.5" />
                       </Button>
                     </div>
                   ))}
@@ -735,28 +735,28 @@ Please provide a price suggestion considering any visible damage or wear in the 
           {/* Video Previews */}
           {videoPreviews.length > 0 && currentStep !== "summary" && (
             <div className="flex justify-start animate-fade-in">
-              <div className="glass rounded-2xl p-3 sm:p-3.5 shadow-lg border border-border/50 backdrop-blur-xl max-w-[85%] sm:max-w-[75%]">
-                <div className="flex items-center gap-1.5 mb-2">
-                  <div className="h-1.5 w-1.5 bg-secondary rounded-full" />
-                  <p className="text-[10px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-wider">Your Videos</p>
+              <div className="glass rounded-xl p-2 sm:p-2.5 shadow-lg border border-border/50 backdrop-blur-xl max-w-[85%] sm:max-w-[75%]">
+                <div className="flex items-center gap-1 mb-1.5">
+                  <div className="h-1 w-1 bg-secondary rounded-full" />
+                  <p className="text-[9px] sm:text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Videos</p>
                 </div>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-3 gap-1.5">
                   {videoPreviews.map((preview, index) => (
-                    <div key={index} className="relative aspect-square rounded-lg overflow-hidden group ring-1 ring-border/50 hover:ring-secondary/50 transition-all">
+                    <div key={index} className="relative aspect-square rounded-md overflow-hidden group ring-1 ring-border/50 hover:ring-secondary/50 transition-all">
                       <video src={preview} className="w-full h-full object-cover" />
                       <div className="absolute inset-0 flex items-center justify-center bg-black/40 group-hover:bg-black/50 transition-colors">
-                        <div className="p-2 bg-white/90 rounded-full">
-                          <Video className="h-5 w-5 text-secondary" />
+                        <div className="p-1.5 bg-white/90 rounded-full">
+                          <Video className="h-4 w-4 text-secondary" />
                         </div>
                       </div>
                       <Button
                         type="button"
                         variant="destructive"
                         size="icon"
-                        className="absolute top-1.5 right-1.5 h-6 w-6 rounded-full opacity-0 group-hover:opacity-100 transition-all shadow-lg hover:scale-110"
+                        className="absolute top-1 right-1 h-5 w-5 rounded-full opacity-0 group-hover:opacity-100 transition-all shadow-lg hover:scale-110"
                         onClick={() => removeVideo(index)}
                       >
-                        <X className="h-3 w-3" />
+                        <X className="h-2.5 w-2.5" />
                       </Button>
                     </div>
                   ))}

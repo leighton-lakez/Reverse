@@ -696,26 +696,29 @@ const Profile = () => {
           
           <TabsContent value="active">
             {loading ? (
-              <div className="text-center py-12">
-                <p className="text-muted-foreground">Loading...</p>
+              <div className="flex items-center justify-center py-20">
+                <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
               </div>
             ) : activeListings.length > 0 ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
                 {activeListings.map((item) => (
-                  <Card
+                  <div
                     key={item.id}
-                    className="group overflow-hidden border-border hover:shadow-[var(--shadow-glow)] transition-all"
+                    className="group relative overflow-hidden bg-card/50 backdrop-blur-sm rounded-2xl border border-border/50 hover:border-primary/30 transition-all hover:shadow-lg hover:shadow-primary/10"
                   >
-                    <div className="relative aspect-square overflow-hidden bg-muted">
+                    <div className="relative aspect-square overflow-hidden bg-gradient-to-br from-muted to-muted/50">
                       <img
                         src={item.images?.[0] || "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800&auto=format&fit=crop"}
                         alt={item.title}
-                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                        className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
                         onError={(e) => {
                           e.currentTarget.src = "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800&auto=format&fit=crop";
                         }}
                       />
-                      <Badge className="absolute top-1 right-1 text-xs bg-primary text-primary-foreground">
+                      {/* Gradient overlay on hover */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
+                      <Badge className="absolute top-2 right-2 text-xs bg-primary text-primary-foreground shadow-md">
                         Active
                       </Badge>
                       <DropdownMenu>
@@ -723,13 +726,13 @@ const Profile = () => {
                           <Button
                             size="icon"
                             variant="ghost"
-                            className="absolute top-1 left-1 h-7 w-7 bg-background/80 hover:bg-background/90 backdrop-blur-sm"
+                            className="absolute top-2 left-2 h-8 w-8 bg-background/90 hover:bg-background backdrop-blur-sm shadow-md"
                             onClick={(e) => e.stopPropagation()}
                           >
                             <MoreVertical className="h-4 w-4 text-primary" />
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="start">
+                        <DropdownMenuContent align="start" className="bg-card/95 backdrop-blur-sm">
                           <DropdownMenuItem onClick={() => navigate("/item-detail", { state: { item } })}>
                             <Eye className="h-4 w-4 mr-2" />
                             Preview Listing
@@ -746,51 +749,56 @@ const Profile = () => {
                       </DropdownMenu>
                     </div>
 
-                    <div className="p-2 space-y-1">
-                      <h3 className="font-semibold text-xs text-foreground line-clamp-1">{item.title}</h3>
+                    <div className="p-3 space-y-2">
+                      <h3 className="font-bold text-sm text-foreground line-clamp-1">{item.title}</h3>
                       <div className="flex items-center justify-between">
-                        <span className="text-sm font-bold text-primary">${parseFloat(item.price)}</span>
-                        <Badge variant="outline" className="text-[10px] px-1 py-0">{item.condition}</Badge>
+                        <span className="text-lg font-black text-primary">${parseFloat(item.price)}</span>
+                        <Badge variant="outline" className="text-xs px-2 py-0.5 border-primary/30">{item.condition}</Badge>
                       </div>
-                      <div className="flex items-center gap-2 mt-1">
-                        <div className="flex items-center gap-1 bg-primary/10 px-2 py-1 rounded-md">
-                          <Eye className="h-4 w-4 text-primary" />
-                          <span className="text-sm font-bold text-primary">{item.viewCount || 0}</span>
+                      <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1.5 bg-primary/10 px-2.5 py-1.5 rounded-lg flex-1">
+                          <Eye className="h-3.5 w-3.5 text-primary" />
+                          <span className="text-xs font-bold text-primary">{item.viewCount || 0}</span>
                         </div>
-                        <div className="flex items-center gap-1 bg-primary/10 px-2 py-1 rounded-md">
-                          <MessageCircle className="h-4 w-4 text-primary" />
-                          <span className="text-sm font-bold text-primary">{item.conversationCount || 0}</span>
+                        <div className="flex items-center gap-1.5 bg-secondary/10 px-2.5 py-1.5 rounded-lg flex-1">
+                          <MessageCircle className="h-3.5 w-3.5 text-secondary" />
+                          <span className="text-xs font-bold text-secondary">{item.conversationCount || 0}</span>
                         </div>
                       </div>
                     </div>
-                  </Card>
+                  </div>
                 ))}
               </div>
             ) : (
-              <div className="text-center py-12">
-                <p className="text-muted-foreground">No active listings</p>
+              <div className="bg-card/50 backdrop-blur-sm rounded-2xl p-20 text-center border border-border/50">
+                <div className="inline-flex p-4 rounded-full bg-muted/50 mb-4">
+                  <Package className="h-12 w-12 text-muted-foreground opacity-50" />
+                </div>
+                <p className="text-base font-semibold text-foreground mb-2">No active listings</p>
+                <p className="text-sm text-muted-foreground">Your active listings will appear here</p>
               </div>
             )}
           </TabsContent>
           
           <TabsContent value="sold">
             {soldListings.length > 0 ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
                 {soldListings.map((item) => (
-                  <Card
+                  <div
                     key={item.id}
-                    className="group overflow-hidden border-border opacity-75 hover:opacity-90 transition-opacity"
+                    className="group relative overflow-hidden bg-card/50 backdrop-blur-sm rounded-2xl border border-border/50 opacity-80 hover:opacity-100 transition-all"
                   >
-                    <div className="relative aspect-square overflow-hidden bg-muted">
+                    <div className="relative aspect-square overflow-hidden bg-gradient-to-br from-muted to-muted/50">
                       <img
                         src={item.images?.[0] || "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800&auto=format&fit=crop"}
                         alt={item.title}
-                        className="h-full w-full object-cover grayscale"
+                        className="h-full w-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
                         onError={(e) => {
                           e.currentTarget.src = "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800&auto=format&fit=crop";
                         }}
                       />
-                      <Badge className="absolute top-1 right-1 text-xs bg-secondary text-secondary-foreground">
+                      <div className="absolute inset-0 bg-secondary/20" />
+                      <Badge className="absolute top-2 right-2 text-xs bg-secondary text-secondary-foreground shadow-md">
                         Sold
                       </Badge>
                       <DropdownMenu>
@@ -798,13 +806,13 @@ const Profile = () => {
                           <Button
                             size="icon"
                             variant="ghost"
-                            className="absolute top-1 left-1 h-7 w-7 bg-background/80 hover:bg-background/90 backdrop-blur-sm"
+                            className="absolute top-2 left-2 h-8 w-8 bg-background/90 hover:bg-background backdrop-blur-sm shadow-md"
                             onClick={(e) => e.stopPropagation()}
                           >
                             <MoreVertical className="h-4 w-4 text-primary" />
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="start">
+                        <DropdownMenuContent align="start" className="bg-card/95 backdrop-blur-sm">
                           <DropdownMenuItem onClick={() => handleReviveListing(item.id)}>
                             <RotateCcw className="h-4 w-4 mr-2" />
                             Revive Listing
@@ -817,19 +825,23 @@ const Profile = () => {
                       </DropdownMenu>
                     </div>
 
-                    <div className="p-2 space-y-1">
-                      <h3 className="font-semibold text-xs text-foreground line-clamp-1">{item.title}</h3>
+                    <div className="p-3 space-y-2">
+                      <h3 className="font-bold text-sm text-foreground line-clamp-1">{item.title}</h3>
                       <div className="flex items-center justify-between">
-                        <span className="text-sm font-bold text-foreground">${parseFloat(item.price)}</span>
-                        <Badge variant="outline" className="text-[10px] px-1 py-0">{item.condition}</Badge>
+                        <span className="text-lg font-black text-foreground">${parseFloat(item.price)}</span>
+                        <Badge variant="outline" className="text-xs px-2 py-0.5 border-secondary/30">{item.condition}</Badge>
                       </div>
                     </div>
-                  </Card>
+                  </div>
                 ))}
               </div>
             ) : (
-              <div className="text-center py-12">
-                <p className="text-muted-foreground">No sold items yet</p>
+              <div className="bg-card/50 backdrop-blur-sm rounded-2xl p-20 text-center border border-border/50">
+                <div className="inline-flex p-4 rounded-full bg-muted/50 mb-4">
+                  <CheckCircle className="h-12 w-12 text-muted-foreground opacity-50" />
+                </div>
+                <p className="text-base font-semibold text-foreground mb-2">No sold items yet</p>
+                <p className="text-sm text-muted-foreground">Items you've sold will appear here</p>
               </div>
             )}
           </TabsContent>
