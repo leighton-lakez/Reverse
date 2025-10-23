@@ -444,10 +444,37 @@ const Profile = () => {
         {/* Profile Header */}
         <Card className="p-4 mb-3 animate-fade-in border-border">
           <div className="flex items-center gap-4">
-            <Avatar className="h-16 w-16 border-2 border-primary flex-shrink-0">
-              <AvatarImage src={profileData.avatar} />
-              <AvatarFallback>{profileData.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-            </Avatar>
+            <div className="relative flex-shrink-0">
+              {/* Avatar with story ring and dropdown */}
+              <div
+                className={`cursor-pointer ${
+                  myStories.length > 0
+                    ? 'p-0.5 rounded-full bg-gradient-to-tr from-primary via-yellow-500 to-primary'
+                    : ''
+                }`}
+                onClick={() => {
+                  if (myStories.length > 0) {
+                    setStoryViewerOpen(true);
+                  }
+                }}
+              >
+                <Avatar className={`h-16 w-16 ${myStories.length > 0 ? 'border-2 border-background' : 'border-2 border-primary'}`}>
+                  <AvatarImage src={profileData.avatar} />
+                  <AvatarFallback>{profileData.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                </Avatar>
+              </div>
+
+              {/* Plus button to create story */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setCreateStoryOpen(true);
+                }}
+                className="absolute bottom-0 right-0 h-5 w-5 bg-primary rounded-full flex items-center justify-center border-2 border-background hover:scale-110 transition-transform"
+              >
+                <Plus className="h-3 w-3 text-primary-foreground" />
+              </button>
+            </div>
             
             <div className="flex-1 min-w-0">
               <div className="flex items-start justify-between gap-2">
@@ -585,48 +612,6 @@ const Profile = () => {
             </div>
           </div>
         </Card>
-
-        {/* Story Section */}
-        <div className="mb-3 animate-fade-in" style={{ animationDelay: "0.05s" }}>
-          <div className="flex items-center gap-3 overflow-x-auto pb-2">
-            {/* Create Story Button */}
-            <div className="flex-shrink-0">
-              <button
-                onClick={() => setCreateStoryOpen(true)}
-                className="flex flex-col items-center gap-1"
-              >
-                <div className="relative">
-                  <Avatar className="h-16 w-16 border-2 border-dashed border-primary">
-                    <AvatarImage src={profileData.avatar} />
-                    <AvatarFallback>{profileData.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-                  </Avatar>
-                  <div className="absolute bottom-0 right-0 h-5 w-5 bg-primary rounded-full flex items-center justify-center border-2 border-background">
-                    <Plus className="h-3 w-3 text-primary-foreground" />
-                  </div>
-                </div>
-                <span className="text-xs text-foreground font-medium">Create</span>
-              </button>
-            </div>
-
-            {/* My Stories */}
-            {myStories.length > 0 && (
-              <div className="flex-shrink-0">
-                <button
-                  onClick={() => setStoryViewerOpen(true)}
-                  className="flex flex-col items-center gap-1"
-                >
-                  <div className="p-0.5 rounded-full bg-gradient-to-tr from-primary via-yellow-500 to-primary">
-                    <Avatar className="h-16 w-16 border-2 border-background">
-                      <AvatarImage src={profileData.avatar} />
-                      <AvatarFallback>{profileData.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-                    </Avatar>
-                  </div>
-                  <span className="text-xs text-foreground font-medium">My Story</span>
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
 
         {/* Listings Tabs */}
         <Tabs defaultValue="active" className="animate-fade-in" style={{ animationDelay: "0.1s" }}>
