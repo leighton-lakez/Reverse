@@ -343,19 +343,19 @@ const UnoGame = () => {
                 variant="ghost"
                 size="icon"
                 onClick={() => setInviteModalOpen(true)}
-                className="hover:bg-muted"
+                className="hover:bg-muted h-12 w-12"
                 title="Invite Friends"
               >
-                <Users className="h-5 w-5" />
+                <Users className="h-7 w-7" />
               </Button>
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={startGame}
-                className="hover:bg-muted"
+                className="hover:bg-muted h-12 w-12"
                 title="Restart Game"
               >
-                <RotateCcw className="h-5 w-5" />
+                <RotateCcw className="h-7 w-7" />
               </Button>
             </div>
           </div>
