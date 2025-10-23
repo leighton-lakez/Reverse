@@ -445,7 +445,7 @@ const Profile = () => {
         <Card className="p-4 mb-3 animate-fade-in border-border">
           <div className="flex items-center gap-4">
             <div className="relative flex-shrink-0">
-              {/* Avatar with story ring and dropdown */}
+              {/* Avatar with story ring */}
               <div
                 className={`cursor-pointer ${
                   myStories.length > 0
@@ -464,15 +464,15 @@ const Profile = () => {
                 </Avatar>
               </div>
 
-              {/* Plus button to create story */}
+              {/* Enhanced create story button */}
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   setCreateStoryOpen(true);
                 }}
-                className="absolute bottom-0 right-0 h-5 w-5 bg-primary rounded-full flex items-center justify-center border-2 border-background hover:scale-110 transition-transform"
+                className="absolute -bottom-1 -right-1 h-8 w-8 bg-gradient-to-r from-primary to-primary/90 rounded-full flex items-center justify-center border-3 border-background shadow-lg hover:scale-110 hover:shadow-xl hover:shadow-primary/50 transition-all duration-200 group"
               >
-                <Plus className="h-3 w-3 text-primary-foreground" />
+                <Plus className="h-5 w-5 text-primary-foreground group-hover:rotate-90 transition-transform duration-200" />
               </button>
             </div>
             
