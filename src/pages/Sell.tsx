@@ -631,43 +631,56 @@ Please provide a price suggestion considering any visible damage or wear in the 
   const canSubmitInput = currentStep !== "images" && currentStep !== "summary" && currentStep !== "welcome";
 
   return (
-    <div className="min-h-screen bg-background pb-20 sm:pb-24 flex flex-col overflow-hidden relative">
+    <div className="min-h-screen bg-gradient-to-b from-background via-background to-card pb-20 sm:pb-24 flex flex-col overflow-hidden relative">
+      {/* Ambient gradient background */}
+      <div className="fixed inset-0 gradient-mesh pointer-events-none opacity-30" />
+
       {/* Header */}
-      <header className="sticky top-0 z-50 glass">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 py-3 sm:py-4">
-          <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate("/")}>
-            <ReverseIcon className="w-8 h-8" />
-            <h1 className="text-xl font-black tracking-tighter text-gradient">REVERSE</h1>
+      <header className="sticky top-0 z-50 glass border-b border-border/50">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4 sm:py-5">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3 cursor-pointer group" onClick={() => navigate("/")}>
+              <div className="relative">
+                <div className="absolute inset-0 bg-primary/20 rounded-lg blur-md group-hover:blur-lg transition-all" />
+                <ReverseIcon className="w-9 h-9 relative z-10 group-hover:scale-105 transition-transform" />
+              </div>
+              <h1 className="text-2xl font-black tracking-tighter text-gradient">REVERSE</h1>
+            </div>
+            <div className="flex items-center gap-2 px-4 py-2 rounded-full glass border border-primary/20">
+              <div className="h-2 w-2 bg-green-500 rounded-full animate-pulse" />
+              <span className="text-xs font-medium text-muted-foreground">Live Assistant</span>
+            </div>
           </div>
         </div>
       </header>
 
       {/* Chat Messages */}
-      <main className="flex-1 max-w-3xl mx-auto w-full px-3 sm:px-4 py-4 sm:py-6 overflow-y-auto pb-32 sm:pb-24">
-        <div className="space-y-4 pb-8">
-          {messages.map((message) => (
+      <main className="flex-1 max-w-4xl mx-auto w-full px-3 sm:px-6 py-6 sm:py-8 overflow-y-auto pb-32 sm:pb-24 relative z-10">
+        <div className="space-y-5 pb-8">
+          {messages.map((message, index) => (
             <div
               key={message.id}
               className={`flex ${message.type === "user" ? "justify-end" : "justify-start"} animate-fade-in`}
+              style={{ animationDelay: `${index * 50}ms` }}
             >
               <div
-                className={`max-w-[85%] sm:max-w-[80%] rounded-2xl px-3 sm:px-4 py-2.5 sm:py-3 shadow-md ${
+                className={`max-w-[85%] sm:max-w-[75%] rounded-3xl px-4 sm:px-5 py-3 sm:py-4 shadow-lg transition-all hover:scale-[1.01] ${
                   message.type === "user"
-                    ? "gradient-primary text-primary-foreground shadow-glow"
-                    : "glass text-foreground"
+                    ? "bg-gradient-to-br from-primary via-primary to-primary/90 text-primary-foreground shadow-primary/20 border border-primary/30"
+                    : "glass text-foreground border border-border/50 backdrop-blur-xl"
                 }`}
               >
-                <p className="text-xs sm:text-sm whitespace-pre-line leading-relaxed">{message.content}</p>
+                <p className="text-sm sm:text-base whitespace-pre-line leading-relaxed font-medium">{message.content}</p>
 
                 {message.options && (
-                  <div className="flex flex-wrap gap-1.5 sm:gap-2 mt-2 sm:mt-3">
+                  <div className="flex flex-wrap gap-2 sm:gap-2.5 mt-3 sm:mt-4">
                     {message.options.map((option) => (
                       <Button
                         key={option}
                         onClick={() => handleOptionClick(option)}
                         size="sm"
                         variant="outline"
-                        className="bg-background/50 hover:bg-background border-border text-xs sm:text-sm h-8 sm:h-9 px-2 sm:px-3"
+                        className="bg-background/80 hover:bg-primary/10 border-primary/30 hover:border-primary/50 text-xs sm:text-sm h-9 sm:h-10 px-3 sm:px-4 rounded-full font-semibold hover:shadow-md transition-all hover:scale-105"
                       >
                         {option}
                       </Button>
@@ -680,11 +693,11 @@ Please provide a price suggestion considering any visible damage or wear in the 
 
           {isTyping && (
             <div className="flex justify-start animate-fade-in">
-              <div className="glass rounded-2xl px-3 sm:px-4 py-2.5 sm:py-3 shadow-md">
-                <div className="flex gap-1">
-                  <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: "0ms" }}></div>
-                  <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: "150ms" }}></div>
-                  <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: "300ms" }}></div>
+              <div className="glass rounded-3xl px-5 py-4 shadow-lg border border-border/50 backdrop-blur-xl">
+                <div className="flex gap-1.5">
+                  <div className="w-2.5 h-2.5 bg-primary rounded-full animate-bounce shadow-lg shadow-primary/50" style={{ animationDelay: "0ms" }}></div>
+                  <div className="w-2.5 h-2.5 bg-primary rounded-full animate-bounce shadow-lg shadow-primary/50" style={{ animationDelay: "150ms" }}></div>
+                  <div className="w-2.5 h-2.5 bg-primary rounded-full animate-bounce shadow-lg shadow-primary/50" style={{ animationDelay: "300ms" }}></div>
                 </div>
               </div>
             </div>
@@ -692,21 +705,25 @@ Please provide a price suggestion considering any visible damage or wear in the 
 
           {/* Image Previews */}
           {imagePreviews.length > 0 && currentStep !== "summary" && (
-            <div className="flex justify-start">
-              <div className="glass rounded-2xl p-3 shadow-md">
-                <p className="text-xs text-muted-foreground mb-2">Photos</p>
-                <div className="grid grid-cols-3 gap-2">
+            <div className="flex justify-start animate-fade-in">
+              <div className="glass rounded-3xl p-4 sm:p-5 shadow-lg border border-border/50 backdrop-blur-xl max-w-[85%] sm:max-w-[75%]">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="h-2 w-2 bg-primary rounded-full" />
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Your Photos</p>
+                </div>
+                <div className="grid grid-cols-3 gap-2.5 sm:gap-3">
                   {imagePreviews.map((preview, index) => (
-                    <div key={index} className="relative aspect-square rounded-md overflow-hidden group">
-                      <img src={preview} alt={`Upload ${index + 1}`} className="w-full h-full object-cover" />
+                    <div key={index} className="relative aspect-square rounded-xl overflow-hidden group ring-2 ring-border/50 hover:ring-primary/50 transition-all">
+                      <img src={preview} alt={`Upload ${index + 1}`} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                       <Button
                         type="button"
                         variant="destructive"
                         size="icon"
-                        className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                        className="absolute top-2 right-2 h-7 w-7 rounded-full opacity-0 group-hover:opacity-100 transition-all shadow-lg hover:scale-110"
                         onClick={() => removeImage(index)}
                       >
-                        <X className="h-3 w-3" />
+                        <X className="h-4 w-4" />
                       </Button>
                     </div>
                   ))}
@@ -717,24 +734,29 @@ Please provide a price suggestion considering any visible damage or wear in the 
 
           {/* Video Previews */}
           {videoPreviews.length > 0 && currentStep !== "summary" && (
-            <div className="flex justify-start">
-              <div className="glass rounded-2xl p-3 shadow-md">
-                <p className="text-xs text-muted-foreground mb-2">Videos</p>
-                <div className="grid grid-cols-3 gap-2">
+            <div className="flex justify-start animate-fade-in">
+              <div className="glass rounded-3xl p-4 sm:p-5 shadow-lg border border-border/50 backdrop-blur-xl max-w-[85%] sm:max-w-[75%]">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="h-2 w-2 bg-secondary rounded-full" />
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Your Videos</p>
+                </div>
+                <div className="grid grid-cols-3 gap-2.5 sm:gap-3">
                   {videoPreviews.map((preview, index) => (
-                    <div key={index} className="relative aspect-square rounded-md overflow-hidden group">
+                    <div key={index} className="relative aspect-square rounded-xl overflow-hidden group ring-2 ring-border/50 hover:ring-secondary/50 transition-all">
                       <video src={preview} className="w-full h-full object-cover" />
-                      <div className="absolute inset-0 flex items-center justify-center bg-black/30">
-                        <Video className="h-8 w-8 text-white" />
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/40 group-hover:bg-black/50 transition-colors">
+                        <div className="p-2.5 bg-white/90 rounded-full">
+                          <Video className="h-6 w-6 text-secondary" />
+                        </div>
                       </div>
                       <Button
                         type="button"
                         variant="destructive"
                         size="icon"
-                        className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                        className="absolute top-2 right-2 h-7 w-7 rounded-full opacity-0 group-hover:opacity-100 transition-all shadow-lg hover:scale-110"
                         onClick={() => removeVideo(index)}
                       >
-                        <X className="h-3 w-3" />
+                        <X className="h-4 w-4" />
                       </Button>
                     </div>
                   ))}
@@ -748,80 +770,87 @@ Please provide a price suggestion considering any visible damage or wear in the 
       </main>
 
       {/* Input Area */}
-      <div className="sticky bottom-0 sm:bottom-16 safe-area-bottom">
-        <div className="max-w-3xl mx-auto px-3 sm:px-6 py-3 sm:py-4">
-          {currentStep === "images" && (
-            <div className="flex gap-2">
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*,video/*"
-                multiple
-                className="hidden"
-                onChange={handleImageUpload}
-              />
-              <Button
-                onClick={() => fileInputRef.current?.click()}
-                className="flex-1 h-11 sm:h-12 text-sm sm:text-base gradient-primary shadow-glow hover:shadow-glow-secondary transition-all"
-              >
-                <Upload className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
-                Upload Photos/Videos
-              </Button>
-            </div>
-          )}
+      <div className="sticky bottom-0 sm:bottom-16 safe-area-bottom z-20">
+        <div className="relative">
+          {/* Gradient fade effect */}
+          <div className="absolute bottom-full left-0 right-0 h-20 bg-gradient-to-t from-background via-background/90 to-transparent pointer-events-none" />
 
-          {canSubmitInput && (
-            <div className="space-y-2">
-              {currentStep === "price" && (
-                <Button
-                  onClick={getAIPriceSuggestion}
-                  disabled={isGettingAIPrice || itemData.images.length === 0}
-                  className="w-full h-11 sm:h-12 bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all font-semibold"
-                >
-                  {isGettingAIPrice ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      AI is analyzing...
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="h-4 w-4 mr-2" />
-                      Get AI Price Suggestion
-                    </>
-                  )}
-                </Button>
+          <div className="glass border-t border-border/50 backdrop-blur-2xl">
+            <div className="max-w-4xl mx-auto px-3 sm:px-6 py-4 sm:py-5">
+              {currentStep === "images" && (
+                <div className="flex gap-3">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*,video/*"
+                    multiple
+                    className="hidden"
+                    onChange={handleImageUpload}
+                  />
+                  <Button
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex-1 h-12 sm:h-14 text-sm sm:text-base bg-gradient-to-r from-primary via-primary to-primary/90 hover:from-primary/90 hover:via-primary hover:to-primary shadow-xl shadow-primary/30 hover:shadow-2xl hover:shadow-primary/40 transition-all font-bold rounded-2xl border border-primary/20"
+                  >
+                    <Upload className="h-5 w-5 mr-2.5" />
+                    Upload Photos/Videos
+                  </Button>
+                </div>
               )}
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  handleSubmitInput();
-                }}
-                className="flex gap-2"
-              >
-                <Input
-                  value={inputValue}
-                  onChange={(e) => setInputValue(e.target.value)}
-                  placeholder={getPlaceholder()}
-                  type={getCurrentInputType()}
-                  className="flex-1 h-11 sm:h-12 text-sm sm:text-base bg-muted border-border"
-                  disabled={submitting || isGettingAIPrice}
-                  autoFocus
-                />
-                <Button
-                  type="submit"
-                  size="icon"
-                  className="h-11 w-11 sm:h-12 sm:w-12"
-                  disabled={!inputValue.trim() || submitting || isGettingAIPrice}
-                >
-                  {submitting ? (
-                    <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 animate-spin" />
-                  ) : (
-                    <Send className="h-4 w-4 sm:h-5 sm:w-5" />
+
+              {canSubmitInput && (
+                <div className="space-y-3">
+                  {currentStep === "price" && (
+                    <Button
+                      onClick={getAIPriceSuggestion}
+                      disabled={isGettingAIPrice || itemData.images.length === 0}
+                      className="w-full h-12 sm:h-14 bg-gradient-to-r from-secondary via-secondary to-secondary/90 hover:from-secondary/90 hover:via-secondary hover:to-secondary shadow-xl shadow-secondary/30 hover:shadow-2xl hover:shadow-secondary/40 transition-all font-bold rounded-2xl border border-secondary/20"
+                    >
+                      {isGettingAIPrice ? (
+                        <>
+                          <Loader2 className="h-5 w-5 mr-2.5 animate-spin" />
+                          AI is analyzing...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="h-5 w-5 mr-2.5" />
+                          Get AI Price Suggestion
+                        </>
+                      )}
+                    </Button>
                   )}
-                </Button>
-              </form>
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      handleSubmitInput();
+                    }}
+                    className="flex gap-3"
+                  >
+                    <Input
+                      value={inputValue}
+                      onChange={(e) => setInputValue(e.target.value)}
+                      placeholder={getPlaceholder()}
+                      type={getCurrentInputType()}
+                      className="flex-1 h-12 sm:h-14 text-sm sm:text-base bg-background/50 border-border/50 rounded-2xl px-5 focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition-all font-medium placeholder:text-muted-foreground/60"
+                      disabled={submitting || isGettingAIPrice}
+                      autoFocus
+                    />
+                    <Button
+                      type="submit"
+                      size="icon"
+                      className="h-12 w-12 sm:h-14 sm:w-14 rounded-2xl bg-gradient-to-br from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40 hover:scale-105 transition-all"
+                      disabled={!inputValue.trim() || submitting || isGettingAIPrice}
+                    >
+                      {submitting ? (
+                        <Loader2 className="h-5 w-5 animate-spin" />
+                      ) : (
+                        <Send className="h-5 w-5" />
+                      )}
+                    </Button>
+                  </form>
+                </div>
+              )}
             </div>
-          )}
+          </div>
         </div>
       </div>
 

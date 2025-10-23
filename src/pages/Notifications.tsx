@@ -85,24 +85,32 @@ const StoriesSection = ({ currentUserId }: { currentUserId: string }) => {
 
   return (
     <>
-      <div className="mb-4">
-        <h2 className="text-sm font-semibold text-foreground mb-2">Stories</h2>
-        <div className="flex gap-3 overflow-x-auto pb-2">
+      <div className="mb-6">
+        <h2 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
+          Stories
+          <div className="h-1 w-12 bg-gradient-to-r from-primary to-secondary rounded-full" />
+        </h2>
+        <div className="flex gap-4 overflow-x-auto pb-3 scrollbar-hide">
           {storiesWithUsers.map((userStory) => (
             <button
               key={userStory.userId}
               onClick={() => handleStoryClick(userStory)}
-              className="flex flex-col items-center gap-1 flex-shrink-0"
+              className="flex flex-col items-center gap-2 flex-shrink-0 group"
             >
-              <div className="p-0.5 rounded-full bg-gradient-to-tr from-primary via-yellow-500 to-primary">
-                <Avatar className="h-16 w-16 border-2 border-background">
-                  <AvatarImage src={userStory.profile?.avatar_url} />
-                  <AvatarFallback>
-                    {userStory.profile?.display_name?.split(' ').map((n: string) => n[0]).join('') || 'U'}
-                  </AvatarFallback>
-                </Avatar>
+              <div className="relative">
+                <div className="p-1 rounded-full bg-gradient-to-tr from-primary via-yellow-400 to-primary shadow-lg group-hover:shadow-primary/30 transition-all story-pulse">
+                  <Avatar className="h-20 w-20 border-[3px] border-background ring-2 ring-primary/20 group-hover:ring-primary/40 transition-all">
+                    <AvatarImage src={userStory.profile?.avatar_url} />
+                    <AvatarFallback className="text-lg font-bold">
+                      {userStory.profile?.display_name?.split(' ').map((n: string) => n[0]).join('') || 'U'}
+                    </AvatarFallback>
+                  </Avatar>
+                </div>
+                <div className="absolute -bottom-1 -right-1 bg-primary text-primary-foreground text-xs font-bold rounded-full h-6 w-6 flex items-center justify-center border-2 border-background shadow-md">
+                  {userStory.stories.length}
+                </div>
               </div>
-              <span className="text-xs text-foreground font-medium max-w-[64px] truncate">
+              <span className="text-sm text-foreground font-semibold max-w-[80px] truncate group-hover:text-primary transition-colors">
                 {userStory.profile?.display_name || 'User'}
               </span>
             </button>
@@ -172,37 +180,46 @@ const FriendsSection = ({ currentUserId }: { currentUserId: string }) => {
 
   if (friends.length === 0) {
     return (
-      <Card className="p-6 text-center border-border bg-muted/30">
-        <div className="flex items-center justify-center gap-2 mb-2">
-          <Users className="h-10 w-10 text-muted-foreground" />
+      <div className="bg-card/50 backdrop-blur-sm rounded-2xl p-12 text-center border border-border/50">
+        <div className="inline-flex p-4 rounded-full bg-muted/50 mb-4">
+          <Users className="h-12 w-12 text-muted-foreground opacity-50" />
         </div>
-        <p className="text-sm text-muted-foreground font-medium">0 Friends</p>
-        <p className="text-xs text-muted-foreground mt-1">
+        <p className="text-base font-semibold text-foreground mb-2">0 Friends</p>
+        <p className="text-sm text-muted-foreground max-w-sm mx-auto">
           When you and another user follow each other, you'll become friends
         </p>
-      </Card>
+      </div>
     );
   }
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       {friends.map((friend) => (
-        <Card
+        <div
           key={friend.id}
           onClick={() => navigate(`/user/${friend.id}`)}
-          className="p-3 border-border hover:bg-muted/50 transition-all cursor-pointer"
+          className="group relative overflow-hidden bg-card/80 backdrop-blur-sm rounded-2xl p-4 border border-border/50 hover:border-primary/30 transition-all cursor-pointer hover:shadow-lg hover:scale-[1.02]"
         >
-          <div className="flex items-center gap-3">
-            <Avatar className="h-10 w-10 border-2 border-primary">
+          <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-primary/10 to-transparent rounded-bl-full opacity-0 group-hover:opacity-100 transition-opacity" />
+          <div className="relative flex items-center gap-4">
+            <Avatar className="h-14 w-14 border-2 border-background ring-2 ring-primary/20 group-hover:ring-primary/40 transition-all">
               <AvatarImage src={friend.avatar_url} />
-              <AvatarFallback>{friend.display_name?.split(' ').map((n: string) => n[0]).join('')}</AvatarFallback>
+              <AvatarFallback className="text-lg font-bold">{friend.display_name?.split(' ').map((n: string) => n[0]).join('')}</AvatarFallback>
             </Avatar>
-            <div className="flex-1">
-              <p className="text-sm font-semibold text-foreground">{friend.display_name}</p>
-              <p className="text-xs text-muted-foreground">Friend</p>
+            <div className="flex-1 min-w-0">
+              <p className="text-base font-bold text-foreground mb-1">{friend.display_name}</p>
+              <div className="flex items-center gap-2">
+                <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+                <p className="text-sm text-muted-foreground">Friend</p>
+              </div>
+            </div>
+            <div className="flex-shrink-0 text-primary opacity-0 group-hover:opacity-100 transition-opacity">
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
             </div>
           </div>
-        </Card>
+        </div>
       ))}
     </div>
   );
@@ -411,68 +428,88 @@ const Notifications = () => {
 
         {/* Message Notifications */}
         <div className="animate-fade-in" style={{ animationDelay: "0.1s" }}>
-          <h2 className="text-xs font-semibold text-muted-foreground mb-2">Messages</h2>
+          <h2 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
+            Messages
+            <div className="h-1 w-12 bg-gradient-to-r from-primary to-secondary rounded-full" />
+          </h2>
           {loadingMessages ? (
-            <Card className="p-6 text-center border-border">
+            <div className="bg-card/50 backdrop-blur-sm rounded-2xl p-12 text-center border border-border/50">
               <div className="flex items-center justify-center">
-                <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                <div className="w-8 h-8 border-3 border-primary border-t-transparent rounded-full animate-spin" />
               </div>
-            </Card>
+            </div>
           ) : messageNotifications.length > 0 ? (
-            <div className="space-y-1.5">
+            <div className="space-y-3">
               {messageNotifications.map((notification) => (
-                <Card
+                <div
                   key={notification.id}
                   onClick={() => navigate("/chat", {
                     state: {
                       sellerId: notification.senderId
                     }
                   })}
-                  className={`p-2.5 border-border hover:bg-muted/50 transition-all cursor-pointer ${
-                    notification.unread ? 'bg-primary/5 border-l-2 border-l-primary' : ''
+                  className={`group relative overflow-hidden bg-card/80 backdrop-blur-sm rounded-2xl p-4 border transition-all cursor-pointer hover:shadow-lg hover:scale-[1.02] ${
+                    notification.unread
+                      ? 'border-primary/50 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent shadow-md shadow-primary/10'
+                      : 'border-border/50 hover:border-border'
                   }`}
                 >
-                  <div className="flex gap-2">
-                    <Avatar className="h-9 w-9 flex-shrink-0">
-                      <AvatarImage src={notification.avatar} />
-                      <AvatarFallback>{notification.name.split(' ').map((n: string) => n[0]).join('')}</AvatarFallback>
-                    </Avatar>
+                  {notification.unread && (
+                    <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-primary/20 to-transparent rounded-bl-full opacity-50" />
+                  )}
+                  <div className="relative flex gap-3">
+                    <div className="relative flex-shrink-0">
+                      <Avatar className="h-12 w-12 border-2 border-background ring-2 ring-primary/20">
+                        <AvatarImage src={notification.avatar} />
+                        <AvatarFallback className="font-bold">{notification.name.split(' ').map((n: string) => n[0]).join('')}</AvatarFallback>
+                      </Avatar>
+                      {notification.unread && (
+                        <div className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center border-2 border-background animate-pulse">
+                          {notification.unreadCount}
+                        </div>
+                      )}
+                    </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-xs font-semibold text-foreground">{notification.name}</span>
+                      <div className="flex items-start justify-between gap-2 mb-1">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-bold text-foreground">{notification.name}</span>
                           {notification.unread && (
-                            <Badge variant="default" className="h-3.5 px-1.5 text-[9px] bg-primary text-primary-foreground">
-                              {notification.unreadCount} New
+                            <Badge variant="default" className="h-5 px-2 text-xs bg-primary text-primary-foreground shadow-sm">
+                              New
                             </Badge>
                           )}
                         </div>
-                        <span className="text-[9px] text-muted-foreground flex-shrink-0">{notification.timeAgo}</span>
+                        <span className="text-xs text-muted-foreground flex-shrink-0">{notification.timeAgo}</span>
                       </div>
-                      <p className="text-[11px] text-foreground line-clamp-1">{notification.message}</p>
-                      <p className="text-[9px] text-muted-foreground mt-0.5">
-                        {notification.messageCount} {notification.messageCount === 1 ? 'message' : 'messages'}
-                      </p>
+                      <p className="text-sm text-foreground/80 line-clamp-2 mb-2">{notification.message}</p>
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <MessageCircle className="h-3.5 w-3.5" />
+                        <span>{notification.messageCount} {notification.messageCount === 1 ? 'message' : 'messages'}</span>
+                      </div>
                     </div>
-                    <MessageCircle className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0 mt-0.5" />
                   </div>
-                </Card>
+                </div>
               ))}
             </div>
           ) : (
-            <Card className="p-6 text-center border-border">
-              <MessageCircle className="h-12 w-12 text-muted-foreground mx-auto mb-2 opacity-50" />
-              <p className="text-sm text-muted-foreground">No messages yet</p>
-              <p className="text-xs text-muted-foreground mt-1">
+            <div className="bg-card/50 backdrop-blur-sm rounded-2xl p-12 text-center border border-border/50">
+              <div className="inline-flex p-4 rounded-full bg-muted/50 mb-4">
+                <MessageCircle className="h-12 w-12 text-muted-foreground opacity-50" />
+              </div>
+              <p className="text-base font-semibold text-foreground mb-2">No messages yet</p>
+              <p className="text-sm text-muted-foreground max-w-sm mx-auto">
                 When someone messages you about your listings, they'll appear here
               </p>
-            </Card>
+            </div>
           )}
         </div>
 
-        {/* Empty state for friends (since there's no friends system) */}
+        {/* Friends Section */}
         <div className="animate-fade-in" style={{ animationDelay: "0.2s" }}>
-          <h2 className="text-xs font-semibold text-muted-foreground mb-2">Friends</h2>
+          <h2 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
+            Friends
+            <div className="h-1 w-12 bg-gradient-to-r from-primary to-secondary rounded-full" />
+          </h2>
           <FriendsSection currentUserId={currentUserId} />
         </div>
       </main>
