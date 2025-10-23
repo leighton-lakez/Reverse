@@ -152,31 +152,68 @@ const UnoGame = () => {
 
   // Real-time subscription for multiplayer
   useEffect(() => {
-    if (!isMultiplayer || !roomCode) return;
+    if (!isMultiplayer || !roomCode || !currentUserId) return;
+
+    console.log('Setting up real-time subscription for room:', roomCode);
 
     const channel = supabase
       .channel(`game-room-${roomCode}`)
       .on(
         'postgres_changes',
         {
-          event: '*',
+          event: 'UPDATE',
           schema: 'public',
           table: 'uno_game_rooms',
           filter: `room_code=eq.${roomCode}`
         },
         (payload) => {
-          console.log('Game room updated:', payload);
+          console.log('Real-time update received:', payload);
           if (payload.new) {
-            handleGameRoomUpdate(payload.new);
+            const updatedRoom = payload.new;
+
+            // Update game room state
+            setGameRoom(updatedRoom);
+
+            // Handle different game statuses
+            if (updatedRoom.status === 'playing') {
+              if (waitingForOpponent) {
+                setWaitingForOpponent(false);
+              }
+
+              // Load the updated game state
+              const playerId = currentUserId;
+              const opponentId = updatedRoom.host_id === playerId ? updatedRoom.guest_id : updatedRoom.host_id;
+
+              setPlayerHand(updatedRoom.game_state.playerHands[playerId] || []);
+              setOpponentHand(updatedRoom.game_state.playerHands[opponentId] || []);
+              setDiscardPile(updatedRoom.game_state.discardPile || []);
+              setCurrentColor(updatedRoom.game_state.currentColor || 'red');
+              setIsPlayerTurn(updatedRoom.game_state.currentTurn === playerId);
+              setIsReversed(updatedRoom.game_state.isReversed || false);
+
+              console.log('Game state loaded - My turn:', updatedRoom.game_state.currentTurn === playerId);
+            } else if (updatedRoom.status === 'finished') {
+              setGameOver(true);
+              if (updatedRoom.winner_id === currentUserId) {
+                sounds.playWin();
+                setWinner("You");
+              } else {
+                sounds.playLose();
+                setWinner(opponentProfile?.display_name || "Opponent");
+              }
+            }
           }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('Subscription status:', status);
+      });
 
     return () => {
+      console.log('Cleaning up real-time subscription');
       supabase.removeChannel(channel);
     };
-  }, [isMultiplayer, roomCode]);
+  }, [isMultiplayer, roomCode, currentUserId, waitingForOpponent, opponentProfile, sounds]);
 
   const joinGameRoom = async (code: string, userId: string) => {
     try {
@@ -305,25 +342,6 @@ const UnoGame = () => {
     setIsReversed(gameState.isReversed || false);
   };
 
-  const handleGameRoomUpdate = (room: any) => {
-    setGameRoom(room);
-
-    if (room.status === 'playing' && waitingForOpponent) {
-      setWaitingForOpponent(false);
-      loadGameState(room.game_state, undefined, room);
-    } else if (room.status === 'playing') {
-      loadGameState(room.game_state, undefined, room);
-    } else if (room.status === 'finished') {
-      setGameOver(true);
-      if (room.winner_id === currentUserId) {
-        sounds.playWin();
-        setWinner("You");
-      } else {
-        sounds.playLose();
-        setWinner(opponentProfile?.display_name || "Opponent");
-      }
-    }
-  };
 
   const fetchFriends = async (userId: string) => {
     // Get users that current user follows
@@ -483,18 +501,27 @@ const UnoGame = () => {
         setIsReversed(!isReversed);
       }
 
+      // Fetch latest game state to avoid conflicts
+      const { data: latestRoom } = await supabase
+        .from('uno_game_rooms')
+        .select('*')
+        .eq('id', gameRoom.id)
+        .single();
+
+      if (!latestRoom) return;
+
       // Then update database to sync with opponent
-      const opponentId = gameRoom.host_id === currentUserId ? gameRoom.guest_id : gameRoom.host_id;
+      const opponentId = latestRoom.host_id === currentUserId ? latestRoom.guest_id : latestRoom.host_id;
       const gameState = {
-        ...gameRoom.game_state,
+        ...latestRoom.game_state,
         playerHands: {
-          ...gameRoom.game_state.playerHands,
+          ...latestRoom.game_state.playerHands,
           [currentUserId]: newPlayerHand
         },
         discardPile: newDiscardPile,
         currentColor: newColor,
         currentTurn: opponentId,
-        isReversed: card.value === "reverse" ? !gameRoom.game_state.isReversed : gameRoom.game_state.isReversed
+        isReversed: card.value === "reverse" ? !latestRoom.game_state.isReversed : latestRoom.game_state.isReversed
       };
 
       // Check for winner
@@ -509,14 +536,14 @@ const UnoGame = () => {
             status: 'finished',
             winner_id: currentUserId
           })
-          .eq('id', gameRoom.id);
+          .eq('id', latestRoom.id);
         return;
       }
 
       await supabase
         .from('uno_game_rooms')
         .update({ game_state: gameState })
-        .eq('id', gameRoom.id);
+        .eq('id', latestRoom.id);
 
       // Show toast for special cards
       if (card.value === "skip") {

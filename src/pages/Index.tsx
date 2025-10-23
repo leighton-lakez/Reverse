@@ -1,4 +1,4 @@
-import { LogOut, X, Heart, RotateCcw, Filter } from "lucide-react";
+import { LogOut, X, Heart, RotateCcw, Filter, Map } from "lucide-react";
 import BottomNav from "@/components/BottomNav";
 import { ReverseIcon } from "@/components/ReverseIcon";
 import { useState, useEffect, useRef } from "react";
@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
+import MapView from "@/components/MapView";
 
 interface Item {
   id: string;
@@ -35,6 +36,7 @@ const Index = () => {
   const [welcomeCardAnimating, setWelcomeCardAnimating] = useState(false);
   const [showContent, setShowContent] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState("All");
+  const [showMapView, setShowMapView] = useState(false);
 
   const navigate = useNavigate();
   const cardRef = useRef<HTMLDivElement>(null);
@@ -351,8 +353,38 @@ const Index = () => {
         </div>
       </div>
 
+      {/* Map Toggle Button - Fixed on right side */}
+      <button
+        onClick={() => setShowMapView(!showMapView)}
+        className={`fixed right-4 top-1/2 -translate-y-1/2 z-40 flex items-center gap-2 px-4 py-3 rounded-l-xl shadow-lg transition-all duration-300 ${
+          showMapView
+            ? 'bg-primary text-primary-foreground'
+            : 'bg-card border border-border hover:bg-muted'
+        }`}
+        title={showMapView ? "Show Cards" : "Show Map"}
+      >
+        <Map className="h-5 w-5" />
+        <span className="text-sm font-semibold hidden sm:inline">{showMapView ? "Cards" : "Map"}</span>
+      </button>
+
       {/* Main Content */}
       <main className="flex-1 max-w-md mx-auto w-full px-3 sm:px-4 pt-2 pb-1 sm:py-6 flex flex-col items-center justify-start overflow-hidden">
+        {showMapView ? (
+          <div className="w-full h-full rounded-lg overflow-hidden">
+            <MapView
+              items={items}
+              onItemClick={(item) => {
+                // Navigate to the specific item in the card view
+                const itemIndex = items.findIndex(i => i.id === item.id);
+                if (itemIndex !== -1) {
+                  setCurrentIndex(itemIndex);
+                  setShowMapView(false);
+                }
+              }}
+            />
+          </div>
+        ) : (
+          <>
         {showWelcomeCard ? (
           <>
             {/* Welcome Card - UNO Reverse */}
@@ -550,6 +582,8 @@ const Index = () => {
               {currentIndex + 1} / {items.length}
             </div>
           </div>
+        )}
+        </>
         )}
       </main>
 
