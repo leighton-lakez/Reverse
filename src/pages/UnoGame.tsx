@@ -179,7 +179,8 @@ const UnoGame = () => {
 
     if (playableCards.length > 0) {
       const card = playableCards[0];
-      setBotHand(botHand.filter((c) => c.id !== card.id));
+      const newBotHand = botHand.filter((c) => c.id !== card.id);
+      setBotHand(newBotHand);
       setDiscardPile([...discardPile, card]);
 
       if (card.color === "wild") {
@@ -189,6 +190,12 @@ const UnoGame = () => {
         setCurrentColor(card.color);
       }
 
+      // Check win condition
+      if (newBotHand.length === 0) {
+        checkWinner("Bot");
+        return;
+      }
+
       // Handle special cards
       if (card.value === "reverse") {
         setIsReversed(!isReversed);
@@ -196,12 +203,16 @@ const UnoGame = () => {
           title: "🔄 Bot played Reverse!",
           description: "Direction reversed!",
         });
+        setIsPlayerTurn(true);
       } else if (card.value === "skip") {
         toast({
           title: "⏭️ Bot played Skip!",
-          description: "Your turn skipped!",
+          description: "Your turn skipped! Bot plays again.",
         });
-        setTimeout(() => botPlay(), 1000);
+        // Bot gets another turn, keep isPlayerTurn as false
+        setTimeout(() => {
+          setIsPlayerTurn(false);
+        }, 1500);
         return;
       } else if (card.value === "draw2") {
         drawCards(playerHand, setPlayerHand, 2);
@@ -209,23 +220,21 @@ const UnoGame = () => {
           title: "➕ Bot played Draw 2!",
           description: "You draw 2 cards!",
         });
+        setIsPlayerTurn(true);
       } else if (card.value === "wild4") {
         drawCards(playerHand, setPlayerHand, 4);
         toast({
           title: "➕ Bot played Wild Draw 4!",
           description: "You draw 4 cards!",
         });
-      }
-
-      if (botHand.length === 1) {
-        checkWinner("Bot");
-        return;
+        setIsPlayerTurn(true);
+      } else {
+        setIsPlayerTurn(true);
       }
     } else {
       drawCards(botHand, setBotHand, 1);
+      setIsPlayerTurn(true);
     }
-
-    setIsPlayerTurn(true);
   };
 
   const checkWinner = (player: string) => {
