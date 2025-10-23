@@ -217,7 +217,8 @@ const UnoGame = () => {
           title: "⏭️ Bot played Skip!",
           description: "Your turn skipped! Bot plays again.",
         });
-        // Bot gets another turn, keep isPlayerTurn as false
+        // Bot gets another turn - briefly set to true then back to false to trigger useEffect
+        setIsPlayerTurn(true);
         setTimeout(() => {
           setIsPlayerTurn(false);
         }, 1500);
