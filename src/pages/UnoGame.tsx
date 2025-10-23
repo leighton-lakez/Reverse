@@ -175,7 +175,11 @@ const UnoGame = () => {
             setGameRoom(updatedRoom);
 
             // Handle different game statuses
-            if (updatedRoom.status === 'playing') {
+            if (updatedRoom.status === 'ready' && updatedRoom.host_id === currentUserId) {
+              // Guest has arrived, host should initialize
+              console.log('Guest arrived, host initializing game...');
+              initializeMultiplayerGame(updatedRoom);
+            } else if (updatedRoom.status === 'playing') {
               if (waitingForOpponent) {
                 setWaitingForOpponent(false);
               }
@@ -261,14 +265,23 @@ const UnoGame = () => {
 
       // If game hasn't started yet, initialize it
       if (room.status === 'waiting' && room.host_id === userId) {
+        // Host is waiting for guest to join
         setWaitingForOpponent(true);
+        // Don't initialize yet - wait for guest to join first
+      } else if (room.status === 'waiting' && room.guest_id === userId) {
+        // Guest just joined - notify host to initialize
+        setWaitingForOpponent(true);
+        // Update the room to signal guest has arrived
+        await supabase
+          .from('uno_game_rooms')
+          .update({ status: 'ready' })
+          .eq('id', room.id);
+      } else if (room.status === 'ready' && room.host_id === userId) {
+        // Guest has arrived, host initializes the game
         await initializeMultiplayerGame(room);
-      } else if (room.status === 'waiting') {
-        // Guest joined - wait for host to initialize, then start
-        setWaitingForOpponent(true);
-        // Don't call startMultiplayerGame here - wait for the host to initialize first
       } else if (room.status === 'playing') {
         // Load existing game state
+        setWaitingForOpponent(false);
         loadGameState(room.game_state, userId, room);
       }
     } catch (error: any) {

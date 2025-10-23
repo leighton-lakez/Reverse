@@ -353,24 +353,28 @@ const Index = () => {
         </div>
       </div>
 
-      {/* Map Toggle Button - Fixed on right side */}
+      {/* Map Toggle Button - Fixed on left side */}
       <button
         onClick={() => setShowMapView(!showMapView)}
-        className={`fixed right-4 top-1/2 -translate-y-1/2 z-40 flex items-center gap-2 px-4 py-3 rounded-l-xl shadow-lg transition-all duration-300 ${
+        className={`fixed left-0 top-1/2 -translate-y-1/2 z-50 flex flex-col items-center justify-center py-8 px-3 rounded-r-2xl shadow-2xl transition-all duration-300 ${
           showMapView
-            ? 'bg-primary text-primary-foreground'
-            : 'bg-card border border-border hover:bg-muted'
+            ? 'bg-primary text-primary-foreground hover:bg-primary/90'
+            : 'bg-gradient-to-br from-primary/90 to-primary text-primary-foreground hover:from-primary hover:to-primary/90 animate-pulse'
         }`}
         title={showMapView ? "Show Cards" : "Show Map"}
       >
-        <Map className="h-5 w-5" />
-        <span className="text-sm font-semibold hidden sm:inline">{showMapView ? "Cards" : "Map"}</span>
+        <Map className="h-7 w-7 mb-2" />
+        <span className="text-xs font-black tracking-wider [writing-mode:vertical-lr] rotate-180">
+          {showMapView ? "CARDS" : "MAP VIEW"}
+        </span>
       </button>
 
       {/* Main Content */}
-      <main className="flex-1 max-w-md mx-auto w-full px-3 sm:px-4 pt-2 pb-1 sm:py-6 flex flex-col items-center justify-start overflow-hidden">
+      <main className={`flex-1 w-full flex flex-col items-center justify-start overflow-hidden ${
+        showMapView ? 'fixed inset-0 z-40 pt-16' : 'max-w-md mx-auto px-3 sm:px-4 pt-2 pb-1 sm:py-6'
+      }`}>
         {showMapView ? (
-          <div className="w-full h-full rounded-lg overflow-hidden">
+          <div className="w-full h-full">
             <MapView
               items={items}
               onItemClick={(item) => {

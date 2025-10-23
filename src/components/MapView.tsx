@@ -3,7 +3,10 @@ import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { Card } from "./ui/card";
-import { MapPin, DollarSign } from "lucide-react";
+import { MapPin, DollarSign, Search, SlidersHorizontal } from "lucide-react";
+import { Input } from "./ui/input";
+import { Button } from "./ui/button";
+import { Slider } from "./ui/slider";
 
 // Fix for default marker icons in react-leaflet
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -76,6 +79,11 @@ const getCoordinatesForLocation = (location: string): [number, number] => {
 
 const MapView = ({ items, onItemClick }: MapViewProps) => {
   const [itemsWithCoords, setItemsWithCoords] = useState<Item[]>([]);
+  const [filteredItems, setFilteredItems] = useState<Item[]>([]);
+  const [showFilters, setShowFilters] = useState(false);
+  const [locationSearch, setLocationSearch] = useState("");
+  const [priceRange, setPriceRange] = useState([0, 10000]);
+  const [maxPrice, setMaxPrice] = useState(10000);
 
   useEffect(() => {
     // Add coordinates to items that don't have them
@@ -91,13 +99,37 @@ const MapView = ({ items, onItemClick }: MapViewProps) => {
       };
     });
     setItemsWithCoords(itemsWithGeo);
+
+    // Calculate max price from items
+    const max = Math.max(...items.map(item => item.price), 10000);
+    setMaxPrice(max);
+    setPriceRange([0, max]);
   }, [items]);
 
-  // Calculate center of map based on items
-  const center: [number, number] = itemsWithCoords.length > 0
+  // Filter items based on location search and price range
+  useEffect(() => {
+    let filtered = itemsWithCoords;
+
+    // Filter by location
+    if (locationSearch.trim()) {
+      filtered = filtered.filter(item =>
+        item.location.toLowerCase().includes(locationSearch.toLowerCase())
+      );
+    }
+
+    // Filter by price range
+    filtered = filtered.filter(item =>
+      item.price >= priceRange[0] && item.price <= priceRange[1]
+    );
+
+    setFilteredItems(filtered);
+  }, [itemsWithCoords, locationSearch, priceRange]);
+
+  // Calculate center of map based on filtered items
+  const center: [number, number] = filteredItems.length > 0
     ? [
-        itemsWithCoords.reduce((sum, item) => sum + (item.latitude || 0), 0) / itemsWithCoords.length,
-        itemsWithCoords.reduce((sum, item) => sum + (item.longitude || 0), 0) / itemsWithCoords.length
+        filteredItems.reduce((sum, item) => sum + (item.latitude || 0), 0) / filteredItems.length,
+        filteredItems.reduce((sum, item) => sum + (item.longitude || 0), 0) / filteredItems.length
       ]
     : [39.8283, -98.5795]; // Center of US
 
@@ -111,6 +143,70 @@ const MapView = ({ items, onItemClick }: MapViewProps) => {
 
   return (
     <div className="h-full w-full relative">
+      {/* Filter Controls */}
+      <div className="absolute top-4 left-4 right-4 z-[1000] flex gap-2">
+        {/* Location Search */}
+        <div className="flex-1 relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            type="text"
+            placeholder="Search location..."
+            value={locationSearch}
+            onChange={(e) => setLocationSearch(e.target.value)}
+            className="pl-9 bg-background/95 backdrop-blur-sm shadow-lg border-2"
+          />
+        </div>
+
+        {/* Filter Toggle Button */}
+        <Button
+          onClick={() => setShowFilters(!showFilters)}
+          variant={showFilters ? "default" : "secondary"}
+          size="icon"
+          className="shadow-lg"
+        >
+          <SlidersHorizontal className="h-4 w-4" />
+        </Button>
+      </div>
+
+      {/* Price Filter Panel */}
+      {showFilters && (
+        <Card className="absolute top-20 left-4 right-4 z-[1000] p-4 bg-background/95 backdrop-blur-sm shadow-2xl border-2">
+          <div className="space-y-4">
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-sm font-semibold">Price Range</label>
+                <span className="text-sm text-muted-foreground">
+                  ${priceRange[0]} - ${priceRange[1]}
+                </span>
+              </div>
+              <Slider
+                min={0}
+                max={maxPrice}
+                step={50}
+                value={priceRange}
+                onValueChange={setPriceRange}
+                className="w-full"
+              />
+            </div>
+
+            <div className="flex items-center justify-between text-xs text-muted-foreground">
+              <span>{filteredItems.length} listing{filteredItems.length !== 1 ? 's' : ''} found</span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setLocationSearch("");
+                  setPriceRange([0, maxPrice]);
+                }}
+                className="h-7 text-xs"
+              >
+                Clear Filters
+              </Button>
+            </div>
+          </div>
+        </Card>
+      )}
+
       <MapContainer
         center={center}
         zoom={4}
@@ -122,7 +218,7 @@ const MapView = ({ items, onItemClick }: MapViewProps) => {
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
 
-        {itemsWithCoords.map((item) => (
+        {filteredItems.map((item) => (
           <Marker
             key={item.id}
             position={[item.latitude!, item.longitude!]}
