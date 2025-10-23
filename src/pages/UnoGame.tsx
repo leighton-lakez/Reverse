@@ -1,10 +1,17 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, RotateCcw } from "lucide-react";
+import { ArrowLeft, RotateCcw, Users, Copy, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ReverseIcon } from "@/components/ReverseIcon";
 import { toast } from "@/hooks/use-toast";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 
 type CardColor = "red" | "blue" | "green" | "yellow" | "wild";
 type CardValue = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" | "skip" | "reverse" | "draw2" | "wild" | "wild4";
@@ -25,6 +32,7 @@ const UnoGame = () => {
   const [gameOver, setGameOver] = useState(false);
   const [winner, setWinner] = useState<string>("");
   const [isReversed, setIsReversed] = useState(false);
+  const [inviteModalOpen, setInviteModalOpen] = useState(false);
 
   const colors: CardColor[] = ["red", "blue", "green", "yellow"];
   const values: CardValue[] = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "skip", "reverse", "draw2"];
@@ -265,6 +273,39 @@ const UnoGame = () => {
     }
   };
 
+  const handleCopyInviteLink = () => {
+    const inviteLink = `${window.location.origin}/uno`;
+    navigator.clipboard.writeText(inviteLink);
+    toast({
+      title: "Link Copied!",
+      description: "Share this link with your friends to invite them to play UNO!",
+    });
+  };
+
+  const handleShareInvite = async () => {
+    const inviteLink = `${window.location.origin}/uno`;
+    const shareData = {
+      title: "Play UNO with me!",
+      text: "Join me for a game of UNO on REVERSE! 🎮",
+      url: inviteLink,
+    };
+
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+        toast({
+          title: "Invite Sent!",
+          description: "Your friends will receive the invite.",
+        });
+      } catch (err) {
+        // User cancelled or error occurred
+        console.log("Share cancelled");
+      }
+    } else {
+      handleCopyInviteLink();
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-900 via-green-800 to-green-900 pb-24 relative overflow-hidden">
       {/* Realistic felt table texture with vignette */}
@@ -297,14 +338,26 @@ const UnoGame = () => {
               <ReverseIcon className="w-8 h-8" />
               <h1 className="text-2xl font-black tracking-tighter text-gradient">UNO REVERSE</h1>
             </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={startGame}
-              className="hover:bg-muted"
-            >
-              <RotateCcw className="h-5 w-5" />
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setInviteModalOpen(true)}
+                className="hover:bg-muted"
+                title="Invite Friends"
+              >
+                <Users className="h-5 w-5" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={startGame}
+                className="hover:bg-muted"
+                title="Restart Game"
+              >
+                <RotateCcw className="h-5 w-5" />
+              </Button>
+            </div>
           </div>
         </div>
       </header>
@@ -610,6 +663,59 @@ const UnoGame = () => {
           </div>
         </div>
       </main>
+
+      {/* Invite Friends Modal */}
+      <Dialog open={inviteModalOpen} onOpenChange={setInviteModalOpen}>
+        <DialogContent className="bg-gradient-to-b from-card to-card/95 border-primary/20 sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text flex items-center gap-2">
+              <Users className="h-6 w-6 text-primary" />
+              Invite Friends to Play
+            </DialogTitle>
+            <DialogDescription className="text-muted-foreground">
+              Share this link with your friends and play UNO together!
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 pt-4">
+            {/* Link Display */}
+            <div className="flex items-center gap-2 p-3 rounded-xl bg-muted/50 border border-border">
+              <input
+                type="text"
+                value={`${window.location.origin}/uno`}
+                readOnly
+                className="flex-1 bg-transparent border-0 outline-none text-sm font-mono text-foreground"
+              />
+            </div>
+
+            {/* Action Buttons */}
+            <div className="grid grid-cols-2 gap-3">
+              <Button
+                onClick={handleCopyInviteLink}
+                className="h-12 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/30 hover:border-primary/50"
+                variant="outline"
+              >
+                <Copy className="h-4 w-4 mr-2" />
+                Copy Link
+              </Button>
+              <Button
+                onClick={handleShareInvite}
+                className="h-12 bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg shadow-primary/25"
+              >
+                <Share2 className="h-4 w-4 mr-2" />
+                Share
+              </Button>
+            </div>
+
+            {/* Info Text */}
+            <div className="flex items-center gap-2 p-3 rounded-xl bg-blue-500/10 border border-blue-500/30">
+              <div className="text-xs text-blue-600 dark:text-blue-400">
+                💡 <span className="font-semibold">Tip:</span> Your friends can join by clicking the link and playing against the bot or waiting for multiplayer support!
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
