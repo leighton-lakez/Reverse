@@ -77,6 +77,7 @@ const Profile = () => {
   const [myStories, setMyStories] = useState<any[]>([]);
   const [averageRating, setAverageRating] = useState<number | null>(null);
   const [reviewCount, setReviewCount] = useState(0);
+  const [reviews, setReviews] = useState<any[]>([]);
   const [profileData, setProfileData] = useState({
     name: "",
     bio: "",
@@ -100,6 +101,7 @@ const Profile = () => {
         await fetchFollowCounts(session.user.id);
         await fetchMyStories(session.user.id);
         await fetchUserRating(session.user.id);
+        await fetchUserReviews(session.user.id);
       }
     });
   }, [navigate]);
@@ -267,6 +269,29 @@ const Profile = () => {
     } else {
       setAverageRating(null);
       setReviewCount(0);
+    }
+  };
+
+  const fetchUserReviews = async (userId: string) => {
+    const { data, error } = await supabase
+      .from("reviews")
+      .select(`
+        *,
+        profiles!reviews_reviewer_id_fkey (
+          display_name,
+          avatar_url
+        )
+      `)
+      .eq("reviewed_user_id", userId)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error('Error fetching reviews:', error);
+      return;
+    }
+
+    if (data) {
+      setReviews(data);
     }
   };
 
@@ -444,9 +469,9 @@ const Profile = () => {
   const soldListings = myListings.filter((item: any) => item.status === 'sold');
 
   return (
-    <div className="min-h-screen bg-background pb-24 relative">
+    <div className="min-h-screen bg-gradient-to-b from-background via-background to-primary/5 pb-24 relative">
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-lg border-b border-border">
+      <header className="sticky top-0 z-40 glass border-b border-border/50 shadow-md">
         <div className="max-w-7xl mx-auto px-4 py-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate("/")}>
@@ -465,49 +490,62 @@ const Profile = () => {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 py-3">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
         {/* Profile Header */}
-        <Card className="p-4 mb-3 animate-fade-in border-border">
-          <div className="flex items-center gap-4">
-            <div className="flex-shrink-0">
-              {/* Avatar with modern story ring */}
-              <div
-                className={`cursor-pointer transition-all duration-300 ${
-                  myStories.length > 0
-                    ? 'p-[3px] rounded-full bg-gradient-to-tr from-primary via-secondary to-primary story-pulse shadow-lg shadow-primary/50'
-                    : 'p-[2px] rounded-full bg-gradient-to-tr from-muted-foreground/20 to-muted-foreground/10'
-                }`}
-                onClick={() => {
-                  if (myStories.length > 0) {
-                    setStoryViewerOpen(true);
-                  }
-                }}
-              >
-                <Avatar className="h-20 w-20 border-[3px] border-background ring-2 ring-background/50">
-                  <AvatarImage src={profileData.avatar} />
-                  <AvatarFallback className="text-lg font-bold">{profileData.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-                </Avatar>
-              </div>
-            </div>
-            
-            <div className="flex-1 min-w-0">
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex-1 min-w-0">
-                  <h2 className="text-lg font-bold text-foreground truncate">{profileData.name}</h2>
-                  <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                    <div className="flex items-center gap-1">
-                      <MapPin className="h-3 w-3" />
-                      <span className="truncate">{profileData.location}</span>
-                    </div>
-                    {averageRating !== null && reviewCount > 0 && (
-                      <div className="flex items-center gap-1">
-                        <Star className="h-3 w-3 fill-primary text-primary" />
-                        <span className="font-semibold text-foreground">{averageRating}</span>
-                        <span className="text-muted-foreground">({reviewCount})</span>
-                      </div>
-                    )}
-                  </div>
+        <div className="relative overflow-hidden bg-gradient-to-br from-card/80 via-card/60 to-primary/5 backdrop-blur-sm rounded-3xl p-6 mb-6 animate-fade-in border border-border/50 shadow-lg">
+          {/* Decorative gradient overlay */}
+          <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-primary/10 to-transparent rounded-full blur-3xl opacity-50" />
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-secondary/10 to-transparent rounded-full blur-3xl opacity-50" />
+
+          <div className="relative">
+            <div className="flex items-start gap-6 mb-6">
+              <div className="flex-shrink-0">
+                {/* Avatar with modern story ring */}
+                <div
+                  className={`cursor-pointer transition-all duration-300 ${
+                    myStories.length > 0
+                      ? 'p-1 rounded-full bg-gradient-to-tr from-primary via-yellow-400 to-primary story-pulse shadow-xl shadow-primary/30'
+                      : 'p-1 rounded-full bg-gradient-to-tr from-muted-foreground/20 to-muted-foreground/10'
+                  }`}
+                  onClick={() => {
+                    if (myStories.length > 0) {
+                      setStoryViewerOpen(true);
+                    }
+                  }}
+                >
+                  <Avatar className="h-24 w-24 border-4 border-background ring-4 ring-primary/20">
+                    <AvatarImage src={profileData.avatar} />
+                    <AvatarFallback className="text-2xl font-bold">{profileData.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                  </Avatar>
                 </div>
+                {myStories.length > 0 && (
+                  <div className="mt-2 text-center">
+                    <div className="inline-flex items-center gap-1 bg-primary/10 text-primary px-2 py-1 rounded-full text-xs font-semibold">
+                      <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
+                      {myStories.length} {myStories.length === 1 ? 'story' : 'stories'}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex-1 min-w-0">
+                <div className="flex items-start justify-between gap-2 mb-3">
+                  <div className="flex-1 min-w-0">
+                    <h2 className="text-2xl font-black text-foreground truncate mb-2">{profileData.name}</h2>
+                    <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground mb-2">
+                      <div className="flex items-center gap-1.5 bg-muted/50 px-3 py-1.5 rounded-full">
+                        <MapPin className="h-4 w-4 text-primary" />
+                        <span className="font-medium">{profileData.location}</span>
+                      </div>
+                      {averageRating !== null && reviewCount > 0 && (
+                        <div className="flex items-center gap-1.5 bg-muted/50 px-3 py-1.5 rounded-full">
+                          <Star className="h-4 w-4 fill-primary text-primary" />
+                          <span className="font-bold text-foreground">{averageRating}</span>
+                          <span className="text-muted-foreground">({reviewCount} reviews)</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 
                 <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
                   <DialogTrigger asChild>
@@ -641,9 +679,10 @@ const Profile = () => {
 
         {/* Listings Tabs */}
         <Tabs defaultValue="active" className="animate-fade-in" style={{ animationDelay: "0.1s" }}>
-          <TabsList className="grid w-full grid-cols-2 mb-3">
+          <TabsList className="grid w-full grid-cols-3 mb-3">
             <TabsTrigger value="active" className="text-sm">Active</TabsTrigger>
             <TabsTrigger value="sold" className="text-sm">Sold</TabsTrigger>
+            <TabsTrigger value="reviews" className="text-sm">Reviews ({reviewCount})</TabsTrigger>
           </TabsList>
           
           <TabsContent value="active">
@@ -782,6 +821,62 @@ const Profile = () => {
             ) : (
               <div className="text-center py-12">
                 <p className="text-muted-foreground">No sold items yet</p>
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="reviews">
+            {reviews.length > 0 ? (
+              <div className="space-y-3">
+                {reviews.map((review) => (
+                  <Card key={review.id} className="p-4 border-border">
+                    <div className="flex items-start gap-3">
+                      <Avatar className="h-10 w-10 border-2 border-background">
+                        <AvatarImage src={review.profiles?.avatar_url} />
+                        <AvatarFallback>
+                          {review.profiles?.display_name?.split(' ').map((n: string) => n[0]).join('') || 'U'}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="font-semibold text-sm text-foreground">
+                              {review.profiles?.display_name || 'Anonymous'}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {new Date(review.created_at).toLocaleDateString('en-US', {
+                                year: 'numeric',
+                                month: 'short',
+                                day: 'numeric'
+                              })}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            {Array.from({ length: 5 }).map((_, i) => (
+                              <Star
+                                key={i}
+                                className={`h-4 w-4 ${
+                                  i < review.rating
+                                    ? 'fill-primary text-primary'
+                                    : 'text-muted-foreground/30'
+                                }`}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                        {review.comment && (
+                          <p className="text-sm text-foreground">{review.comment}</p>
+                        )}
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <Star className="h-12 w-12 mx-auto text-muted-foreground/30 mb-3" />
+                <p className="text-muted-foreground font-medium">No reviews yet</p>
+                <p className="text-sm text-muted-foreground mt-1">Reviews from other users will appear here</p>
               </div>
             )}
           </TabsContent>

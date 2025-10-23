@@ -21,6 +21,7 @@ import FollowingList from "./pages/FollowingList";
 import Debug from "./pages/Debug";
 import NotFound from "./pages/NotFound";
 import FirstVisitReverse from "./components/FirstVisitReverse";
+import ChatboxAssistant from "./components/ChatboxAssistant";
 
 const queryClient = new QueryClient();
 
@@ -53,6 +54,7 @@ const App = () => (
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
+        <ChatboxAssistant />
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

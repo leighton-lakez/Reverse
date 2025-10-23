@@ -655,8 +655,8 @@ Please provide a price suggestion considering any visible damage or wear in the 
       </header>
 
       {/* Chat Messages */}
-      <main className="flex-1 max-w-4xl mx-auto w-full px-3 sm:px-6 py-6 sm:py-8 overflow-y-auto pb-32 sm:pb-24 relative z-10">
-        <div className="space-y-5 pb-8">
+      <main className="flex-1 max-w-4xl mx-auto w-full px-3 sm:px-6 py-4 sm:py-5 overflow-y-auto pb-32 sm:pb-24 relative z-10">
+        <div className="space-y-3 pb-6">
           {messages.map((message, index) => (
             <div
               key={message.id}
@@ -664,23 +664,23 @@ Please provide a price suggestion considering any visible damage or wear in the 
               style={{ animationDelay: `${index * 50}ms` }}
             >
               <div
-                className={`max-w-[85%] sm:max-w-[75%] rounded-3xl px-4 sm:px-5 py-3 sm:py-4 shadow-lg transition-all hover:scale-[1.01] ${
+                className={`max-w-[85%] sm:max-w-[75%] rounded-2xl px-3 sm:px-4 py-2 sm:py-2.5 shadow-lg transition-all hover:scale-[1.01] ${
                   message.type === "user"
                     ? "bg-gradient-to-br from-primary via-primary to-primary/90 text-primary-foreground shadow-primary/20 border border-primary/30"
                     : "glass text-foreground border border-border/50 backdrop-blur-xl"
                 }`}
               >
-                <p className="text-sm sm:text-base whitespace-pre-line leading-relaxed font-medium">{message.content}</p>
+                <p className="text-xs sm:text-sm whitespace-pre-line leading-relaxed font-medium">{message.content}</p>
 
                 {message.options && (
-                  <div className="flex flex-wrap gap-2 sm:gap-2.5 mt-3 sm:mt-4">
+                  <div className="flex flex-wrap gap-1.5 sm:gap-2 mt-2 sm:mt-2.5">
                     {message.options.map((option) => (
                       <Button
                         key={option}
                         onClick={() => handleOptionClick(option)}
                         size="sm"
                         variant="outline"
-                        className="bg-background/80 hover:bg-primary/10 border-primary/30 hover:border-primary/50 text-xs sm:text-sm h-9 sm:h-10 px-3 sm:px-4 rounded-full font-semibold hover:shadow-md transition-all hover:scale-105"
+                        className="bg-background/80 hover:bg-primary/10 border-primary/30 hover:border-primary/50 text-xs h-8 sm:h-9 px-2.5 sm:px-3 rounded-full font-semibold hover:shadow-md transition-all hover:scale-105"
                       >
                         {option}
                       </Button>
@@ -693,11 +693,11 @@ Please provide a price suggestion considering any visible damage or wear in the 
 
           {isTyping && (
             <div className="flex justify-start animate-fade-in">
-              <div className="glass rounded-3xl px-5 py-4 shadow-lg border border-border/50 backdrop-blur-xl">
-                <div className="flex gap-1.5">
-                  <div className="w-2.5 h-2.5 bg-primary rounded-full animate-bounce shadow-lg shadow-primary/50" style={{ animationDelay: "0ms" }}></div>
-                  <div className="w-2.5 h-2.5 bg-primary rounded-full animate-bounce shadow-lg shadow-primary/50" style={{ animationDelay: "150ms" }}></div>
-                  <div className="w-2.5 h-2.5 bg-primary rounded-full animate-bounce shadow-lg shadow-primary/50" style={{ animationDelay: "300ms" }}></div>
+              <div className="glass rounded-2xl px-4 py-2.5 shadow-lg border border-border/50 backdrop-blur-xl">
+                <div className="flex gap-1">
+                  <div className="w-2 h-2 bg-primary rounded-full animate-bounce shadow-lg shadow-primary/50" style={{ animationDelay: "0ms" }}></div>
+                  <div className="w-2 h-2 bg-primary rounded-full animate-bounce shadow-lg shadow-primary/50" style={{ animationDelay: "150ms" }}></div>
+                  <div className="w-2 h-2 bg-primary rounded-full animate-bounce shadow-lg shadow-primary/50" style={{ animationDelay: "300ms" }}></div>
                 </div>
               </div>
             </div>
@@ -706,24 +706,24 @@ Please provide a price suggestion considering any visible damage or wear in the 
           {/* Image Previews */}
           {imagePreviews.length > 0 && currentStep !== "summary" && (
             <div className="flex justify-start animate-fade-in">
-              <div className="glass rounded-3xl p-4 sm:p-5 shadow-lg border border-border/50 backdrop-blur-xl max-w-[85%] sm:max-w-[75%]">
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="h-2 w-2 bg-primary rounded-full" />
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Your Photos</p>
+              <div className="glass rounded-2xl p-3 sm:p-3.5 shadow-lg border border-border/50 backdrop-blur-xl max-w-[85%] sm:max-w-[75%]">
+                <div className="flex items-center gap-1.5 mb-2">
+                  <div className="h-1.5 w-1.5 bg-primary rounded-full" />
+                  <p className="text-[10px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-wider">Your Photos</p>
                 </div>
-                <div className="grid grid-cols-3 gap-2.5 sm:gap-3">
+                <div className="grid grid-cols-3 gap-2">
                   {imagePreviews.map((preview, index) => (
-                    <div key={index} className="relative aspect-square rounded-xl overflow-hidden group ring-2 ring-border/50 hover:ring-primary/50 transition-all">
+                    <div key={index} className="relative aspect-square rounded-lg overflow-hidden group ring-1 ring-border/50 hover:ring-primary/50 transition-all">
                       <img src={preview} alt={`Upload ${index + 1}`} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                       <Button
                         type="button"
                         variant="destructive"
                         size="icon"
-                        className="absolute top-2 right-2 h-7 w-7 rounded-full opacity-0 group-hover:opacity-100 transition-all shadow-lg hover:scale-110"
+                        className="absolute top-1.5 right-1.5 h-6 w-6 rounded-full opacity-0 group-hover:opacity-100 transition-all shadow-lg hover:scale-110"
                         onClick={() => removeImage(index)}
                       >
-                        <X className="h-4 w-4" />
+                        <X className="h-3 w-3" />
                       </Button>
                     </div>
                   ))}
@@ -735,28 +735,28 @@ Please provide a price suggestion considering any visible damage or wear in the 
           {/* Video Previews */}
           {videoPreviews.length > 0 && currentStep !== "summary" && (
             <div className="flex justify-start animate-fade-in">
-              <div className="glass rounded-3xl p-4 sm:p-5 shadow-lg border border-border/50 backdrop-blur-xl max-w-[85%] sm:max-w-[75%]">
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="h-2 w-2 bg-secondary rounded-full" />
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Your Videos</p>
+              <div className="glass rounded-2xl p-3 sm:p-3.5 shadow-lg border border-border/50 backdrop-blur-xl max-w-[85%] sm:max-w-[75%]">
+                <div className="flex items-center gap-1.5 mb-2">
+                  <div className="h-1.5 w-1.5 bg-secondary rounded-full" />
+                  <p className="text-[10px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-wider">Your Videos</p>
                 </div>
-                <div className="grid grid-cols-3 gap-2.5 sm:gap-3">
+                <div className="grid grid-cols-3 gap-2">
                   {videoPreviews.map((preview, index) => (
-                    <div key={index} className="relative aspect-square rounded-xl overflow-hidden group ring-2 ring-border/50 hover:ring-secondary/50 transition-all">
+                    <div key={index} className="relative aspect-square rounded-lg overflow-hidden group ring-1 ring-border/50 hover:ring-secondary/50 transition-all">
                       <video src={preview} className="w-full h-full object-cover" />
                       <div className="absolute inset-0 flex items-center justify-center bg-black/40 group-hover:bg-black/50 transition-colors">
-                        <div className="p-2.5 bg-white/90 rounded-full">
-                          <Video className="h-6 w-6 text-secondary" />
+                        <div className="p-2 bg-white/90 rounded-full">
+                          <Video className="h-5 w-5 text-secondary" />
                         </div>
                       </div>
                       <Button
                         type="button"
                         variant="destructive"
                         size="icon"
-                        className="absolute top-2 right-2 h-7 w-7 rounded-full opacity-0 group-hover:opacity-100 transition-all shadow-lg hover:scale-110"
+                        className="absolute top-1.5 right-1.5 h-6 w-6 rounded-full opacity-0 group-hover:opacity-100 transition-all shadow-lg hover:scale-110"
                         onClick={() => removeVideo(index)}
                       >
-                        <X className="h-4 w-4" />
+                        <X className="h-3 w-3" />
                       </Button>
                     </div>
                   ))}
