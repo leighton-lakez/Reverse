@@ -337,10 +337,25 @@ const UserProfile = () => {
       <main className="max-w-7xl mx-auto px-4 py-3">
         <Card className="p-4 mb-3 animate-fade-in border-border">
           <div className="flex items-start gap-4">
-            <Avatar className="h-16 w-16 border-2 border-primary flex-shrink-0">
-              <AvatarImage src={profileData.avatar} />
-              <AvatarFallback>{profileData.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-            </Avatar>
+            {/* Avatar with Story Ring */}
+            {userStories.length > 0 ? (
+              <button
+                onClick={() => setStoryViewerOpen(true)}
+                className="flex-shrink-0 group"
+              >
+                <div className="p-0.5 rounded-full bg-gradient-to-tr from-primary via-yellow-500 to-primary story-pulse">
+                  <Avatar className="h-16 w-16 border-[3px] border-background ring-2 ring-primary/20 group-hover:ring-primary/40 transition-all">
+                    <AvatarImage src={profileData.avatar} />
+                    <AvatarFallback>{profileData.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                  </Avatar>
+                </div>
+              </button>
+            ) : (
+              <Avatar className="h-16 w-16 border-2 border-primary flex-shrink-0">
+                <AvatarImage src={profileData.avatar} />
+                <AvatarFallback>{profileData.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+              </Avatar>
+            )}
             
             <div className="flex-1 min-w-0">
               <h2 className="text-lg font-bold text-foreground truncate">{profileData.name}</h2>
@@ -393,28 +408,6 @@ const UserProfile = () => {
             </div>
           </div>
         </Card>
-
-        {/* Story Section */}
-        {userStories.length > 0 && (
-          <div className="mb-3 animate-fade-in" style={{ animationDelay: "0.05s" }}>
-            <div className="flex items-center gap-3 overflow-x-auto pb-2">
-              <div className="flex-shrink-0">
-                <button
-                  onClick={() => setStoryViewerOpen(true)}
-                  className="flex flex-col items-center gap-1"
-                >
-                  <div className="p-0.5 rounded-full bg-gradient-to-tr from-primary via-yellow-500 to-primary">
-                    <Avatar className="h-16 w-16 border-2 border-background">
-                      <AvatarImage src={profileData.avatar} />
-                      <AvatarFallback>{profileData.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-                    </Avatar>
-                  </div>
-                  <span className="text-xs text-foreground font-medium">View Story</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Reviews Section */}
         <div className="animate-fade-in mb-3" style={{ animationDelay: "0.05s" }}>
