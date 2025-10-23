@@ -464,15 +464,15 @@ const Profile = () => {
                 </Avatar>
               </div>
 
-              {/* Enhanced create story button */}
+              {/* Create story button */}
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   setCreateStoryOpen(true);
                 }}
-                className="absolute -bottom-1 -right-1 h-8 w-8 bg-gradient-to-r from-primary to-primary/90 rounded-full flex items-center justify-center border-3 border-background shadow-lg hover:scale-110 hover:shadow-xl hover:shadow-primary/50 transition-all duration-200 group"
+                className="absolute bottom-0 right-0 h-6 w-6 bg-primary rounded-full flex items-center justify-center border-2 border-background shadow-md hover:scale-105 transition-transform"
               >
-                <Plus className="h-5 w-5 text-primary-foreground group-hover:rotate-90 transition-transform duration-200" />
+                <Plus className="h-4 w-4 text-primary-foreground" />
               </button>
             </div>
             
