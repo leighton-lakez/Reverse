@@ -248,13 +248,7 @@ const Profile = () => {
   const fetchMyStories = async (userId: string) => {
     const { data, error } = await supabase
       .from("stories")
-      .select(`
-        *,
-        profiles!stories_user_id_fkey (
-          display_name,
-          avatar_url
-        )
-      `)
+      .select("*")
       .eq("user_id", userId)
       .gt("expires_at", new Date().toISOString())
       .order("created_at", { ascending: false });
