@@ -257,9 +257,11 @@ const UnoGame = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-secondary/5 pb-24 relative overflow-hidden">
-      {/* Animated background */}
-      <div className="absolute inset-0 gradient-mesh opacity-20 pointer-events-none" />
+    <div className="min-h-screen bg-gradient-to-br from-green-900 via-green-800 to-green-900 pb-24 relative overflow-hidden">
+      {/* Felt table texture */}
+      <div className="absolute inset-0 opacity-30 pointer-events-none" style={{
+        backgroundImage: `repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(0,0,0,0.1) 2px, rgba(0,0,0,0.1) 4px)`,
+      }} />
 
       {/* Header */}
       <header className="sticky top-0 z-40 glass border-b border-border/50">
@@ -293,17 +295,29 @@ const UnoGame = () => {
         {/* Bot Hand */}
         <div className="mb-8">
           <div className="flex items-center justify-center gap-2 mb-4">
-            <div className="px-4 py-2 rounded-full glass border border-border/50">
-              <p className="text-sm font-semibold">Bot: {botHand.length} cards</p>
+            <div className="px-4 py-2 rounded-full bg-black/40 backdrop-blur-sm border border-white/20">
+              <p className="text-sm font-semibold text-white">Bot: {botHand.length} cards</p>
             </div>
           </div>
-          <div className="flex justify-center gap-2 flex-wrap">
+          <div className="flex justify-center gap-1 flex-wrap perspective-1000">
             {botHand.map((card, index) => (
               <div
                 key={card.id}
-                className="w-16 h-24 bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg border-2 border-gray-700 shadow-lg"
-                style={{ transform: `rotate(${(index - botHand.length / 2) * 2}deg)` }}
-              />
+                className="w-20 h-32 relative transform transition-all"
+                style={{
+                  transform: `rotate(${(index - botHand.length / 2) * 3}deg) translateY(${Math.abs(index - botHand.length / 2) * 2}px)`,
+                  zIndex: botHand.length - Math.abs(index - botHand.length / 2)
+                }}
+              >
+                {/* Card back with realistic design */}
+                <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-800 to-black rounded-2xl border-4 border-gray-700 shadow-2xl">
+                  <div className="absolute inset-1 bg-gradient-to-br from-red-900 via-red-800 to-red-900 rounded-xl">
+                    <div className="absolute inset-2 border-2 border-yellow-400/50 rounded-lg flex items-center justify-center">
+                      <div className="text-yellow-400 font-black text-xl opacity-50">UNO</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             ))}
           </div>
         </div>
@@ -313,15 +327,47 @@ const UnoGame = () => {
           <div className="flex items-center justify-center gap-8">
             {/* Discard Pile */}
             <div className="relative">
-              <p className="text-xs font-semibold text-center mb-2 text-muted-foreground">Discard Pile</p>
+              <p className="text-xs font-semibold text-center mb-2 text-white/70">Discard Pile</p>
               {discardPile.length > 0 && (
-                <div
-                  className={`w-32 h-48 rounded-xl border-4 shadow-2xl flex items-center justify-center transition-all ${getColorClass(
-                    currentColor
-                  )}`}
-                >
-                  <div className="text-white text-4xl font-black">
-                    {discardPile[discardPile.length - 1].value.toUpperCase()}
+                <div className="relative w-36 h-52 perspective-1000">
+                  {/* Card shadow/depth effect */}
+                  <div className="absolute inset-0 bg-black/40 rounded-2xl blur-xl transform translate-y-2" />
+
+                  {/* Actual card */}
+                  <div
+                    className={`relative w-full h-full rounded-2xl border-[6px] shadow-2xl flex flex-col transition-all transform hover:scale-105 ${getColorClass(
+                      currentColor
+                    )}`}
+                  >
+                    {/* Top corner */}
+                    <div className="absolute top-2 left-2 text-white font-black text-lg">
+                      {discardPile[discardPile.length - 1].value.toUpperCase()}
+                    </div>
+
+                    {/* Center large text */}
+                    <div className="flex-1 flex items-center justify-center">
+                      <div className="bg-white/90 rounded-full w-24 h-24 flex items-center justify-center shadow-lg">
+                        <div className={`text-5xl font-black ${
+                          currentColor === "yellow" ? "text-yellow-600" :
+                          currentColor === "red" ? "text-red-600" :
+                          currentColor === "blue" ? "text-blue-600" :
+                          currentColor === "green" ? "text-green-600" :
+                          "text-purple-600"
+                        }`}>
+                          {discardPile[discardPile.length - 1].value.toUpperCase()}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Bottom corner (rotated) */}
+                    <div className="absolute bottom-2 right-2 text-white font-black text-lg rotate-180">
+                      {discardPile[discardPile.length - 1].value.toUpperCase()}
+                    </div>
+
+                    {/* UNO logo at bottom */}
+                    <div className="absolute bottom-3 left-1/2 transform -translate-x-1/2">
+                      <div className="text-white font-black text-xs opacity-80">UNO</div>
+                    </div>
                   </div>
                 </div>
               )}
@@ -329,18 +375,18 @@ const UnoGame = () => {
 
             {/* Game Info */}
             <div className="text-center">
-              <div className="glass rounded-2xl p-6 border border-border/50 space-y-3">
-                <div className={`w-12 h-12 rounded-full mx-auto ${getColorClass(currentColor)}`} />
-                <p className="text-sm font-semibold text-muted-foreground">Current Color</p>
+              <div className="bg-black/40 backdrop-blur-sm rounded-2xl p-6 border border-white/20 space-y-3">
+                <div className={`w-16 h-16 rounded-full mx-auto border-4 border-white shadow-xl ${getColorClass(currentColor)}`} />
+                <p className="text-sm font-semibold text-white/80">Current Color</p>
                 {!gameOver && (
-                  <div className={`px-4 py-2 rounded-full ${isPlayerTurn ? "bg-primary/20" : "bg-secondary/20"}`}>
-                    <p className="text-sm font-bold">
-                      {isPlayerTurn ? "Your Turn" : "Bot's Turn"}
+                  <div className={`px-4 py-2 rounded-full ${isPlayerTurn ? "bg-yellow-500/80" : "bg-blue-500/80"} shadow-lg`}>
+                    <p className="text-sm font-bold text-white">
+                      {isPlayerTurn ? "🎮 Your Turn" : "🤖 Bot's Turn"}
                     </p>
                   </div>
                 )}
                 {gameOver && (
-                  <div className="px-4 py-3 rounded-full bg-gradient-to-r from-primary to-secondary">
+                  <div className="px-4 py-3 rounded-full bg-gradient-to-r from-yellow-500 to-orange-500 shadow-xl">
                     <p className="text-sm font-black text-white">
                       {winner} Wins! 🎉
                     </p>
@@ -354,36 +400,76 @@ const UnoGame = () => {
         {/* Player Hand */}
         <div>
           <div className="flex items-center justify-center gap-2 mb-4">
-            <div className="px-4 py-2 rounded-full glass border border-primary/30">
-              <p className="text-sm font-semibold">Your Hand: {playerHand.length} cards</p>
+            <div className="px-4 py-2 rounded-full bg-black/40 backdrop-blur-sm border border-white/20">
+              <p className="text-sm font-semibold text-white">Your Hand: {playerHand.length} cards</p>
             </div>
             {isPlayerTurn && !gameOver && (
               <Button
                 onClick={drawCard}
                 size="sm"
-                className="rounded-full"
+                className="rounded-full bg-yellow-500 hover:bg-yellow-600 text-black font-bold shadow-lg"
               >
-                Draw Card
+                🎴 Draw Card
               </Button>
             )}
           </div>
-          <div className="flex justify-center gap-3 flex-wrap">
+          <div className="flex justify-center gap-2 flex-wrap perspective-1000">
             {playerHand.map((card, index) => (
               <button
                 key={card.id}
                 onClick={() => handleCardClick(card)}
                 disabled={!isPlayerTurn || gameOver}
-                className={`w-24 h-36 rounded-xl border-4 shadow-xl transition-all ${getColorClass(
-                  card.color
-                )} ${
+                className={`relative w-28 h-40 transition-all ${
                   isPlayerTurn && !gameOver && canPlayCard(card)
-                    ? "hover:scale-110 hover:-translate-y-4 cursor-pointer"
+                    ? "hover:scale-110 hover:-translate-y-6 cursor-pointer"
                     : "opacity-60 cursor-not-allowed"
                 }`}
-                style={{ transform: `rotate(${(index - playerHand.length / 2) * 1}deg)` }}
+                style={{
+                  transform: `rotate(${(index - playerHand.length / 2) * 2}deg) translateY(${Math.abs(index - playerHand.length / 2) * 3}px)`,
+                  zIndex: playerHand.length - Math.abs(index - playerHand.length / 2)
+                }}
               >
-                <div className="text-white text-2xl font-black flex items-center justify-center h-full">
-                  {card.value.toUpperCase()}
+                {/* Card shadow */}
+                <div className="absolute inset-0 bg-black/50 rounded-2xl blur-lg transform translate-y-2" />
+
+                {/* Card */}
+                <div className={`relative w-full h-full rounded-2xl border-[6px] shadow-2xl flex flex-col ${getColorClass(
+                  card.color
+                )}`}>
+                  {/* Top corner */}
+                  <div className="absolute top-2 left-2 text-white font-black text-base">
+                    {card.value.toUpperCase()}
+                  </div>
+
+                  {/* Center large display */}
+                  <div className="flex-1 flex items-center justify-center">
+                    <div className="bg-white/90 rounded-full w-20 h-20 flex items-center justify-center shadow-lg">
+                      <div className={`text-3xl font-black ${
+                        card.color === "yellow" ? "text-yellow-600" :
+                        card.color === "red" ? "text-red-600" :
+                        card.color === "blue" ? "text-blue-600" :
+                        card.color === "green" ? "text-green-600" :
+                        "text-purple-600"
+                      }`}>
+                        {card.value === "skip" ? "⊘" :
+                         card.value === "reverse" ? "⟲" :
+                         card.value === "draw2" ? "+2" :
+                         card.value === "wild" ? "W" :
+                         card.value === "wild4" ? "+4" :
+                         card.value.toUpperCase()}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Bottom corner (rotated) */}
+                  <div className="absolute bottom-2 right-2 text-white font-black text-base rotate-180">
+                    {card.value.toUpperCase()}
+                  </div>
+
+                  {/* UNO logo */}
+                  <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2">
+                    <div className="text-white font-black text-[10px] opacity-80">UNO</div>
+                  </div>
                 </div>
               </button>
             ))}
