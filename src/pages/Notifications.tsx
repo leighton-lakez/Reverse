@@ -50,7 +50,6 @@ const StoriesSection = ({ currentUserId }: { currentUserId: string }) => {
       `)
       .in("user_id", followingIds)
       .gt("expires_at", new Date().toISOString())
-      .is("deleted_at", null)
       .order("created_at", { ascending: false });
 
     if (!stories) {
@@ -58,8 +57,11 @@ const StoriesSection = ({ currentUserId }: { currentUserId: string }) => {
       return;
     }
 
+    // Filter out soft-deleted stories if the column exists
+    const activeStories = stories.filter((story: any) => !story.deleted_at);
+
     // Group stories by user
-    const groupedByUser = stories.reduce((acc: any, story: any) => {
+    const groupedByUser = activeStories.reduce((acc: any, story: any) => {
       const userId = story.user_id;
       if (!acc[userId]) {
         acc[userId] = {

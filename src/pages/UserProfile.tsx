@@ -141,11 +141,12 @@ const UserProfile = () => {
       `)
       .eq("user_id", uid)
       .gt("expires_at", new Date().toISOString())
-      .is("deleted_at", null)
       .order("created_at", { ascending: false });
 
     if (!error && data) {
-      setUserStories(data);
+      // Filter out soft-deleted stories if the column exists
+      const activeStories = data.filter((story: any) => !story.deleted_at);
+      setUserStories(activeStories);
     }
   };
 
