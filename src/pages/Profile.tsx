@@ -474,7 +474,7 @@ const Profile = () => {
               <div
                 className={`cursor-pointer transition-all duration-300 ${
                   myStories.length > 0
-                    ? 'p-[3px] rounded-full bg-gradient-to-tr from-primary via-secondary to-primary animate-pulse shadow-lg shadow-primary/50'
+                    ? 'p-[3px] rounded-full bg-gradient-to-tr from-primary via-secondary to-primary story-pulse shadow-lg shadow-primary/50'
                     : 'p-[2px] rounded-full bg-gradient-to-tr from-muted-foreground/20 to-muted-foreground/10'
                 }`}
                 onClick={() => {
@@ -499,10 +499,13 @@ const Profile = () => {
                       <MapPin className="h-3 w-3" />
                       <span className="truncate">{profileData.location}</span>
                     </div>
-                    <div className="flex items-center gap-1">
-                      <Star className="h-3 w-3 fill-primary text-primary" />
-                      <span className="font-semibold text-foreground">4.9</span>
-                    </div>
+                    {averageRating !== null && reviewCount > 0 && (
+                      <div className="flex items-center gap-1">
+                        <Star className="h-3 w-3 fill-primary text-primary" />
+                        <span className="font-semibold text-foreground">{averageRating}</span>
+                        <span className="text-muted-foreground">({reviewCount})</span>
+                      </div>
+                    )}
                   </div>
                 </div>
                 

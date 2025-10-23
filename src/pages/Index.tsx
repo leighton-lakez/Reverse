@@ -1,4 +1,4 @@
-import { LogOut, X, Heart, RotateCcw } from "lucide-react";
+import { LogOut, X, Heart, RotateCcw, Filter } from "lucide-react";
 import BottomNav from "@/components/BottomNav";
 import { ReverseIcon } from "@/components/ReverseIcon";
 import { useState, useEffect, useRef } from "react";
@@ -17,7 +17,10 @@ interface Item {
   images: string[];
   user_id: string;
   description: string;
+  category: string;
 }
+
+const categories = ["All", "Handbags", "Shoes", "Clothing", "Accessories", "Jewelry", "Watches"];
 
 const Index = () => {
   const [items, setItems] = useState<Item[]>([]);
@@ -31,6 +34,7 @@ const Index = () => {
   const [showWelcomeCard, setShowWelcomeCard] = useState(false);
   const [welcomeCardAnimating, setWelcomeCardAnimating] = useState(false);
   const [showContent, setShowContent] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState("All");
 
   const navigate = useNavigate();
   const cardRef = useRef<HTMLDivElement>(null);
@@ -64,7 +68,7 @@ const Index = () => {
 
   useEffect(() => {
     fetchItems();
-  }, [user]);
+  }, [user, selectedCategory]);
 
   useEffect(() => {
     // Check if user has started browsing before
@@ -90,10 +94,17 @@ const Index = () => {
       query = query.neq("user_id", user.id);
     }
 
+    // Filter by category if not "All"
+    if (selectedCategory !== "All") {
+      query = query.eq("category", selectedCategory.toLowerCase());
+    }
+
     const { data, error } = await query;
 
     if (!error && data) {
       setItems(data);
+      setCurrentIndex(0); // Reset to first item when category changes
+      setSkippedItems([]); // Clear skipped items
     }
     setLoading(false);
   };
@@ -285,6 +296,30 @@ const Index = () => {
           </div>
         </div>
       </header>
+
+      {/* Category Filter */}
+      <div className="flex-shrink-0 bg-background/95 backdrop-blur-lg border-b border-border">
+        <div className="max-w-7xl mx-auto px-2 sm:px-4 py-2">
+          <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
+            <Filter className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+            {categories.map((category) => (
+              <Button
+                key={category}
+                variant={selectedCategory === category ? "default" : "outline"}
+                size="sm"
+                onClick={() => setSelectedCategory(category)}
+                className={`flex-shrink-0 transition-all ${
+                  selectedCategory === category
+                    ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                    : "hover:bg-primary/10"
+                }`}
+              >
+                {category}
+              </Button>
+            ))}
+          </div>
+        </div>
+      </div>
 
       {/* Main Content */}
       <main className="flex-1 max-w-md mx-auto w-full px-3 sm:px-4 pt-2 pb-1 sm:py-6 flex flex-col items-center justify-start overflow-hidden">

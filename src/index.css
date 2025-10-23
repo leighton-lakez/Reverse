@@ -8,7 +8,74 @@
 /* All colors MUST be HSL */
 
 @layer base {
+  /* Light Mode (Default) */
   :root {
+    /* Clean white background - Light and airy */
+    --background: 0 0% 100%;
+    --foreground: 0 0% 10%;
+
+    /* Cards with subtle warmth */
+    --card: 0 0% 98%;
+    --card-foreground: 0 0% 10%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 10%;
+
+    /* Champagne gold primary - Sophisticated luxury */
+    --primary: 43 43% 58%;
+    --primary-foreground: 0 0% 10%;
+
+    /* Deep burgundy secondary - Rich accent */
+    --secondary: 350 59% 36%;
+    --secondary-foreground: 0 0% 100%;
+
+    /* Warm neutral tones */
+    --muted: 30 10% 95%;
+    --muted-foreground: 40 15% 40%;
+
+    --accent: 40 64% 90%;
+    --accent-foreground: 0 0% 10%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Refined borders and inputs */
+    --border: 30 10% 88%;
+    --input: 30 10% 95%;
+    --ring: 43 43% 58%;
+
+    /* Softer rounded corners for luxury feel */
+    --radius: 0.75rem;
+
+    /* Success color */
+    --success: 142 76% 36%;
+    --success-foreground: 0 0% 100%;
+
+    /* Luxury gradients - Gold to burgundy */
+    --gradient-primary: linear-gradient(135deg, hsl(43 43% 58%), hsl(350 59% 36%));
+    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%), hsl(0 0% 98%));
+    --gradient-mesh: radial-gradient(at 40% 20%, hsl(43 43% 58% / 0.08) 0px, transparent 50%),
+                      radial-gradient(at 80% 0%, hsl(350 59% 36% / 0.08) 0px, transparent 50%),
+                      radial-gradient(at 0% 50%, hsl(43 43% 58% / 0.06) 0px, transparent 50%);
+
+    /* Refined glassmorphism */
+    --glass-bg: hsl(0 0% 100% / 0.8);
+    --glass-border: hsl(40 20% 70% / 0.2);
+
+    /* Subtle shadows */
+    --shadow-sm: 0 2px 8px hsl(0 0% 0% / 0.08);
+    --shadow-md: 0 4px 16px hsl(0 0% 0% / 0.12);
+    --shadow-lg: 0 8px 32px hsl(0 0% 0% / 0.15);
+    --shadow-glow: 0 0 30px hsl(43 43% 58% / 0.2);
+    --shadow-glow-secondary: 0 0 30px hsl(350 59% 36% / 0.2);
+
+    /* Smooth transitions */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  }
+
+  /* Dark Mode */
+  .dark {
     /* Deep charcoal black background - Luxury minimal */
     --background: 0 0% 4%;
     --foreground: 40 25% 95%;
@@ -43,9 +110,6 @@
     --input: 30 10% 18%;
     --ring: 43 43% 58%;
 
-    /* Softer rounded corners for luxury feel */
-    --radius: 0.75rem;
-
     /* Success color */
     --success: 142 76% 36%;
     --success-foreground: 40 25% 95%;
@@ -67,10 +131,6 @@
     --shadow-lg: 0 8px 32px hsl(0 0% 0% / 0.5);
     --shadow-glow: 0 0 30px hsl(43 43% 58% / 0.2);
     --shadow-glow-secondary: 0 0 30px hsl(350 59% 36% / 0.2);
-
-    /* Smooth transitions */
-    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    --transition-bounce: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
   }
 }
 
@@ -242,5 +302,29 @@
 
   .animate-shimmer {
     animation: shimmer 3s infinite;
+  }
+
+  /* Slow pulse animation for story rings */
+  @keyframes story-pulse {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.6;
+    }
+  }
+
+  .story-pulse {
+    animation: story-pulse 3.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  /* Hide scrollbar but keep functionality */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
   }
 }
