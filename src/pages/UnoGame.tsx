@@ -231,7 +231,7 @@ const UnoGame = () => {
         await startMultiplayerGame(room);
       } else if (room.status === 'playing') {
         // Load existing game state
-        loadGameState(room.game_state, userId);
+        loadGameState(room.game_state, userId, room);
       }
     } catch (error: any) {
       console.error('Join room error:', error);
@@ -275,13 +275,20 @@ const UnoGame = () => {
       .update({ status: 'playing' })
       .eq('id', room.id);
 
-    loadGameState(room.game_state);
+    loadGameState(room.game_state, undefined, room);
   };
 
-  const loadGameState = (gameState: any, userId?: string) => {
+  const loadGameState = (gameState: any, userId?: string, room?: any) => {
     const playerId = userId || currentUserId;
+    const currentRoom = room || gameRoom;
+
+    if (!currentRoom) {
+      console.error('Cannot load game state: room is null');
+      return;
+    }
+
     setPlayerHand(gameState.playerHands[playerId] || []);
-    const opponentId = gameRoom.host_id === playerId ? gameRoom.guest_id : gameRoom.host_id;
+    const opponentId = currentRoom.host_id === playerId ? currentRoom.guest_id : currentRoom.host_id;
     setOpponentHand(gameState.playerHands[opponentId] || []);
     setDiscardPile(gameState.discardPile || []);
     setCurrentColor(gameState.currentColor || 'red');
@@ -294,9 +301,9 @@ const UnoGame = () => {
 
     if (room.status === 'playing' && waitingForOpponent) {
       setWaitingForOpponent(false);
-      loadGameState(room.game_state);
+      loadGameState(room.game_state, undefined, room);
     } else if (room.status === 'playing') {
-      loadGameState(room.game_state);
+      loadGameState(room.game_state, undefined, room);
     } else if (room.status === 'finished') {
       setGameOver(true);
       if (room.winner_id === currentUserId) {
