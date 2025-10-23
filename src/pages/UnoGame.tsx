@@ -267,10 +267,19 @@ const UnoGame = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-900 via-green-800 to-green-900 pb-24 relative overflow-hidden">
-      {/* Felt table texture */}
-      <div className="absolute inset-0 opacity-30 pointer-events-none" style={{
-        backgroundImage: `repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(0,0,0,0.1) 2px, rgba(0,0,0,0.1) 4px)`,
+      {/* Realistic felt table texture with vignette */}
+      <div className="absolute inset-0 pointer-events-none" style={{
+        backgroundImage: `
+          radial-gradient(circle at 50% 50%, transparent 0%, rgba(0,0,0,0.4) 100%),
+          repeating-linear-gradient(90deg, rgba(0,0,0,0.03) 0px, transparent 1px, transparent 2px, rgba(0,0,0,0.03) 3px),
+          repeating-linear-gradient(0deg, rgba(0,0,0,0.03) 0px, transparent 1px, transparent 2px, rgba(0,0,0,0.03) 3px)
+        `,
+        backgroundSize: '100% 100%, 4px 4px, 4px 4px'
       }} />
+
+      {/* Ambient lighting */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-yellow-200/5 rounded-full blur-[150px] pointer-events-none" />
+      <div className="absolute bottom-0 left-1/4 w-[600px] h-[600px] bg-blue-200/3 rounded-full blur-[120px] pointer-events-none" />
 
       {/* Header */}
       <header className="sticky top-0 z-40 glass border-b border-border/50">
@@ -308,26 +317,50 @@ const UnoGame = () => {
               <p className="text-sm font-semibold text-white">Bot: {botHand.length} cards</p>
             </div>
           </div>
-          <div className="flex justify-center gap-1 flex-wrap perspective-1000">
-            {botHand.map((card, index) => (
-              <div
-                key={card.id}
-                className="w-20 h-32 relative transform transition-all"
-                style={{
-                  transform: `rotate(${(index - botHand.length / 2) * 3}deg) translateY(${Math.abs(index - botHand.length / 2) * 2}px)`,
-                  zIndex: botHand.length - Math.abs(index - botHand.length / 2)
-                }}
-              >
-                {/* Card back with realistic design */}
-                <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-800 to-black rounded-2xl border-4 border-gray-700 shadow-2xl">
-                  <div className="absolute inset-1 bg-gradient-to-br from-red-900 via-red-800 to-red-900 rounded-xl">
-                    <div className="absolute inset-2 border-2 border-yellow-400/50 rounded-lg flex items-center justify-center">
-                      <div className="text-yellow-400 font-black text-xl opacity-50">UNO</div>
+          <div className="flex justify-center gap-1 flex-wrap" style={{ perspective: '1000px' }}>
+            {botHand.map((card, index) => {
+              const rotation = (index - botHand.length / 2) * 2.5;
+              const yOffset = Math.abs(index - botHand.length / 2) * 3;
+              return (
+                <div
+                  key={card.id}
+                  className="w-24 h-36 relative transition-all duration-300"
+                  style={{
+                    transform: `rotateZ(${rotation}deg) translateY(${yOffset}px) rotateX(-5deg)`,
+                    zIndex: botHand.length - Math.abs(index - botHand.length / 2),
+                    transformStyle: 'preserve-3d'
+                  }}
+                >
+                  {/* Multiple shadow layers for depth */}
+                  <div className="absolute inset-0 bg-black/60 rounded-[18px] blur-2xl transform translate-y-6" />
+                  <div className="absolute inset-0 bg-black/40 rounded-[18px] blur-lg transform translate-y-4" />
+                  <div className="absolute inset-0 bg-black/20 rounded-[18px] blur-md transform translate-y-2" />
+
+                  {/* Card back with realistic design */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-[#1a1a1a] via-[#0d0d0d] to-black rounded-[18px] border-[5px] border-[#333] shadow-[0_8px_32px_rgba(0,0,0,0.8)]" style={{ transformStyle: 'preserve-3d' }}>
+                    {/* Inner card design */}
+                    <div className="absolute inset-[6px] bg-gradient-to-br from-red-700 via-red-800 to-red-900 rounded-[14px] shadow-inner">
+                      {/* Pattern overlay */}
+                      <div className="absolute inset-0 opacity-20" style={{
+                        backgroundImage: 'radial-gradient(circle at 20% 20%, rgba(255,255,255,0.1) 0%, transparent 50%)'
+                      }} />
+
+                      {/* Yellow border */}
+                      <div className="absolute inset-[8px] border-[3px] border-yellow-500/40 rounded-[10px] flex items-center justify-center">
+                        {/* UNO logo with glow */}
+                        <div className="relative">
+                          <div className="text-yellow-400 font-black text-2xl tracking-wider drop-shadow-[0_0_8px_rgba(250,204,21,0.5)]">UNO</div>
+                          <div className="absolute inset-0 text-yellow-300 font-black text-2xl tracking-wider blur-sm opacity-50">UNO</div>
+                        </div>
+                      </div>
                     </div>
+
+                    {/* Glossy highlight */}
+                    <div className="absolute top-0 left-0 right-0 h-1/3 bg-gradient-to-b from-white/10 to-transparent rounded-t-[14px]" />
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
@@ -335,48 +368,95 @@ const UnoGame = () => {
         <div className="mb-8">
           <div className="flex items-center justify-center gap-8">
             {/* Discard Pile */}
-            <div className="relative">
-              <p className="text-xs font-semibold text-center mb-2 text-white/70">Discard Pile</p>
+            <div className="relative" style={{ perspective: '1200px' }}>
+              <p className="text-xs font-semibold text-center mb-3 text-white/70 drop-shadow-lg">Discard Pile</p>
               {discardPile.length > 0 && (
-                <div className="relative w-36 h-52 perspective-1000">
-                  {/* Card shadow/depth effect */}
-                  <div className="absolute inset-0 bg-black/40 rounded-2xl blur-xl transform translate-y-2" />
+                <div className="relative w-40 h-60">
+                  {/* Stack of cards underneath for depth */}
+                  {discardPile.length > 1 && (
+                    <>
+                      <div className="absolute inset-0 bg-gradient-to-br from-gray-800 to-gray-900 rounded-[20px] border-4 border-gray-700 transform translate-y-2 translate-x-1 opacity-50" />
+                      <div className="absolute inset-0 bg-gradient-to-br from-gray-800 to-gray-900 rounded-[20px] border-4 border-gray-700 transform translate-y-1 translate-x-0.5 opacity-70" />
+                    </>
+                  )}
 
-                  {/* Actual card */}
+                  {/* Multiple shadow layers for ultra-realistic depth */}
+                  <div className="absolute inset-0 bg-black/70 rounded-[20px] blur-3xl transform translate-y-8 scale-95" />
+                  <div className="absolute inset-0 bg-black/50 rounded-[20px] blur-2xl transform translate-y-5" />
+                  <div className="absolute inset-0 bg-black/30 rounded-[20px] blur-xl transform translate-y-3" />
+
+                  {/* Main card with 3D transform */}
                   <div
-                    className={`relative w-full h-full rounded-2xl border-[6px] shadow-2xl flex flex-col transition-all transform hover:scale-105 ${getColorClass(
+                    className={`relative w-full h-full rounded-[20px] border-[7px] transition-all duration-500 hover:scale-105 hover:rotate-2 ${getColorClass(
                       currentColor
                     )}`}
+                    style={{
+                      transformStyle: 'preserve-3d',
+                      transform: 'rotateX(2deg) rotateY(-2deg)',
+                      boxShadow: '0 25px 60px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.2)'
+                    }}
                   >
-                    {/* Top corner */}
-                    <div className="absolute top-2 left-2 text-white font-black text-lg">
-                      {discardPile[discardPile.length - 1].value.toUpperCase()}
+                    {/* Glossy highlight */}
+                    <div className="absolute top-0 left-0 right-0 h-2/5 bg-gradient-to-b from-white/15 to-transparent rounded-t-[14px] pointer-events-none" />
+
+                    {/* Top corner with shadow */}
+                    <div className="absolute top-3 left-3 text-white font-black text-xl drop-shadow-[0_2px_4px_rgba(0,0,0,0.4)]">
+                      {discardPile[discardPile.length - 1].value === "skip" ? "⊘" :
+                       discardPile[discardPile.length - 1].value === "reverse" ? "⟲" :
+                       discardPile[discardPile.length - 1].value === "draw2" ? "+2" :
+                       discardPile[discardPile.length - 1].value === "wild" ? "W" :
+                       discardPile[discardPile.length - 1].value === "wild4" ? "+4" :
+                       discardPile[discardPile.length - 1].value.toUpperCase()}
                     </div>
 
-                    {/* Center large text */}
-                    <div className="flex-1 flex items-center justify-center">
-                      <div className="bg-white/90 rounded-full w-24 h-24 flex items-center justify-center shadow-lg">
-                        <div className={`text-5xl font-black ${
-                          currentColor === "yellow" ? "text-yellow-600" :
-                          currentColor === "red" ? "text-red-600" :
-                          currentColor === "blue" ? "text-blue-600" :
-                          currentColor === "green" ? "text-green-600" :
-                          "text-purple-600"
-                        }`}>
-                          {discardPile[discardPile.length - 1].value.toUpperCase()}
+                    {/* Center large oval with realistic shadow */}
+                    <div className="flex-1 flex items-center justify-center absolute inset-0">
+                      <div className="relative">
+                        {/* Oval shadow */}
+                        <div className="absolute inset-0 transform translate-y-2 blur-lg opacity-40">
+                          <div className="bg-black/60 rounded-full w-32 h-32" />
+                        </div>
+
+                        {/* Main oval */}
+                        <div className="relative bg-white rounded-full w-32 h-32 flex items-center justify-center shadow-[0_8px_20px_rgba(0,0,0,0.3),inset_0_2px_4px_rgba(255,255,255,0.5)]">
+                          <div className={`text-6xl font-black drop-shadow-md ${
+                            currentColor === "yellow" ? "text-yellow-600" :
+                            currentColor === "red" ? "text-red-600" :
+                            currentColor === "blue" ? "text-blue-600" :
+                            currentColor === "green" ? "text-green-600" :
+                            "bg-gradient-to-br from-red-500 via-blue-500 to-green-500 bg-clip-text text-transparent"
+                          }`}>
+                            {discardPile[discardPile.length - 1].value === "skip" ? "⊘" :
+                             discardPile[discardPile.length - 1].value === "reverse" ? "⟲" :
+                             discardPile[discardPile.length - 1].value === "draw2" ? "+2" :
+                             discardPile[discardPile.length - 1].value === "wild" ? "W" :
+                             discardPile[discardPile.length - 1].value === "wild4" ? "+4" :
+                             discardPile[discardPile.length - 1].value.toUpperCase()}
+                          </div>
                         </div>
                       </div>
                     </div>
 
-                    {/* Bottom corner (rotated) */}
-                    <div className="absolute bottom-2 right-2 text-white font-black text-lg rotate-180">
-                      {discardPile[discardPile.length - 1].value.toUpperCase()}
+                    {/* Bottom corner (rotated) with shadow */}
+                    <div className="absolute bottom-3 right-3 text-white font-black text-xl rotate-180 drop-shadow-[0_2px_4px_rgba(0,0,0,0.4)]">
+                      {discardPile[discardPile.length - 1].value === "skip" ? "⊘" :
+                       discardPile[discardPile.length - 1].value === "reverse" ? "⟲" :
+                       discardPile[discardPile.length - 1].value === "draw2" ? "+2" :
+                       discardPile[discardPile.length - 1].value === "wild" ? "W" :
+                       discardPile[discardPile.length - 1].value === "wild4" ? "+4" :
+                       discardPile[discardPile.length - 1].value.toUpperCase()}
                     </div>
 
-                    {/* UNO logo at bottom */}
-                    <div className="absolute bottom-3 left-1/2 transform -translate-x-1/2">
-                      <div className="text-white font-black text-xs opacity-80">UNO</div>
+                    {/* UNO logo with glow effect */}
+                    <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2">
+                      <div className="relative">
+                        <div className="text-white font-black text-sm tracking-widest drop-shadow-[0_0_6px_rgba(255,255,255,0.5)]">UNO</div>
+                        <div className="absolute inset-0 text-white font-black text-sm tracking-widest blur-sm opacity-60">UNO</div>
+                      </div>
                     </div>
+
+                    {/* Edge lighting */}
+                    <div className="absolute inset-0 rounded-[14px] shadow-[inset_0_-2px_8px_rgba(0,0,0,0.3),inset_0_2px_8px_rgba(255,255,255,0.1)]" />
                   </div>
                 </div>
               )}
@@ -422,66 +502,112 @@ const UnoGame = () => {
               </Button>
             )}
           </div>
-          <div className="flex justify-center gap-2 flex-wrap perspective-1000">
-            {playerHand.map((card, index) => (
-              <button
-                key={card.id}
-                onClick={() => handleCardClick(card)}
-                disabled={!isPlayerTurn || gameOver}
-                className={`relative w-28 h-40 transition-all ${
-                  isPlayerTurn && !gameOver && canPlayCard(card)
-                    ? "hover:scale-110 hover:-translate-y-6 cursor-pointer"
-                    : "opacity-60 cursor-not-allowed"
-                }`}
-                style={{
-                  transform: `rotate(${(index - playerHand.length / 2) * 2}deg) translateY(${Math.abs(index - playerHand.length / 2) * 3}px)`,
-                  zIndex: playerHand.length - Math.abs(index - playerHand.length / 2)
-                }}
-              >
-                {/* Card shadow */}
-                <div className="absolute inset-0 bg-black/50 rounded-2xl blur-lg transform translate-y-2" />
+          <div className="flex justify-center gap-2 flex-wrap" style={{ perspective: '1500px' }}>
+            {playerHand.map((card, index) => {
+              const rotation = (index - playerHand.length / 2) * 3;
+              const yOffset = Math.abs(index - playerHand.length / 2) * 4;
+              const canPlay = isPlayerTurn && !gameOver && canPlayCard(card);
 
-                {/* Card */}
-                <div className={`relative w-full h-full rounded-2xl border-[6px] shadow-2xl flex flex-col ${getColorClass(
-                  card.color
-                )}`}>
-                  {/* Top corner */}
-                  <div className="absolute top-2 left-2 text-white font-black text-base">
-                    {card.value.toUpperCase()}
-                  </div>
+              return (
+                <button
+                  key={card.id}
+                  onClick={() => handleCardClick(card)}
+                  disabled={!isPlayerTurn || gameOver}
+                  className={`relative w-32 h-48 transition-all duration-300 ${
+                    canPlay
+                      ? "hover:scale-110 hover:-translate-y-8 hover:rotate-0 cursor-pointer"
+                      : "opacity-60 cursor-not-allowed"
+                  }`}
+                  style={{
+                    transform: `rotateZ(${rotation}deg) translateY(${yOffset}px) rotateX(5deg)`,
+                    zIndex: playerHand.length - Math.abs(index - playerHand.length / 2),
+                    transformStyle: 'preserve-3d'
+                  }}
+                >
+                  {/* Multiple layered shadows for depth */}
+                  <div className="absolute inset-0 bg-black/70 rounded-[22px] blur-3xl transform translate-y-8 scale-95" />
+                  <div className="absolute inset-0 bg-black/50 rounded-[22px] blur-2xl transform translate-y-5" />
+                  <div className="absolute inset-0 bg-black/30 rounded-[22px] blur-lg transform translate-y-3" />
 
-                  {/* Center large display */}
-                  <div className="flex-1 flex items-center justify-center">
-                    <div className="bg-white/90 rounded-full w-20 h-20 flex items-center justify-center shadow-lg">
-                      <div className={`text-3xl font-black ${
-                        card.color === "yellow" ? "text-yellow-600" :
-                        card.color === "red" ? "text-red-600" :
-                        card.color === "blue" ? "text-blue-600" :
-                        card.color === "green" ? "text-green-600" :
-                        "text-purple-600"
-                      }`}>
-                        {card.value === "skip" ? "⊘" :
-                         card.value === "reverse" ? "⟲" :
-                         card.value === "draw2" ? "+2" :
-                         card.value === "wild" ? "W" :
-                         card.value === "wild4" ? "+4" :
-                         card.value.toUpperCase()}
+                  {/* Card with photorealistic effects */}
+                  <div
+                    className={`relative w-full h-full rounded-[22px] border-[7px] ${getColorClass(card.color)}`}
+                    style={{
+                      transformStyle: 'preserve-3d',
+                      boxShadow: '0 20px 50px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.2), inset 0 -1px 0 rgba(0,0,0,0.2)'
+                    }}
+                  >
+                    {/* Glossy reflection */}
+                    <div className="absolute top-0 left-0 right-0 h-2/5 bg-gradient-to-b from-white/15 to-transparent rounded-t-[16px] pointer-events-none" />
+
+                    {/* Top corner with drop shadow */}
+                    <div className="absolute top-3 left-3 text-white font-black text-xl drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">
+                      {card.value === "skip" ? "⊘" :
+                       card.value === "reverse" ? "⟲" :
+                       card.value === "draw2" ? "+2" :
+                       card.value === "wild" ? "W" :
+                       card.value === "wild4" ? "+4" :
+                       card.value.toUpperCase()}
+                    </div>
+
+                    {/* Center oval with realistic depth */}
+                    <div className="flex-1 flex items-center justify-center absolute inset-0">
+                      <div className="relative">
+                        {/* Shadow beneath oval */}
+                        <div className="absolute inset-0 transform translate-y-3 blur-xl opacity-40">
+                          <div className="bg-black/70 rounded-full w-24 h-24" />
+                        </div>
+
+                        {/* Main white oval */}
+                        <div className="relative bg-white rounded-full w-24 h-24 flex items-center justify-center shadow-[0_6px_16px_rgba(0,0,0,0.3),inset_0_2px_4px_rgba(255,255,255,0.6),inset_0_-2px_4px_rgba(0,0,0,0.1)]">
+                          <div className={`text-4xl font-black drop-shadow-md ${
+                            card.color === "yellow" ? "text-yellow-600" :
+                            card.color === "red" ? "text-red-600" :
+                            card.color === "blue" ? "text-blue-600" :
+                            card.color === "green" ? "text-green-600" :
+                            "bg-gradient-to-br from-red-500 via-blue-500 to-green-500 bg-clip-text text-transparent"
+                          }`}>
+                            {card.value === "skip" ? "⊘" :
+                             card.value === "reverse" ? "⟲" :
+                             card.value === "draw2" ? "+2" :
+                             card.value === "wild" ? "W" :
+                             card.value === "wild4" ? "+4" :
+                             card.value.toUpperCase()}
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  {/* Bottom corner (rotated) */}
-                  <div className="absolute bottom-2 right-2 text-white font-black text-base rotate-180">
-                    {card.value.toUpperCase()}
-                  </div>
+                    {/* Bottom corner rotated with shadow */}
+                    <div className="absolute bottom-3 right-3 text-white font-black text-xl rotate-180 drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">
+                      {card.value === "skip" ? "⊘" :
+                       card.value === "reverse" ? "⟲" :
+                       card.value === "draw2" ? "+2" :
+                       card.value === "wild" ? "W" :
+                       card.value === "wild4" ? "+4" :
+                       card.value.toUpperCase()}
+                    </div>
 
-                  {/* UNO logo */}
-                  <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2">
-                    <div className="text-white font-black text-[10px] opacity-80">UNO</div>
+                    {/* UNO logo with glow */}
+                    <div className="absolute bottom-3 left-1/2 transform -translate-x-1/2">
+                      <div className="relative">
+                        <div className="text-white font-black text-xs tracking-widest drop-shadow-[0_0_6px_rgba(255,255,255,0.5)]">UNO</div>
+                        <div className="absolute inset-0 text-white font-black text-xs tracking-widest blur-sm opacity-60">UNO</div>
+                      </div>
+                    </div>
+
+                    {/* Edge lighting and depth */}
+                    <div className="absolute inset-0 rounded-[16px] shadow-[inset_0_-3px_10px_rgba(0,0,0,0.25),inset_0_3px_10px_rgba(255,255,255,0.1)]" />
+
+                    {/* Playable card glow effect */}
+                    {canPlay && (
+                      <div className="absolute inset-0 rounded-[16px] shadow-[0_0_20px_rgba(255,215,0,0.4)] animate-pulse" />
+                    )}
                   </div>
-                </div>
-              </button>
-            ))}
+                </button>
+              );
+            })}
+          </div>
           </div>
         </div>
       </main>
