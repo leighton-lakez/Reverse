@@ -246,19 +246,33 @@ const Profile = () => {
   };
 
   const fetchMyStories = async (userId: string) => {
-    const { data, error } = await supabase
+    const { data: storiesData, error: storiesError } = await supabase
       .from("stories")
       .select("*")
       .eq("user_id", userId)
       .gt("expires_at", new Date().toISOString())
       .order("created_at", { ascending: false });
 
-    if (error) {
-      console.error('Error fetching stories:', error);
-    } else {
-      console.log('Fetched stories:', data);
-      setMyStories(data || []);
+    if (storiesError) {
+      console.error('Error fetching stories:', storiesError);
+      return;
     }
+
+    // Fetch profile data separately
+    const { data: profileData } = await supabase
+      .from("profiles")
+      .select("display_name, avatar_url")
+      .eq("id", userId)
+      .single();
+
+    // Combine stories with profile data
+    const storiesWithProfile = (storiesData || []).map(story => ({
+      ...story,
+      profiles: profileData
+    }));
+
+    console.log('Fetched stories:', storiesWithProfile);
+    setMyStories(storiesWithProfile);
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
