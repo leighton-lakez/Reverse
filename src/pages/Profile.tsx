@@ -1088,14 +1088,14 @@ const Profile = () => {
           <DialogHeader>
             <DialogTitle>Manage Stories</DialogTitle>
             <DialogDescription>
-              View, delete, and manage your active and past stories
+              View and delete your active stories. Past stories show only expired ones (deleted stories are permanently removed).
             </DialogDescription>
           </DialogHeader>
 
           <Tabs defaultValue="active" className="w-full">
             <TabsList className="grid w-full grid-cols-2 mb-4">
               <TabsTrigger value="active">Active ({myStories.length})</TabsTrigger>
-              <TabsTrigger value="past">Past ({pastStories.length})</TabsTrigger>
+              <TabsTrigger value="past">Expired ({pastStories.length})</TabsTrigger>
             </TabsList>
 
             <TabsContent value="active" className="space-y-3">
@@ -1170,23 +1170,20 @@ const Profile = () => {
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                          <Badge variant={story.deleted_at ? "destructive" : "secondary"} className="text-xs">
-                            {story.deleted_at ? "Deleted" : "Expired"}
+                          <Badge variant="secondary" className="text-xs">
+                            Expired
                           </Badge>
                           <span className="text-xs text-muted-foreground">
                             {new Date(story.created_at).toLocaleDateString()}
                           </span>
                         </div>
                         <p className="text-sm text-muted-foreground">
-                          {story.deleted_at
-                            ? `Deleted: ${new Date(story.deleted_at).toLocaleDateString()}`
-                            : `Expired: ${new Date(story.expires_at).toLocaleDateString()}`
-                          }
+                          Expired: {new Date(story.expires_at).toLocaleDateString()}
                         </p>
                       </div>
                       <Badge variant="outline" className="flex-shrink-0">
                         <Clock className="h-3 w-3 mr-1" />
-                        Past
+                        24h
                       </Badge>
                     </div>
                   </Card>
@@ -1194,7 +1191,8 @@ const Profile = () => {
               ) : (
                 <div className="text-center py-12">
                   <Clock className="h-12 w-12 mx-auto text-muted-foreground/30 mb-3" />
-                  <p className="text-muted-foreground">No past stories</p>
+                  <p className="text-muted-foreground font-medium">No expired stories</p>
+                  <p className="text-sm text-muted-foreground mt-2">Stories automatically expire after 24 hours</p>
                 </div>
               )}
             </TabsContent>
