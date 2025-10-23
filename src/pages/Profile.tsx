@@ -103,6 +103,7 @@ const Profile = () => {
         await fetchMyStories(session.user.id);
         await fetchUserRating(session.user.id);
         await fetchUserReviews(session.user.id);
+        await fetchGivenReviews(session.user.id);
       }
     });
   }, [navigate]);
@@ -293,6 +294,29 @@ const Profile = () => {
 
     if (data) {
       setReviews(data);
+    }
+  };
+
+  const fetchGivenReviews = async (userId: string) => {
+    const { data, error } = await supabase
+      .from("reviews")
+      .select(`
+        *,
+        profiles!reviews_reviewed_user_id_fkey (
+          display_name,
+          avatar_url
+        )
+      `)
+      .eq("reviewer_id", userId)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error('Error fetching given reviews:', error);
+      return;
+    }
+
+    if (data) {
+      setGivenReviews(data);
     }
   };
 
@@ -683,15 +707,18 @@ const Profile = () => {
 
         {/* Listings Tabs */}
         <Tabs defaultValue="active" className="animate-fade-in" style={{ animationDelay: "0.1s" }}>
-          <TabsList className="grid w-full grid-cols-3 mb-6 p-1.5 bg-muted/50 backdrop-blur-sm rounded-2xl border border-border/50">
-            <TabsTrigger value="active" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-semibold rounded-xl transition-all">
+          <TabsList className="grid w-full grid-cols-4 mb-6 p-1.5 bg-muted/50 backdrop-blur-sm rounded-2xl border border-border/50">
+            <TabsTrigger value="active" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-semibold rounded-xl transition-all text-xs sm:text-sm">
               Active
             </TabsTrigger>
-            <TabsTrigger value="sold" className="data-[state=active]:bg-secondary data-[state=active]:text-secondary-foreground font-semibold rounded-xl transition-all">
+            <TabsTrigger value="sold" className="data-[state=active]:bg-secondary data-[state=active]:text-secondary-foreground font-semibold rounded-xl transition-all text-xs sm:text-sm">
               Sold
             </TabsTrigger>
-            <TabsTrigger value="reviews" className="data-[state=active]:bg-foreground data-[state=active]:text-background font-semibold rounded-xl transition-all">
-              Reviews ({reviewCount})
+            <TabsTrigger value="reviews" className="data-[state=active]:bg-foreground data-[state=active]:text-background font-semibold rounded-xl transition-all text-xs sm:text-sm">
+              Received ({reviewCount})
+            </TabsTrigger>
+            <TabsTrigger value="given" className="data-[state=active]:bg-foreground data-[state=active]:text-background font-semibold rounded-xl transition-all text-xs sm:text-sm">
+              Given ({givenReviews.length})
             </TabsTrigger>
           </TabsList>
           
@@ -899,6 +926,62 @@ const Profile = () => {
                 <Star className="h-12 w-12 mx-auto text-muted-foreground/30 mb-3" />
                 <p className="text-muted-foreground font-medium">No reviews yet</p>
                 <p className="text-sm text-muted-foreground mt-1">Reviews from other users will appear here</p>
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="given">
+            {givenReviews.length > 0 ? (
+              <div className="space-y-3">
+                {givenReviews.map((review) => (
+                  <Card key={review.id} className="p-4 border-border">
+                    <div className="flex items-start gap-3">
+                      <Avatar className="h-10 w-10 border-2 border-background">
+                        <AvatarImage src={review.profiles?.avatar_url} />
+                        <AvatarFallback>
+                          {review.profiles?.display_name?.split(' ').map((n: string) => n[0]).join('') || 'U'}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="font-semibold text-sm text-foreground">
+                              Review for {review.profiles?.display_name || 'Anonymous'}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {new Date(review.created_at).toLocaleDateString('en-US', {
+                                year: 'numeric',
+                                month: 'short',
+                                day: 'numeric'
+                              })}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            {Array.from({ length: 5 }).map((_, i) => (
+                              <Star
+                                key={i}
+                                className={`h-4 w-4 ${
+                                  i < review.rating
+                                    ? 'fill-primary text-primary'
+                                    : 'text-muted-foreground/30'
+                                }`}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                        {review.comment && (
+                          <p className="text-sm text-foreground">{review.comment}</p>
+                        )}
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <Star className="h-12 w-12 mx-auto text-muted-foreground/30 mb-3" />
+                <p className="text-muted-foreground font-medium">No reviews given yet</p>
+                <p className="text-sm text-muted-foreground mt-1">Reviews you give to other users will appear here</p>
               </div>
             )}
           </TabsContent>
