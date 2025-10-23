@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { ArrowLeft, Send, Image, Smile } from "lucide-react";
+import { ArrowLeft, Send, Image, Smile, Gamepad2 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,7 +26,7 @@ const Chat = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { sellerId, item } = location.state || {};
-  
+
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [currentUser, setCurrentUser] = useState<any>(null);
@@ -35,6 +35,32 @@ const Chat = () => {
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Helper function to detect and render UNO game invites
+  const renderMessageContent = (text: string) => {
+    const unoRoomMatch = text.match(/\/uno\?room=(UNO-[^\s]+)/);
+
+    if (unoRoomMatch) {
+      const roomCode = unoRoomMatch[1];
+      const messageText = text.split(window.location.origin)[0].trim();
+
+      return (
+        <div className="space-y-2">
+          <p className="text-sm">{messageText}</p>
+          <Button
+            onClick={() => navigate(`/uno?room=${roomCode}`)}
+            className="w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-bold shadow-lg"
+            size="sm"
+          >
+            <Gamepad2 className="mr-2 h-4 w-4" />
+            Join UNO Game
+          </Button>
+        </div>
+      );
+    }
+
+    return <p className="text-sm">{text}</p>;
+  };
 
   useEffect(() => {
     let channel: any = null;
@@ -375,7 +401,7 @@ const Chat = () => {
                   onClick={() => window.open(message.imageUrl, '_blank')}
                 />
               ) : null}
-              <p className="text-sm">{message.text}</p>
+              {renderMessageContent(message.text)}
               <p className={`text-[10px] mt-1 ${
                 message.sender === "me" ? "text-primary-foreground/70" : "text-muted-foreground"
               }`}>
