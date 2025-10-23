@@ -132,21 +132,34 @@ const UserProfile = () => {
   const fetchUserStories = async (uid: string) => {
     const { data, error } = await supabase
       .from("stories")
-      .select(`
-        *,
-        profiles!stories_user_id_fkey (
-          display_name,
-          avatar_url
-        )
-      `)
+      .select("*")
       .eq("user_id", uid)
       .gt("expires_at", new Date().toISOString())
       .order("created_at", { ascending: false });
 
-    if (!error && data) {
+    if (error) {
+      console.error('Error fetching stories:', error);
+      return;
+    }
+
+    if (data) {
       // Filter out soft-deleted stories if the column exists
       const activeStories = data.filter((story: any) => !story.deleted_at);
-      setUserStories(activeStories);
+
+      // Fetch profile data separately
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("display_name, avatar_url")
+        .eq("id", uid)
+        .single();
+
+      // Add profile to each story
+      const storiesWithProfile = activeStories.map((story: any) => ({
+        ...story,
+        profiles: profile
+      }));
+
+      setUserStories(storiesWithProfile);
     }
   };
 
