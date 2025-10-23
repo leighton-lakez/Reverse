@@ -655,8 +655,8 @@ Please provide a price suggestion considering any visible damage or wear in the 
       </header>
 
       {/* Chat Messages */}
-      <main className="flex-1 max-w-4xl mx-auto w-full px-3 sm:px-6 py-4 sm:py-5 overflow-y-auto pb-32 sm:pb-24 relative z-10">
-        <div className="space-y-3 pb-6">
+      <main className="flex-1 max-w-4xl mx-auto w-full px-3 sm:px-6 py-3 sm:py-4 overflow-y-auto pb-32 sm:pb-24 relative z-10">
+        <div className="space-y-2 pb-4">
           {messages.map((message, index) => (
             <div
               key={message.id}
@@ -664,23 +664,23 @@ Please provide a price suggestion considering any visible damage or wear in the 
               style={{ animationDelay: `${index * 50}ms` }}
             >
               <div
-                className={`max-w-[85%] sm:max-w-[75%] rounded-2xl px-3 sm:px-4 py-2 sm:py-2.5 shadow-lg transition-all hover:scale-[1.01] ${
+                className={`max-w-[85%] sm:max-w-[75%] rounded-xl px-2.5 sm:px-3 py-1.5 sm:py-2 shadow-lg transition-all hover:scale-[1.01] ${
                   message.type === "user"
                     ? "bg-gradient-to-br from-primary via-primary to-primary/90 text-primary-foreground shadow-primary/20 border border-primary/30"
                     : "glass text-foreground border border-border/50 backdrop-blur-xl"
                 }`}
               >
-                <p className="text-xs sm:text-sm whitespace-pre-line leading-relaxed font-medium">{message.content}</p>
+                <p className="text-[11px] sm:text-xs whitespace-pre-line leading-snug font-medium">{message.content}</p>
 
                 {message.options && (
-                  <div className="flex flex-wrap gap-1.5 sm:gap-2 mt-2 sm:mt-2.5">
+                  <div className="flex flex-wrap gap-1 sm:gap-1.5 mt-1.5 sm:mt-2">
                     {message.options.map((option) => (
                       <Button
                         key={option}
                         onClick={() => handleOptionClick(option)}
                         size="sm"
                         variant="outline"
-                        className="bg-background/80 hover:bg-primary/10 border-primary/30 hover:border-primary/50 text-xs h-8 sm:h-9 px-2.5 sm:px-3 rounded-full font-semibold hover:shadow-md transition-all hover:scale-105"
+                        className="bg-background/80 hover:bg-primary/10 border-primary/30 hover:border-primary/50 text-[10px] sm:text-xs h-7 sm:h-8 px-2 sm:px-2.5 rounded-full font-semibold hover:shadow-md transition-all hover:scale-105"
                       >
                         {option}
                       </Button>
@@ -693,11 +693,11 @@ Please provide a price suggestion considering any visible damage or wear in the 
 
           {isTyping && (
             <div className="flex justify-start animate-fade-in">
-              <div className="glass rounded-2xl px-4 py-2.5 shadow-lg border border-border/50 backdrop-blur-xl">
+              <div className="glass rounded-xl px-3 py-2 shadow-lg border border-border/50 backdrop-blur-xl">
                 <div className="flex gap-1">
-                  <div className="w-2 h-2 bg-primary rounded-full animate-bounce shadow-lg shadow-primary/50" style={{ animationDelay: "0ms" }}></div>
-                  <div className="w-2 h-2 bg-primary rounded-full animate-bounce shadow-lg shadow-primary/50" style={{ animationDelay: "150ms" }}></div>
-                  <div className="w-2 h-2 bg-primary rounded-full animate-bounce shadow-lg shadow-primary/50" style={{ animationDelay: "300ms" }}></div>
+                  <div className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce shadow-lg shadow-primary/50" style={{ animationDelay: "0ms" }}></div>
+                  <div className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce shadow-lg shadow-primary/50" style={{ animationDelay: "150ms" }}></div>
+                  <div className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce shadow-lg shadow-primary/50" style={{ animationDelay: "300ms" }}></div>
                 </div>
               </div>
             </div>

@@ -549,9 +549,9 @@ const Profile = () => {
                 
                 <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
                   <DialogTrigger asChild>
-                    <Button variant="outline" size="sm" className="gap-1 flex-shrink-0">
-                      <Edit2 className="h-3 w-3" />
-                      <span className="hidden sm:inline">Edit</span>
+                    <Button variant="outline" className="gap-2 border-primary/30 hover:bg-primary/10 hover:border-primary/50">
+                      <Edit2 className="h-4 w-4" />
+                      <span>Edit Profile</span>
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="bg-card border-border">
@@ -642,47 +642,56 @@ const Profile = () => {
                 </Dialog>
               </div>
             </div>
-          </div>
-          
-          <p className="text-sm text-foreground mt-2 line-clamp-2">{profileData.bio}</p>
 
-          {/* Create Story Button */}
-          <Button
-            onClick={() => setCreateStoryOpen(true)}
-            className="w-full mt-3 bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-md hover:shadow-lg transition-all"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Create Story
-          </Button>
+            {profileData.bio && (
+              <p className="text-base text-foreground/80 leading-relaxed line-clamp-3 mb-4">{profileData.bio}</p>
+            )}
 
-          <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-border">
-            <div className="text-center">
-              <div className="text-lg font-bold text-foreground">{myListings.length}</div>
-              <div className="text-xs text-muted-foreground">Listings</div>
-            </div>
-            <div 
-              className="text-center cursor-pointer hover:bg-muted/50 rounded-lg p-2 -m-2 transition-colors"
-              onClick={() => navigate("/followers")}
+            {/* Create Story Button */}
+            <Button
+              onClick={() => setCreateStoryOpen(true)}
+              className="w-full bg-gradient-to-r from-primary via-primary to-secondary hover:from-primary/90 hover:via-primary/90 hover:to-secondary/90 shadow-md hover:shadow-xl transition-all"
             >
-              <div className="text-lg font-bold text-foreground">{followersCount}</div>
-              <div className="text-xs text-muted-foreground">Followers</div>
-            </div>
-            <div 
-              className="text-center cursor-pointer hover:bg-muted/50 rounded-lg p-2 -m-2 transition-colors"
-              onClick={() => navigate("/following")}
-            >
-              <div className="text-lg font-bold text-foreground">{followingCount}</div>
-              <div className="text-xs text-muted-foreground">Following</div>
+              <Plus className="h-5 w-5 mr-2" />
+              <span className="font-semibold">Create Story</span>
+            </Button>
+
+            {/* Stats Grid */}
+            <div className="grid grid-cols-3 gap-4 mt-6">
+              <div className="group text-center p-4 rounded-2xl bg-gradient-to-br from-muted/50 to-muted/30 border border-border/50 hover:border-primary/30 transition-all cursor-default">
+                <div className="text-3xl font-black text-foreground mb-1">{myListings.length}</div>
+                <div className="text-sm font-medium text-muted-foreground">Listings</div>
+              </div>
+              <div
+                className="group text-center p-4 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 hover:border-primary/40 transition-all cursor-pointer hover:shadow-lg hover:shadow-primary/10"
+                onClick={() => navigate("/followers")}
+              >
+                <div className="text-3xl font-black text-foreground mb-1">{followersCount}</div>
+                <div className="text-sm font-medium text-primary">Followers</div>
+              </div>
+              <div
+                className="group text-center p-4 rounded-2xl bg-gradient-to-br from-secondary/10 to-secondary/5 border border-secondary/20 hover:border-secondary/40 transition-all cursor-pointer hover:shadow-lg hover:shadow-secondary/10"
+                onClick={() => navigate("/following")}
+              >
+                <div className="text-3xl font-black text-foreground mb-1">{followingCount}</div>
+                <div className="text-sm font-medium text-secondary">Following</div>
+              </div>
             </div>
           </div>
-        </Card>
+        </div>
 
         {/* Listings Tabs */}
         <Tabs defaultValue="active" className="animate-fade-in" style={{ animationDelay: "0.1s" }}>
-          <TabsList className="grid w-full grid-cols-3 mb-3">
-            <TabsTrigger value="active" className="text-sm">Active</TabsTrigger>
-            <TabsTrigger value="sold" className="text-sm">Sold</TabsTrigger>
-            <TabsTrigger value="reviews" className="text-sm">Reviews ({reviewCount})</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-3 mb-6 p-1.5 bg-muted/50 backdrop-blur-sm rounded-2xl border border-border/50">
+            <TabsTrigger value="active" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-semibold rounded-xl transition-all">
+              Active
+            </TabsTrigger>
+            <TabsTrigger value="sold" className="data-[state=active]:bg-secondary data-[state=active]:text-secondary-foreground font-semibold rounded-xl transition-all">
+              Sold
+            </TabsTrigger>
+            <TabsTrigger value="reviews" className="data-[state=active]:bg-foreground data-[state=active]:text-background font-semibold rounded-xl transition-all">
+              Reviews ({reviewCount})
+            </TabsTrigger>
           </TabsList>
           
           <TabsContent value="active">
