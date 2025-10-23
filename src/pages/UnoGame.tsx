@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, RotateCcw, Users, Copy, Share2 } from "lucide-react";
+import { ArrowLeft, RotateCcw, Users, Copy, Share2, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ReverseIcon } from "@/components/ReverseIcon";
 import { toast } from "@/hooks/use-toast";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { supabase } from "@/integrations/supabase/client";
 import {
   Dialog,
   DialogContent,
@@ -33,6 +35,9 @@ const UnoGame = () => {
   const [winner, setWinner] = useState<string>("");
   const [isReversed, setIsReversed] = useState(false);
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
+  const [friends, setFriends] = useState<any[]>([]);
+  const [currentUserId, setCurrentUserId] = useState<string>("");
+  const [sendingInvites, setSendingInvites] = useState<Set<string>>(new Set());
 
   const colors: CardColor[] = ["red", "blue", "green", "yellow"];
   const values: CardValue[] = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "skip", "reverse", "draw2"];
@@ -102,7 +107,97 @@ const UnoGame = () => {
 
   useEffect(() => {
     startGame();
+    fetchCurrentUserAndFriends();
   }, []);
+
+  const fetchCurrentUserAndFriends = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+
+    setCurrentUserId(session.user.id);
+    await fetchFriends(session.user.id);
+  };
+
+  const fetchFriends = async (userId: string) => {
+    // Get users that current user follows
+    const { data: following } = await supabase
+      .from("follows")
+      .select("following_id")
+      .eq("follower_id", userId);
+
+    if (!following || following.length === 0) {
+      setFriends([]);
+      return;
+    }
+
+    const followingIds = following.map(f => f.following_id);
+
+    // Get users that follow current user back (mutual follows = friends)
+    const { data: mutualFollows } = await supabase
+      .from("follows")
+      .select("follower_id")
+      .eq("following_id", userId)
+      .in("follower_id", followingIds);
+
+    if (!mutualFollows || mutualFollows.length === 0) {
+      setFriends([]);
+      return;
+    }
+
+    const friendIds = mutualFollows.map(f => f.follower_id);
+
+    // Fetch friend profiles
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("id, display_name, avatar_url")
+      .in("id", friendIds);
+
+    setFriends(profiles || []);
+  };
+
+  const sendInviteToFriend = async (friendId: string, friendName: string) => {
+    if (!currentUserId) {
+      toast({
+        title: "Error",
+        description: "Please sign in to send invites",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSendingInvites(prev => new Set(prev).add(friendId));
+
+    try {
+      // Send a message invite
+      const { error } = await supabase
+        .from("messages")
+        .insert({
+          sender_id: currentUserId,
+          receiver_id: friendId,
+          content: `🎮 Hey! Let's play UNO together! Click here to join: ${window.location.origin}/uno`,
+          read: false,
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Invite Sent! 🎮",
+        description: `${friendName} will receive your UNO invite`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "Failed to send invite",
+        variant: "destructive",
+      });
+    } finally {
+      setSendingInvites(prev => {
+        const next = new Set(prev);
+        next.delete(friendId);
+        return next;
+      });
+    }
+  };
 
   useEffect(() => {
     if (!isPlayerTurn && !gameOver) {
@@ -274,38 +369,6 @@ const UnoGame = () => {
     }
   };
 
-  const handleCopyInviteLink = () => {
-    const inviteLink = `${window.location.origin}/uno`;
-    navigator.clipboard.writeText(inviteLink);
-    toast({
-      title: "Link Copied!",
-      description: "Share this link with your friends to invite them to play UNO!",
-    });
-  };
-
-  const handleShareInvite = async () => {
-    const inviteLink = `${window.location.origin}/uno`;
-    const shareData = {
-      title: "Play UNO with me!",
-      text: "Join me for a game of UNO on REVERSE! 🎮",
-      url: inviteLink,
-    };
-
-    if (navigator.share) {
-      try {
-        await navigator.share(shareData);
-        toast({
-          title: "Invite Sent!",
-          description: "Your friends will receive the invite.",
-        });
-      } catch (err) {
-        // User cancelled or error occurred
-        console.log("Share cancelled");
-      }
-    } else {
-      handleCopyInviteLink();
-    }
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-900 via-green-800 to-green-900 pb-24 relative overflow-hidden">
@@ -667,51 +730,69 @@ const UnoGame = () => {
 
       {/* Invite Friends Modal */}
       <Dialog open={inviteModalOpen} onOpenChange={setInviteModalOpen}>
-        <DialogContent className="bg-gradient-to-b from-card to-card/95 border-primary/20 sm:max-w-md">
+        <DialogContent className="bg-gradient-to-b from-card to-card/95 border-primary/20 sm:max-w-md max-h-[80vh]">
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text flex items-center gap-2">
               <Users className="h-6 w-6 text-primary" />
               Invite Friends to Play
             </DialogTitle>
             <DialogDescription className="text-muted-foreground">
-              Share this link with your friends and play UNO together!
+              {friends.length > 0 ? "Select a friend to send them a UNO invite!" : "Add friends to invite them to play UNO!"}
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4 pt-4">
-            {/* Link Display */}
-            <div className="flex items-center gap-2 p-3 rounded-xl bg-muted/50 border border-border">
-              <input
-                type="text"
-                value={`${window.location.origin}/uno`}
-                readOnly
-                className="flex-1 bg-transparent border-0 outline-none text-sm font-mono text-foreground"
-              />
-            </div>
-
-            {/* Action Buttons */}
-            <div className="grid grid-cols-2 gap-3">
-              <Button
-                onClick={handleCopyInviteLink}
-                className="h-12 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/30 hover:border-primary/50"
-                variant="outline"
-              >
-                <Copy className="h-4 w-4 mr-2" />
-                Copy Link
-              </Button>
-              <Button
-                onClick={handleShareInvite}
-                className="h-12 bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg shadow-primary/25"
-              >
-                <Share2 className="h-4 w-4 mr-2" />
-                Share
-              </Button>
-            </div>
+          <div className="space-y-4 pt-4 overflow-y-auto max-h-[60vh]">
+            {friends.length > 0 ? (
+              <div className="space-y-2">
+                {friends.map((friend) => (
+                  <div
+                    key={friend.id}
+                    className="flex items-center gap-3 p-3 rounded-xl bg-muted/50 border border-border hover:border-primary/50 transition-all"
+                  >
+                    <Avatar className="h-12 w-12 border-2 border-background ring-2 ring-primary/20">
+                      <AvatarImage src={friend.avatar_url} />
+                      <AvatarFallback className="text-sm font-bold">
+                        {friend.display_name?.split(' ').map((n: string) => n[0]).join('') || 'U'}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold text-foreground truncate">{friend.display_name}</p>
+                      <p className="text-xs text-muted-foreground">Friend</p>
+                    </div>
+                    <Button
+                      onClick={() => sendInviteToFriend(friend.id, friend.display_name)}
+                      disabled={sendingInvites.has(friend.id)}
+                      size="sm"
+                      className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-md"
+                    >
+                      {sendingInvites.has(friend.id) ? (
+                        <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        <>
+                          <Send className="h-4 w-4 mr-1" />
+                          Invite
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <div className="inline-flex p-4 rounded-full bg-muted/50 mb-3">
+                  <Users className="h-12 w-12 text-muted-foreground opacity-50" />
+                </div>
+                <p className="text-sm font-semibold text-foreground mb-1">No Friends Yet</p>
+                <p className="text-xs text-muted-foreground max-w-xs mx-auto">
+                  When you and another user follow each other, you'll become friends and can invite them to play!
+                </p>
+              </div>
+            )}
 
             {/* Info Text */}
             <div className="flex items-center gap-2 p-3 rounded-xl bg-blue-500/10 border border-blue-500/30">
               <div className="text-xs text-blue-600 dark:text-blue-400">
-                💡 <span className="font-semibold">Tip:</span> Your friends can join by clicking the link and playing against the bot or waiting for multiplayer support!
+                💡 <span className="font-semibold">Tip:</span> Your friend will receive a message with your UNO invite!
               </div>
             </div>
           </div>

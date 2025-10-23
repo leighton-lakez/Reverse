@@ -141,6 +141,7 @@ const UserProfile = () => {
       `)
       .eq("user_id", uid)
       .gt("expires_at", new Date().toISOString())
+      .is("deleted_at", null)
       .order("created_at", { ascending: false });
 
     if (!error && data) {
