@@ -472,7 +472,17 @@ const UnoGame = () => {
     }
 
     if (isMultiplayer && gameRoom) {
-      // Multiplayer: Update database
+      // Multiplayer: Update local state immediately for responsive UI
+      setPlayerHand(newPlayerHand);
+      setDiscardPile(newDiscardPile);
+      setCurrentColor(newColor);
+      setIsPlayerTurn(false);
+
+      if (card.value === "reverse") {
+        setIsReversed(!isReversed);
+      }
+
+      // Then update database to sync with opponent
       const opponentId = gameRoom.host_id === currentUserId ? gameRoom.guest_id : gameRoom.host_id;
       const gameState = {
         ...gameRoom.game_state,
@@ -489,6 +499,8 @@ const UnoGame = () => {
       // Check for winner
       if (newPlayerHand.length === 0) {
         sounds.playWin();
+        setGameOver(true);
+        setWinner("You");
         await supabase
           .from('uno_game_rooms')
           .update({
@@ -559,10 +571,42 @@ const UnoGame = () => {
     setHand([...hand, ...newCards]);
   };
 
-  const drawCard = () => {
+  const drawCard = async () => {
     sounds.playCardDraw();
-    drawCards(playerHand, setPlayerHand, 1);
-    setIsPlayerTurn(false);
+
+    const newCard: UnoCard = {
+      id: `${Date.now()}`,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      value: values[Math.floor(Math.random() * values.length)],
+    };
+
+    const newPlayerHand = [...playerHand, newCard];
+
+    if (isMultiplayer && gameRoom) {
+      // Update local state immediately
+      setPlayerHand(newPlayerHand);
+      setIsPlayerTurn(false);
+
+      // Update database
+      const opponentId = gameRoom.host_id === currentUserId ? gameRoom.guest_id : gameRoom.host_id;
+      const gameState = {
+        ...gameRoom.game_state,
+        playerHands: {
+          ...gameRoom.game_state.playerHands,
+          [currentUserId]: newPlayerHand
+        },
+        currentTurn: opponentId
+      };
+
+      await supabase
+        .from('uno_game_rooms')
+        .update({ game_state: gameState })
+        .eq('id', gameRoom.id);
+    } else {
+      // Single player
+      setPlayerHand(newPlayerHand);
+      setIsPlayerTurn(false);
+    }
   };
 
   const botPlay = () => {
