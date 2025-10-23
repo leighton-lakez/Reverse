@@ -184,7 +184,16 @@ const UnoGame = () => {
         .eq('room_code', code)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching game room:', error);
+        toast({
+          title: "Error",
+          description: "Multiplayer feature is not available yet. Play against the bot instead!",
+          variant: "destructive",
+        });
+        navigate('/uno');
+        return;
+      }
 
       if (!room) {
         toast({
