@@ -75,6 +75,8 @@ const Profile = () => {
   const [createStoryOpen, setCreateStoryOpen] = useState(false);
   const [storyViewerOpen, setStoryViewerOpen] = useState(false);
   const [myStories, setMyStories] = useState<any[]>([]);
+  const [averageRating, setAverageRating] = useState<number | null>(null);
+  const [reviewCount, setReviewCount] = useState(0);
   const [profileData, setProfileData] = useState({
     name: "",
     bio: "",
@@ -97,6 +99,7 @@ const Profile = () => {
         await fetchUserItems(session.user.id);
         await fetchFollowCounts(session.user.id);
         await fetchMyStories(session.user.id);
+        await fetchUserRating(session.user.id);
       }
     });
   }, [navigate]);
@@ -243,6 +246,28 @@ const Profile = () => {
 
     setFollowersCount(followers || 0);
     setFollowingCount(following || 0);
+  };
+
+  const fetchUserRating = async (userId: string) => {
+    const { data, error } = await supabase
+      .from("reviews")
+      .select("rating")
+      .eq("reviewed_user_id", userId);
+
+    if (error) {
+      console.error('Error fetching reviews:', error);
+      return;
+    }
+
+    if (data && data.length > 0) {
+      const total = data.reduce((sum, review) => sum + review.rating, 0);
+      const avg = total / data.length;
+      setAverageRating(Number(avg.toFixed(1)));
+      setReviewCount(data.length);
+    } else {
+      setAverageRating(null);
+      setReviewCount(0);
+    }
   };
 
   const fetchMyStories = async (userId: string) => {
@@ -444,13 +469,13 @@ const Profile = () => {
         {/* Profile Header */}
         <Card className="p-4 mb-3 animate-fade-in border-border">
           <div className="flex items-center gap-4">
-            <div className="relative flex-shrink-0">
-              {/* Avatar with story ring */}
+            <div className="flex-shrink-0">
+              {/* Avatar with modern story ring */}
               <div
-                className={`cursor-pointer ${
+                className={`cursor-pointer transition-all duration-300 ${
                   myStories.length > 0
-                    ? 'p-0.5 rounded-full bg-gradient-to-tr from-primary via-yellow-500 to-primary'
-                    : ''
+                    ? 'p-[3px] rounded-full bg-gradient-to-tr from-primary via-secondary to-primary animate-pulse shadow-lg shadow-primary/50'
+                    : 'p-[2px] rounded-full bg-gradient-to-tr from-muted-foreground/20 to-muted-foreground/10'
                 }`}
                 onClick={() => {
                   if (myStories.length > 0) {
@@ -458,22 +483,11 @@ const Profile = () => {
                   }
                 }}
               >
-                <Avatar className={`h-16 w-16 ${myStories.length > 0 ? 'border-2 border-background' : 'border-2 border-primary'}`}>
+                <Avatar className="h-20 w-20 border-[3px] border-background ring-2 ring-background/50">
                   <AvatarImage src={profileData.avatar} />
-                  <AvatarFallback>{profileData.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                  <AvatarFallback className="text-lg font-bold">{profileData.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
                 </Avatar>
               </div>
-
-              {/* Create story button */}
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setCreateStoryOpen(true);
-                }}
-                className="absolute bottom-0 right-0 h-6 w-6 bg-primary rounded-full flex items-center justify-center border-2 border-background shadow-md hover:scale-105 transition-transform"
-              >
-                <Plus className="h-4 w-4 text-primary-foreground" />
-              </button>
             </div>
             
             <div className="flex-1 min-w-0">
@@ -590,8 +604,17 @@ const Profile = () => {
           </div>
           
           <p className="text-sm text-foreground mt-2 line-clamp-2">{profileData.bio}</p>
-          
-          <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-border">
+
+          {/* Create Story Button */}
+          <Button
+            onClick={() => setCreateStoryOpen(true)}
+            className="w-full mt-3 bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-md hover:shadow-lg transition-all"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Create Story
+          </Button>
+
+          <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-border">
             <div className="text-center">
               <div className="text-lg font-bold text-foreground">{myListings.length}</div>
               <div className="text-xs text-muted-foreground">Listings</div>
