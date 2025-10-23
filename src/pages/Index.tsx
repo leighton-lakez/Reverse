@@ -275,15 +275,29 @@ const Index = () => {
               </h1>
             </div>
             {user ? (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleSignOut}
-                title="Sign out"
-                className="hover:bg-primary/10 transition-all h-9 w-9 sm:h-10 sm:w-10"
+              <button
+                onClick={() => navigate("/uno")}
+                title="Play UNO!"
+                className="group relative hover:scale-110 transition-all duration-300 h-16 w-16 sm:h-20 sm:w-20"
               >
-                <LogOut className="h-4 w-4 sm:h-5 sm:w-5" />
-              </Button>
+                {/* UNO Reverse Card */}
+                <div className="absolute inset-0 bg-gradient-to-br from-red-500 via-red-600 to-red-700 rounded-xl border-4 border-red-800 shadow-2xl group-hover:shadow-red-500/50 transition-all duration-300 group-hover:rotate-12">
+                  <div className="absolute inset-2 bg-white rounded-lg flex items-center justify-center">
+                    <div className="relative">
+                      {/* Reverse arrows in circular pattern */}
+                      <div className="text-red-600 font-black text-2xl sm:text-3xl">
+                        ⟲
+                      </div>
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="text-red-600 font-black text-xs sm:text-sm">UNO</div>
+                      </div>
+                    </div>
+                  </div>
+                  {/* Corner indicators */}
+                  <div className="absolute top-1 left-1 text-white text-xs font-bold">↻</div>
+                  <div className="absolute bottom-1 right-1 text-white text-xs font-bold rotate-180">↻</div>
+                </div>
+              </button>
             ) : (
               <Button
                 variant="default"

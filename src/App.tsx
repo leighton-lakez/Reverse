@@ -20,6 +20,7 @@ import FollowersList from "./pages/FollowersList";
 import FollowingList from "./pages/FollowingList";
 import Debug from "./pages/Debug";
 import NotFound from "./pages/NotFound";
+import UnoGame from "./pages/UnoGame";
 import FirstVisitReverse from "./components/FirstVisitReverse";
 import ChatboxAssistant from "./components/ChatboxAssistant";
 
@@ -51,6 +52,7 @@ const App = () => (
           <Route path="/following" element={<FollowingList />} />
           <Route path="/following/:userId" element={<FollowingList />} />
           <Route path="/debug" element={<Debug />} />
+          <Route path="/uno" element={<UnoGame />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
