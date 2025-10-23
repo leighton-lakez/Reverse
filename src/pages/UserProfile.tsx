@@ -426,10 +426,10 @@ const UserProfile = () => {
           {currentUserId && currentUserId !== userId && !showReviewForm && (
             <Button
               onClick={() => setShowReviewForm(true)}
-              className="w-full mb-3 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold py-6 text-base shadow-lg"
+              className="w-full mb-4 bg-gradient-to-r from-primary via-primary to-primary/90 hover:from-primary/90 hover:via-primary hover:to-primary text-primary-foreground font-bold py-8 text-lg shadow-xl shadow-primary/30 hover:shadow-2xl hover:shadow-primary/40 transition-all rounded-2xl"
               size="lg"
             >
-              <Star className="h-5 w-5 mr-2 fill-current" />
+              <Star className="h-7 w-7 mr-3 fill-current" />
               {userReview ? "Edit Your Review" : "Leave a Review"}
             </Button>
           )}

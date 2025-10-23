@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Settings, MapPin, Calendar, Star, Package, Edit2, Eye, MessageCircle, CheckCircle, MoreVertical, RotateCcw, Upload, X, Plus } from "lucide-react";
+import { Settings, MapPin, Calendar, Star, Package, Edit2, Eye, MessageCircle, CheckCircle, MoreVertical, RotateCcw, Upload, X, Plus, Trash2, Clock, Image as ImageIcon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -75,6 +75,8 @@ const Profile = () => {
   const [createStoryOpen, setCreateStoryOpen] = useState(false);
   const [storyViewerOpen, setStoryViewerOpen] = useState(false);
   const [myStories, setMyStories] = useState<any[]>([]);
+  const [pastStories, setPastStories] = useState<any[]>([]);
+  const [manageStoriesOpen, setManageStoriesOpen] = useState(false);
   const [averageRating, setAverageRating] = useState<number | null>(null);
   const [reviewCount, setReviewCount] = useState(0);
   const [reviews, setReviews] = useState<any[]>([]);
@@ -321,10 +323,12 @@ const Profile = () => {
   };
 
   const fetchMyStories = async (userId: string) => {
+    // Fetch active stories
     const { data: storiesData, error: storiesError } = await supabase
       .from("stories")
       .select("*")
       .eq("user_id", userId)
+      .is("deleted_at", null)
       .gt("expires_at", new Date().toISOString())
       .order("created_at", { ascending: false });
 
@@ -332,6 +336,15 @@ const Profile = () => {
       console.error('Error fetching stories:', storiesError);
       return;
     }
+
+    // Fetch past stories (expired or deleted)
+    const { data: pastStoriesData } = await supabase
+      .from("stories")
+      .select("*")
+      .eq("user_id", userId)
+      .or(`deleted_at.not.is.null,expires_at.lt.${new Date().toISOString()}`)
+      .order("created_at", { ascending: false })
+      .limit(20);
 
     // Fetch profile data separately
     const { data: profileData } = await supabase
@@ -346,8 +359,41 @@ const Profile = () => {
       profiles: profileData
     }));
 
+    const pastStoriesWithProfile = (pastStoriesData || []).map(story => ({
+      ...story,
+      profiles: profileData
+    }));
+
     console.log('Fetched stories:', storiesWithProfile);
     setMyStories(storiesWithProfile);
+    setPastStories(pastStoriesWithProfile);
+  };
+
+  const handleDeleteStory = async (storyId: string) => {
+    try {
+      const { error } = await supabase
+        .from("stories")
+        .update({ deleted_at: new Date().toISOString() })
+        .eq("id", storyId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Story deleted",
+        description: "Your story has been removed",
+      });
+
+      // Refresh stories
+      if (user?.id) {
+        await fetchMyStories(user.id);
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: getUserFriendlyError(error),
+        variant: "destructive",
+      });
+    }
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -673,14 +719,24 @@ const Profile = () => {
               <p className="text-base text-foreground/80 leading-relaxed line-clamp-3 mb-4">{profileData.bio}</p>
             )}
 
-            {/* Create Story Button */}
-            <Button
-              onClick={() => setCreateStoryOpen(true)}
-              className="w-full bg-gradient-to-r from-primary via-primary to-secondary hover:from-primary/90 hover:via-primary/90 hover:to-secondary/90 shadow-md hover:shadow-xl transition-all"
-            >
-              <Plus className="h-5 w-5 mr-2" />
-              <span className="font-semibold">Create Story</span>
-            </Button>
+            {/* Story Buttons */}
+            <div className="grid grid-cols-2 gap-2">
+              <Button
+                onClick={() => setCreateStoryOpen(true)}
+                className="bg-gradient-to-r from-primary via-primary to-secondary hover:from-primary/90 hover:via-primary/90 hover:to-secondary/90 shadow-md hover:shadow-xl transition-all"
+              >
+                <Plus className="h-5 w-5 mr-2" />
+                <span className="font-semibold">Create</span>
+              </Button>
+              <Button
+                onClick={() => setManageStoriesOpen(true)}
+                variant="outline"
+                className="border-primary/30 hover:bg-primary/10 hover:border-primary/50"
+              >
+                <ImageIcon className="h-5 w-5 mr-2" />
+                <span className="font-semibold">Manage</span>
+              </Button>
+            </div>
 
             {/* Stats Grid */}
             <div className="grid grid-cols-3 gap-4 mt-6">
@@ -1008,6 +1064,126 @@ const Profile = () => {
           stories={myStories}
         />
       )}
+
+      {/* Manage Stories Dialog */}
+      <Dialog open={manageStoriesOpen} onOpenChange={setManageStoriesOpen}>
+        <DialogContent className="bg-card border-border max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Manage Stories</DialogTitle>
+            <DialogDescription>
+              View, delete, and manage your active and past stories
+            </DialogDescription>
+          </DialogHeader>
+
+          <Tabs defaultValue="active" className="w-full">
+            <TabsList className="grid w-full grid-cols-2 mb-4">
+              <TabsTrigger value="active">Active ({myStories.length})</TabsTrigger>
+              <TabsTrigger value="past">Past ({pastStories.length})</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="active" className="space-y-3">
+              {myStories.length > 0 ? (
+                myStories.map((story) => (
+                  <Card key={story.id} className="p-4 border-border">
+                    <div className="flex items-center gap-4">
+                      <div className="relative h-20 w-20 rounded-lg overflow-hidden bg-muted flex-shrink-0">
+                        {story.media_type === 'image' ? (
+                          <img
+                            src={story.media_url}
+                            alt="Story"
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          <video
+                            src={story.media_url}
+                            className="h-full w-full object-cover"
+                          />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Badge variant="secondary" className="text-xs">
+                            {story.media_type}
+                          </Badge>
+                          <span className="text-xs text-muted-foreground">
+                            {new Date(story.created_at).toLocaleDateString()}
+                          </span>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          Expires: {new Date(story.expires_at).toLocaleString()}
+                        </p>
+                      </div>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => handleDeleteStory(story.id)}
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Delete
+                      </Button>
+                    </div>
+                  </Card>
+                ))
+              ) : (
+                <div className="text-center py-12">
+                  <ImageIcon className="h-12 w-12 mx-auto text-muted-foreground/30 mb-3" />
+                  <p className="text-muted-foreground">No active stories</p>
+                </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="past" className="space-y-3">
+              {pastStories.length > 0 ? (
+                pastStories.map((story) => (
+                  <Card key={story.id} className="p-4 border-border opacity-60">
+                    <div className="flex items-center gap-4">
+                      <div className="relative h-20 w-20 rounded-lg overflow-hidden bg-muted flex-shrink-0">
+                        {story.media_type === 'image' ? (
+                          <img
+                            src={story.media_url}
+                            alt="Story"
+                            className="h-full w-full object-cover grayscale"
+                          />
+                        ) : (
+                          <video
+                            src={story.media_url}
+                            className="h-full w-full object-cover grayscale"
+                          />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Badge variant={story.deleted_at ? "destructive" : "secondary"} className="text-xs">
+                            {story.deleted_at ? "Deleted" : "Expired"}
+                          </Badge>
+                          <span className="text-xs text-muted-foreground">
+                            {new Date(story.created_at).toLocaleDateString()}
+                          </span>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          {story.deleted_at
+                            ? `Deleted: ${new Date(story.deleted_at).toLocaleDateString()}`
+                            : `Expired: ${new Date(story.expires_at).toLocaleDateString()}`
+                          }
+                        </p>
+                      </div>
+                      <Badge variant="outline" className="flex-shrink-0">
+                        <Clock className="h-3 w-3 mr-1" />
+                        Past
+                      </Badge>
+                    </div>
+                  </Card>
+                ))
+              ) : (
+                <div className="text-center py-12">
+                  <Clock className="h-12 w-12 mx-auto text-muted-foreground/30 mb-3" />
+                  <p className="text-muted-foreground">No past stories</p>
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
+        </DialogContent>
+      </Dialog>
 
       <BottomNav />
     </div>
