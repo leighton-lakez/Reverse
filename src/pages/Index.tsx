@@ -278,57 +278,59 @@ const Index = () => {
               <button
                 onClick={() => navigate("/uno")}
                 title="Play UNO!"
-                className="group relative hover:scale-105 transition-all duration-500 w-14 h-20 sm:w-16 sm:h-24"
-                style={{ perspective: '1200px' }}
+                className="group relative hover:scale-105 transition-all duration-500 w-20 h-28 sm:w-24 sm:h-36"
+                style={{ perspective: '1500px' }}
               >
-                {/* Multiple shadow layers for depth */}
-                <div className="absolute inset-0 bg-black/70 rounded-[12px] blur-2xl transform translate-y-6 scale-95" />
-                <div className="absolute inset-0 bg-black/50 rounded-[12px] blur-xl transform translate-y-3" />
-                <div className="absolute inset-0 bg-black/30 rounded-[12px] blur-md transform translate-y-1" />
+                {/* Enhanced shadow layers for ultra depth */}
+                <div className="absolute inset-0 bg-black/80 rounded-[16px] blur-3xl transform translate-y-8 scale-90" />
+                <div className="absolute inset-0 bg-black/60 rounded-[16px] blur-2xl transform translate-y-5" />
+                <div className="absolute inset-0 bg-black/40 rounded-[16px] blur-xl transform translate-y-2" />
 
-                {/* UNO Reverse Card - Photorealistic with proper proportions */}
+                {/* UNO Reverse Card - Premium Design */}
                 <div
-                  className="absolute inset-0 bg-gradient-to-br from-red-600 via-red-700 to-red-800 rounded-[12px] border-[4px] border-red-900 shadow-[0_10px_40px_rgba(0,0,0,0.7),inset_0_1px_0_rgba(255,255,255,0.2),inset_0_-1px_0_rgba(0,0,0,0.3)] transition-all duration-500 group-hover:rotate-6"
+                  className="absolute inset-0 bg-gradient-to-br from-red-500 via-red-600 to-red-700 rounded-[16px] border-[5px] border-red-900/80 shadow-[0_15px_50px_rgba(0,0,0,0.8),inset_0_2px_0_rgba(255,255,255,0.25),inset_0_-2px_0_rgba(0,0,0,0.4)] transition-all duration-500 group-hover:rotate-3 group-hover:scale-105"
                   style={{
                     transformStyle: 'preserve-3d',
-                    transform: 'rotateX(2deg) rotateY(-2deg)'
+                    transform: 'rotateX(3deg) rotateY(-3deg)',
+                    background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 50%, #b91c1c 100%)'
                   }}
                 >
-                  {/* Glossy highlight */}
-                  <div className="absolute top-0 left-0 right-0 h-2/5 bg-gradient-to-b from-white/20 to-transparent rounded-t-[9px] pointer-events-none" />
+                  {/* Premium glossy highlight */}
+                  <div className="absolute top-0 left-0 right-0 h-1/2 bg-gradient-to-b from-white/30 via-white/10 to-transparent rounded-t-[12px] pointer-events-none" />
 
-                  {/* Top corner indicator */}
-                  <div className="absolute top-1 left-1 flex flex-col items-center">
-                    <div className="text-white text-[10px] sm:text-xs font-black drop-shadow-md leading-none">⟲</div>
-                    <div className="text-white text-[6px] sm:text-[7px] font-bold drop-shadow-sm mt-0.5">REV</div>
+                  {/* Top corner indicator - cleaner design */}
+                  <div className="absolute top-2 left-2 flex flex-col items-center gap-0.5">
+                    <div className="text-white text-sm sm:text-base font-black drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)] leading-none">⟲</div>
                   </div>
 
-                  {/* Center white oval with reverse symbol */}
-                  <div className="absolute inset-x-2 top-1/2 -translate-y-1/2 aspect-square bg-white rounded-full flex items-center justify-center shadow-[0_4px_16px_rgba(0,0,0,0.4),inset_0_2px_6px_rgba(255,255,255,0.6),inset_0_-2px_6px_rgba(0,0,0,0.15)]">
+                  {/* Center white oval with reverse symbol - larger and cleaner */}
+                  <div className="absolute inset-x-3 sm:inset-x-4 top-1/2 -translate-y-1/2 aspect-square bg-white rounded-full flex items-center justify-center shadow-[0_6px_20px_rgba(0,0,0,0.5),inset_0_3px_8px_rgba(255,255,255,0.7),inset_0_-3px_8px_rgba(0,0,0,0.2)]">
                     <div className="relative flex items-center justify-center">
-                      {/* Main reverse symbol */}
-                      <div className="text-red-600 font-black text-2xl sm:text-3xl drop-shadow-lg leading-none">
+                      {/* Main reverse symbol - bold and clear */}
+                      <div className="text-red-600 font-black text-4xl sm:text-5xl drop-shadow-[0_3px_6px_rgba(0,0,0,0.3)] leading-none" style={{ fontFamily: 'system-ui' }}>
                         ⟲
                       </div>
                     </div>
                   </div>
 
-                  {/* Small UNO logo at bottom */}
-                  <div className="absolute bottom-1 left-1/2 -translate-x-1/2">
-                    <div className="text-white text-[7px] sm:text-[8px] font-black tracking-widest drop-shadow-md">UNO</div>
+                  {/* UNO branding - more prominent */}
+                  <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-white/20 backdrop-blur-sm px-2 py-0.5 rounded-full">
+                    <div className="text-white text-[9px] sm:text-[11px] font-black tracking-[0.15em] drop-shadow-md">UNO</div>
                   </div>
 
-                  {/* Bottom corner (rotated) */}
-                  <div className="absolute bottom-1 right-1 flex flex-col items-center rotate-180">
-                    <div className="text-white text-[10px] sm:text-xs font-black drop-shadow-md leading-none">⟲</div>
-                    <div className="text-white text-[6px] sm:text-[7px] font-bold drop-shadow-sm mt-0.5">REV</div>
+                  {/* Bottom corner (rotated) - cleaner */}
+                  <div className="absolute bottom-2 right-2 rotate-180">
+                    <div className="text-white text-sm sm:text-base font-black drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)] leading-none">⟲</div>
                   </div>
 
-                  {/* Edge lighting and depth */}
-                  <div className="absolute inset-0 rounded-[9px] shadow-[inset_0_-2px_10px_rgba(0,0,0,0.4),inset_0_2px_10px_rgba(255,255,255,0.15)]" />
+                  {/* Enhanced edge lighting and depth */}
+                  <div className="absolute inset-0 rounded-[12px] shadow-[inset_0_-3px_12px_rgba(0,0,0,0.5),inset_0_3px_12px_rgba(255,255,255,0.2)]" />
 
-                  {/* Pulsing glow effect */}
-                  <div className="absolute inset-0 rounded-[9px] shadow-[0_0_25px_rgba(239,68,68,0.5)] group-hover:shadow-[0_0_35px_rgba(239,68,68,0.7)] transition-all duration-500" />
+                  {/* Ambient glow effect */}
+                  <div className="absolute inset-0 rounded-[12px] shadow-[0_0_30px_rgba(239,68,68,0.6)] group-hover:shadow-[0_0_45px_rgba(239,68,68,0.8)] transition-all duration-500" />
+
+                  {/* Subtle texture overlay */}
+                  <div className="absolute inset-0 rounded-[12px] opacity-10 bg-gradient-to-br from-transparent via-white/5 to-transparent pointer-events-none" />
                 </div>
               </button>
             ) : (
