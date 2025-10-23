@@ -241,7 +241,7 @@ export const useUnoSounds = () => {
         osc.start(now);
         osc.stop(now + 0.15);
       }, 200 + i * 80);
-    });
+    }
   }, [audioContext]);
 
   const playLose = useCallback(() => {
