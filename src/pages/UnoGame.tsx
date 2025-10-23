@@ -188,9 +188,10 @@ const UnoGame = () => {
 
       if (error) {
         console.error('Error fetching game room:', error);
+        console.error('Room code attempted:', code);
         toast({
-          title: "Error",
-          description: "Multiplayer feature is not available yet. Play against the bot instead!",
+          title: "Unable to Join Game",
+          description: "Could not find this game room. Please try again or play against the bot!",
           variant: "destructive",
         });
         navigate('/uno');
