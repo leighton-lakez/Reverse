@@ -123,6 +123,116 @@ const Sell = () => {
     }, delay);
   };
 
+  const getAIPriceSuggestion = async () => {
+    const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
+
+    if (!apiKey || apiKey === "your-openai-api-key-here") {
+      toast({
+        title: "AI Feature Not Available",
+        description: "OpenAI API key is not configured.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (itemData.images.length === 0) {
+      toast({
+        title: "Image Required",
+        description: "Please upload at least one image first to use AI price suggestion.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsGettingAIPrice(true);
+    addMessage("I'd like AI to suggest a price for me", "user");
+
+    try {
+      const openai = new OpenAI({
+        apiKey: apiKey,
+        dangerouslyAllowBrowser: true,
+      });
+
+      // Convert first image to base64
+      const firstImage = itemData.images[0];
+      const reader = new FileReader();
+
+      reader.onloadend = async () => {
+        const base64Image = reader.result as string;
+
+        try {
+          const response = await openai.chat.completions.create({
+            model: "gpt-4o",
+            messages: [
+              {
+                role: "system",
+                content: `You are a luxury fashion resale pricing expert. Analyze the product image and any damage/condition notes to suggest a fair resale price. Consider:
+- Brand value and market demand
+- Item condition (visible wear, scratches, damages)
+- Current resale market trends
+- Authenticity indicators
+
+Provide a specific price range and explain your reasoning. Be concise but thorough.`,
+              },
+              {
+                role: "user",
+                content: [
+                  {
+                    type: "text",
+                    text: `Product Details:
+Title: ${itemData.title || "Not provided"}
+Brand: ${itemData.brand || "Not provided"}
+Category: ${itemData.category || "Not provided"}
+Condition: ${itemData.condition || "Not provided"}
+Description: ${itemData.description || "Please analyze the image and suggest a fair resale price based on visible condition."}
+
+Please provide a price suggestion considering any visible damage or wear in the image.`,
+                  },
+                  {
+                    type: "image_url",
+                    image_url: {
+                      url: base64Image,
+                      detail: "high",
+                    },
+                  },
+                ],
+              },
+            ],
+            max_tokens: 500,
+            temperature: 0.7,
+          });
+
+          const aiSuggestion = response.choices[0]?.message?.content || "Unable to generate price suggestion.";
+
+          addBotMessageWithDelay(
+            `🤖 AI Price Analysis:\n\n${aiSuggestion}\n\nWould you like to use this suggestion, or enter your own price?`,
+            800
+          );
+        } catch (error: any) {
+          console.error("OpenAI API Error:", error);
+          toast({
+            title: "AI Analysis Failed",
+            description: error.message || "Failed to get price suggestion. Please try again.",
+            variant: "destructive",
+          });
+          addBotMessageWithDelay("I had trouble analyzing the price. Please enter your price manually.", 600);
+        } finally {
+          setIsGettingAIPrice(false);
+        }
+      };
+
+      reader.readAsDataURL(firstImage);
+    } catch (error: any) {
+      setIsGettingAIPrice(false);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to analyze price.",
+        variant: "destructive",
+      });
+      addBotMessageWithDelay("I had trouble with that. Please enter your price manually.", 600);
+    }
+  };
+
   const startConversation = () => {
     // Set to images step immediately so upload button appears right away
     setCurrentStep("images");
@@ -254,7 +364,7 @@ const Sell = () => {
           "Fair": "fair",
         };
         setItemData({ ...itemData, condition: conditionMap[inputToSubmit] || inputToSubmit });
-        addBotMessageWithDelay("What price are you asking for it? (just the number, like 150)", 600);
+        addBotMessageWithDelay("What price are you asking for it? (just the number, like 150)\n\n💡 Not sure? I can analyze your photos with AI to suggest a fair price!", 600);
         setCurrentStep("price");
         break;
 
@@ -661,35 +771,56 @@ const Sell = () => {
           )}
 
           {canSubmitInput && (
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                handleSubmitInput();
-              }}
-              className="flex gap-2"
-            >
-              <Input
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                placeholder={getPlaceholder()}
-                type={getCurrentInputType()}
-                className="flex-1 h-11 sm:h-12 text-sm sm:text-base bg-muted border-border"
-                disabled={submitting}
-                autoFocus
-              />
-              <Button
-                type="submit"
-                size="icon"
-                className="h-11 w-11 sm:h-12 sm:w-12"
-                disabled={!inputValue.trim() || submitting}
+            <div className="space-y-2">
+              {currentStep === "price" && (
+                <Button
+                  onClick={getAIPriceSuggestion}
+                  disabled={isGettingAIPrice || itemData.images.length === 0}
+                  className="w-full h-11 sm:h-12 bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all font-semibold"
+                >
+                  {isGettingAIPrice ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      AI is analyzing...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="h-4 w-4 mr-2" />
+                      Get AI Price Suggestion
+                    </>
+                  )}
+                </Button>
+              )}
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  handleSubmitInput();
+                }}
+                className="flex gap-2"
               >
-                {submitting ? (
-                  <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 animate-spin" />
-                ) : (
-                  <Send className="h-4 w-4 sm:h-5 sm:w-5" />
-                )}
-              </Button>
-            </form>
+                <Input
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  placeholder={getPlaceholder()}
+                  type={getCurrentInputType()}
+                  className="flex-1 h-11 sm:h-12 text-sm sm:text-base bg-muted border-border"
+                  disabled={submitting || isGettingAIPrice}
+                  autoFocus
+                />
+                <Button
+                  type="submit"
+                  size="icon"
+                  className="h-11 w-11 sm:h-12 sm:w-12"
+                  disabled={!inputValue.trim() || submitting || isGettingAIPrice}
+                >
+                  {submitting ? (
+                    <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 animate-spin" />
+                  ) : (
+                    <Send className="h-4 w-4 sm:h-5 sm:w-5" />
+                  )}
+                </Button>
+              </form>
+            </div>
           )}
         </div>
       </div>

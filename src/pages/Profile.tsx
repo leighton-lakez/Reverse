@@ -656,6 +656,10 @@ const Profile = () => {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="start">
+                          <DropdownMenuItem onClick={() => navigate("/item-detail", { state: { item } })}>
+                            <Eye className="h-4 w-4 mr-2" />
+                            Preview Listing
+                          </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => navigate(`/edit-listing/${item.id}`)}>
                             <Edit2 className="h-4 w-4 mr-2" />
                             Edit Listing
