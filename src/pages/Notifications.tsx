@@ -349,35 +349,57 @@ const Notifications = () => {
   const unreadCount = messageNotifications.filter(n => n.unread).length;
 
   return (
-    <div className="min-h-screen bg-background pb-24">
+    <div className="min-h-screen bg-gradient-to-b from-background via-background to-primary/5 pb-24">
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-lg border-b border-border">
-        <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate("/")}>
-            <ReverseIcon className="w-8 h-8" />
-            <h1 className="text-xl font-black tracking-tighter text-gradient">REVERSE</h1>
+      <header className="sticky top-0 z-40 glass border-b border-border/50 shadow-md">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate("/")}>
+              <ReverseIcon className="w-10 h-10" />
+              <h1 className="text-2xl font-black tracking-tighter text-gradient">REVERSE</h1>
+            </div>
+            <div className="flex items-center gap-2">
+              <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20">
+                {unreadCount} New
+              </Badge>
+            </div>
           </div>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 py-3 space-y-3">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
         {/* Your Activity Stats */}
-        <div className="animate-fade-in bg-gradient-to-br from-primary/5 to-secondary/5 rounded-lg p-4 border border-border">
-          <h2 className="text-sm font-semibold text-foreground mb-3">Your Activity</h2>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="bg-card rounded-lg p-3 border border-border">
-              <div className="flex items-center gap-2 mb-1">
-                <Package className="h-4 w-4 text-primary" />
-                <span className="text-xs text-muted-foreground">Active Listings</span>
+        <div className="animate-fade-in">
+          <h2 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
+            Your Activity
+            <div className="h-1 w-12 bg-gradient-to-r from-primary to-secondary rounded-full" />
+          </h2>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="group relative overflow-hidden bg-gradient-to-br from-primary/10 via-primary/5 to-transparent rounded-2xl p-5 border border-primary/20 hover:border-primary/40 transition-all hover:shadow-lg hover:shadow-primary/20 cursor-pointer">
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="relative">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="p-2 bg-primary/10 rounded-xl">
+                    <Package className="h-5 w-5 text-primary" />
+                  </div>
+                  <span className="text-xs font-medium text-primary">View All</span>
+                </div>
+                <p className="text-3xl font-black text-foreground mb-1">{listingCount}</p>
+                <span className="text-sm font-medium text-muted-foreground">Active Listings</span>
               </div>
-              <p className="text-2xl font-bold text-foreground">{listingCount}</p>
             </div>
-            <div className="bg-card rounded-lg p-3 border border-border">
-              <div className="flex items-center gap-2 mb-1">
-                <MessageCircle className="h-4 w-4 text-primary" />
-                <span className="text-xs text-muted-foreground">New Messages</span>
+            <div className="group relative overflow-hidden bg-gradient-to-br from-secondary/10 via-secondary/5 to-transparent rounded-2xl p-5 border border-secondary/20 hover:border-secondary/40 transition-all hover:shadow-lg hover:shadow-secondary/20 cursor-pointer">
+              <div className="absolute inset-0 bg-gradient-to-br from-secondary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="relative">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="p-2 bg-secondary/10 rounded-xl">
+                    <MessageCircle className="h-5 w-5 text-secondary" />
+                  </div>
+                  <span className="text-xs font-medium text-secondary">View All</span>
+                </div>
+                <p className="text-3xl font-black text-foreground mb-1">{unreadCount}</p>
+                <span className="text-sm font-medium text-muted-foreground">New Messages</span>
               </div>
-              <p className="text-2xl font-bold text-foreground">{unreadCount}</p>
             </div>
           </div>
         </div>
