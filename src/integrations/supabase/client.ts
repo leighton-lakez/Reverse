@@ -5,10 +5,25 @@ import type { Database } from './types';
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
+// Validate environment variables
+if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
+  console.error('Supabase env vars:', {
+    url: SUPABASE_URL,
+    keyExists: !!SUPABASE_PUBLISHABLE_KEY,
+  });
+  throw new Error('Missing Supabase environment variables');
+}
+
+// Ensure URL is properly formatted (no trailing slash, no quotes)
+const cleanUrl = SUPABASE_URL.trim().replace(/["']/g, '').replace(/\/$/, '');
+const cleanKey = SUPABASE_PUBLISHABLE_KEY.trim().replace(/["']/g, '');
+
+console.log('Initializing Supabase with URL:', cleanUrl);
+
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
-export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+export const supabase = createClient<Database>(cleanUrl, cleanKey, {
   auth: {
     storage: localStorage,
     persistSession: true,
