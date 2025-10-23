@@ -78,6 +78,7 @@ const Profile = () => {
   const [averageRating, setAverageRating] = useState<number | null>(null);
   const [reviewCount, setReviewCount] = useState(0);
   const [reviews, setReviews] = useState<any[]>([]);
+  const [givenReviews, setGivenReviews] = useState<any[]>([]);
   const [profileData, setProfileData] = useState({
     name: "",
     bio: "",
