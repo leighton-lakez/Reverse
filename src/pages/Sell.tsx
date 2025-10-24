@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Upload, X, Send, Loader2, Video } from "lucide-react";
+import { Upload, X, Send, Loader2, Video, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { getUserFriendlyError } from "@/lib/errorHandler";
 import { itemSchema } from "@/lib/validationSchemas";
 import { ReverseIcon } from "@/components/ReverseIcon";
+import OpenAI from "openai";
 
 type Message = {
   id: string;

@@ -20,6 +20,9 @@ import FollowersList from "./pages/FollowersList";
 import FollowingList from "./pages/FollowingList";
 import AIAssistant from "./pages/AIAssistant";
 import Debug from "./pages/Debug";
+import AdminDashboard from "./pages/AdminDashboard";
+import AdminMessages from "./pages/AdminMessages";
+import AdminListings from "./pages/AdminListings";
 import NotFound from "./pages/NotFound";
 import FirstVisitReverse from "./components/FirstVisitReverse";
 
@@ -52,6 +55,10 @@ const App = () => (
           <Route path="/following/:userId" element={<FollowingList />} />
           <Route path="/ai-assistant" element={<AIAssistant />} />
           <Route path="/debug" element={<Debug />} />
+          {/* Admin Routes */}
+          <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/admin/messages" element={<AdminMessages />} />
+          <Route path="/admin/listings" element={<AdminListings />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
