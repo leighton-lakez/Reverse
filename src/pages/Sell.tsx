@@ -545,7 +545,13 @@ Please provide a price suggestion considering any visible damage or wear in the 
 
       if (draftError) {
         console.error('Draft save error:', draftError);
-        throw new Error('Failed to save draft');
+        console.error('Draft error details:', {
+          message: draftError.message,
+          code: draftError.code,
+          details: draftError.details,
+          hint: draftError.hint
+        });
+        throw new Error(draftError.message || 'Failed to save draft');
       }
 
       setTimeout(() => {
@@ -562,7 +568,12 @@ Please provide a price suggestion considering any visible damage or wear in the 
     } catch (error: any) {
       console.error('Draft save error:', error);
 
-      const errorMessage = error.message || getUserFriendlyError(error);
+      let errorMessage = error.message || getUserFriendlyError(error);
+
+      // Check if it's a table doesn't exist error
+      if (error.message && (error.message.includes('relation') || error.message.includes('does not exist'))) {
+        errorMessage = "Drafts feature is being set up. Please try listing your item instead or contact support.";
+      }
 
       addMessage(`Oops! ${errorMessage} Please try again.`, "bot");
       toast({
