@@ -655,7 +655,7 @@ Please provide a price suggestion considering any visible damage or wear in the 
       </header>
 
       {/* Chat Messages */}
-      <main className="flex-1 max-w-4xl mx-auto w-full px-3 sm:px-6 py-3 sm:py-4 overflow-y-auto pb-32 sm:pb-24 relative z-10">
+      <main className="flex-1 max-w-4xl mx-auto w-full px-3 sm:px-6 py-3 sm:py-4 overflow-y-auto pb-48 sm:pb-24 relative z-10">
         <div className="space-y-2 pb-4">
           {messages.map((message, index) => (
             <div
@@ -772,13 +772,13 @@ Please provide a price suggestion considering any visible damage or wear in the 
       </main>
 
       {/* Input Area */}
-      <div className="sticky bottom-0 sm:bottom-16 safe-area-bottom z-20">
+      <div className="fixed bottom-16 left-0 right-0 sm:sticky sm:bottom-16 safe-area-bottom z-20">
         <div className="relative">
           {/* Gradient fade effect */}
           <div className="absolute bottom-full left-0 right-0 h-20 bg-gradient-to-t from-background via-background/90 to-transparent pointer-events-none" />
 
           <div className="glass border-t border-border/50 backdrop-blur-2xl">
-            <div className="max-w-4xl mx-auto px-3 sm:px-6 py-4 sm:py-5">
+            <div className="max-w-4xl mx-auto px-3 sm:px-6 py-3 sm:py-5">
               {currentStep === "images" && (
                 <div className="flex gap-3">
                   <input
