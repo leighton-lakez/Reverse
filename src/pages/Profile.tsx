@@ -205,6 +205,77 @@ const Profile = () => {
     }
   };
 
+  const publishDraft = async (draftId: string) => {
+    try {
+      if (!user) return;
+
+      // Get the draft
+      const { data: draft, error: fetchError } = await supabase
+        .from("item_drafts")
+        .select("*")
+        .eq("id", draftId)
+        .single();
+
+      if (fetchError) throw fetchError;
+      if (!draft) throw new Error("Draft not found");
+
+      // Validate required fields
+      if (!draft.title || !draft.category || !draft.description || !draft.condition || !draft.price || !draft.location) {
+        toast({
+          title: "Incomplete Draft",
+          description: "Please ensure all required fields are filled before publishing.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Insert into items table
+      const { error: insertError } = await supabase
+        .from("items")
+        .insert({
+          user_id: user.id,
+          title: draft.title,
+          brand: draft.brand || '',
+          category: draft.category,
+          description: draft.description,
+          condition: draft.condition,
+          price: draft.price,
+          location: draft.location,
+          size: draft.size || '',
+          images: draft.images || [],
+          videos: draft.videos || [],
+          status: "active",
+        });
+
+      if (insertError) {
+        console.error('Publish draft error:', insertError);
+        throw insertError;
+      }
+
+      // Delete the draft after successful publish
+      await supabase
+        .from("item_drafts")
+        .delete()
+        .eq("id", draftId);
+
+      toast({
+        title: "Draft Published!",
+        description: "Your item is now live and visible to everyone.",
+      });
+
+      // Refresh both drafts and items
+      await fetchDrafts(user.id);
+      await fetchUserItems(user.id);
+    } catch (error: any) {
+      console.error('Publish draft error:', error);
+      toast({
+        title: "Error",
+        description: getUserFriendlyError(error),
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleMarkAsSold = async (itemId: string) => {
     try {
       console.log('Marking item as sold:', itemId);
@@ -1107,10 +1178,10 @@ const Profile = () => {
 
           <TabsContent value="drafts">
             {drafts.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                 {drafts.map((draft) => (
                   <Card key={draft.id} className="group overflow-hidden hover:shadow-xl transition-all border-border">
-                    <div className="relative aspect-[4/5] overflow-hidden bg-muted">
+                    <div className="relative aspect-[3/4] overflow-hidden bg-muted">
                       {draft.images && draft.images.length > 0 ? (
                         <img
                           src={draft.images[0]}
@@ -1119,47 +1190,52 @@ const Profile = () => {
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">
-                          <ImageIcon className="h-16 w-16 text-muted-foreground/30" />
+                          <ImageIcon className="h-12 w-12 text-muted-foreground/30" />
                         </div>
                       )}
                       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
 
                       {/* Draft Badge */}
-                      <div className="absolute top-3 left-3">
-                        <Badge className="bg-yellow-600 text-white border-0 shadow-lg">
-                          <Clock className="h-3 w-3 mr-1" />
+                      <div className="absolute top-2 left-2">
+                        <Badge className="bg-yellow-600 text-white border-0 shadow-lg text-[10px] px-1.5 py-0.5">
+                          <Clock className="h-2.5 w-2.5 mr-0.5" />
                           Draft
                         </Badge>
                       </div>
 
                       {/* Action Buttons */}
-                      <div className="absolute top-3 right-3 flex gap-2">
+                      <div className="absolute top-2 right-2 flex gap-1">
                         <Button
                           size="icon"
                           variant="secondary"
-                          className="h-8 w-8 rounded-full shadow-lg"
+                          className="h-7 w-7 rounded-full shadow-lg"
                           onClick={() => deleteDraft(draft.id)}
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Trash2 className="h-3.5 w-3.5" />
                         </Button>
                       </div>
 
                       {/* Info */}
-                      <div className="absolute bottom-0 left-0 right-0 p-4">
-                        <h3 className="font-bold text-white text-sm sm:text-base mb-1 line-clamp-1">
+                      <div className="absolute bottom-0 left-0 right-0 p-2">
+                        <h3 className="font-bold text-white text-xs mb-0.5 line-clamp-1">
                           {draft.title || "Untitled Draft"}
                         </h3>
-                        <div className="flex items-center gap-2 text-white/90">
+                        <div className="flex items-center gap-1 text-white/90 mb-1">
                           {draft.price && (
-                            <p className="text-lg font-bold">${draft.price}</p>
+                            <p className="text-sm font-bold">${draft.price}</p>
                           )}
                           {draft.brand && (
-                            <p className="text-xs opacity-80">{draft.brand}</p>
+                            <p className="text-[10px] opacity-80 truncate">{draft.brand}</p>
                           )}
                         </div>
-                        <p className="text-xs text-white/70 mt-1">
-                          Last updated {new Date(draft.updated_at).toLocaleDateString()}
-                        </p>
+                        <Button
+                          size="sm"
+                          className="w-full h-7 text-[10px] bg-primary hover:bg-primary/90"
+                          onClick={() => publishDraft(draft.id)}
+                        >
+                          <Upload className="h-3 w-3 mr-1" />
+                          Publish
+                        </Button>
                       </div>
                     </div>
                   </Card>
