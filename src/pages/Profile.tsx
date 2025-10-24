@@ -139,7 +139,7 @@ const Profile = () => {
       .order("created_at", { ascending: false });
 
     if (!error && data) {
-      // Fetch conversation counts for each item
+      // Fetch conversation counts and view counts for each item
       const itemsWithStats = await Promise.all(
         data.map(async (item) => {
           // Count unique conversations (distinct senders) for this item
@@ -152,10 +152,13 @@ const Profile = () => {
           const uniqueSenders = new Set(messages?.map(m => m.sender_id) || []);
           const conversationCount = uniqueSenders.size;
 
+          // Get actual view count from the item
+          const viewCount = item.view_count || 0;
+
           return {
             ...item,
             conversationCount,
-            viewCount: 0 // Placeholder for views (not tracked yet)
+            viewCount
           };
         })
       );

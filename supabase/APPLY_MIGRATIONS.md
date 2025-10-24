@@ -1,16 +1,25 @@
 # How to Apply Database Migrations
 
-## For the Drafts Feature
+## Recent Migrations
 
-The drafts feature requires a new database table. To enable it:
+### 1. Drafts Feature (20251023110000)
+The drafts feature requires a new database table.
+
+### 2. Item Views Tracking (20251023120000)
+Accurate view counting per listing with unique user tracking.
+
+## How to Apply Migrations
 
 ### Option 1: Using Supabase Dashboard (Recommended)
 
 1. Go to your Supabase project dashboard
 2. Navigate to **SQL Editor**
 3. Click **New Query**
-4. Copy and paste the contents of `migrations/20251023110000_create_item_drafts.sql`
+4. Copy and paste the contents of the migration file you need:
+   - For drafts: `migrations/20251023110000_create_item_drafts.sql`
+   - For view tracking: `migrations/20251023120000_add_item_views.sql`
 5. Click **Run** to execute the SQL
+6. Repeat for each migration file
 
 ### Option 2: Using Supabase CLI
 
@@ -29,13 +38,20 @@ After applying, verify the table exists:
 2. Look for `item_drafts` table
 3. You should see columns: id, user_id, title, brand, category, description, condition, price, location, size, trade_preference, images, videos, created_at, updated_at
 
-## What This Enables
+## What These Migrations Enable
 
-Once the migration is applied, users will be able to:
+### Drafts Migration
 - Save incomplete listings as drafts from the sell page
 - View all their drafts in the "Drafts" tab on their profile
 - Delete drafts they no longer need
-- Continue editing and publish drafts later
+- Publish drafts instantly to make them public
+
+### View Tracking Migration
+- Accurate view counts per listing (shown on profile)
+- Each unique user view is counted once per item
+- Owners don't count as views
+- View counts update in real-time
+- Conversation counts remain accurate per listing
 
 ## Troubleshooting
 
