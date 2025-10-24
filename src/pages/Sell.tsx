@@ -421,9 +421,9 @@ Please provide a price suggestion considering any visible damage or wear in the 
 
       setTimeout(() => {
         addBotMessageWithDelay(
-          "Does everything look good? Click 'List Item' to publish or 'Start Over' to restart.",
+          "Does everything look good? Choose an option below:",
           1200,
-          ["List Item", "Start Over"],
+          ["List Item", "Save as Draft", "Start Over"],
           "select"
         );
         setCurrentStep("summary");
@@ -435,6 +435,8 @@ Please provide a price suggestion considering any visible damage or wear in the 
     if (currentStep === "summary") {
       if (option === "List Item") {
         submitListing();
+      } else if (option === "Save as Draft") {
+        saveDraft();
       } else {
         resetConversation();
       }
@@ -469,6 +471,108 @@ Please provide a price suggestion considering any visible damage or wear in the 
 
     // Restart
     startConversation();
+  };
+
+  const saveDraft = async () => {
+    if (!userId) return;
+
+    setSubmitting(true);
+    addMessage("Save as Draft", "user");
+    addBotMessageWithDelay("Saving your draft... 💾", 300);
+
+    try {
+      // Upload images to storage first
+      const uploadedImageUrls: string[] = [];
+      for (const file of itemData.images) {
+        const fileExt = file.name.split(".").pop();
+        const fileName = `${userId}/drafts/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from("item-images")
+          .upload(fileName, file);
+
+        if (uploadError) {
+          console.error('Draft image upload error:', uploadError);
+          throw new Error(`Failed to upload images: ${uploadError.message}`);
+        }
+
+        const {
+          data: { publicUrl },
+        } = supabase.storage.from("item-images").getPublicUrl(uploadData.path);
+
+        uploadedImageUrls.push(publicUrl);
+      }
+
+      // Upload videos
+      const uploadedVideoUrls: string[] = [];
+      for (const file of itemData.videos) {
+        const fileExt = file.name.split(".").pop();
+        const fileName = `${userId}/drafts/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from("item-images")
+          .upload(fileName, file);
+
+        if (uploadError) {
+          console.error('Draft video upload error:', uploadError);
+          throw new Error(`Failed to upload videos: ${uploadError.message}`);
+        }
+
+        const {
+          data: { publicUrl },
+        } = supabase.storage.from("item-images").getPublicUrl(uploadData.path);
+
+        uploadedVideoUrls.push(publicUrl);
+      }
+
+      // Save draft to database
+      const { error: draftError } = await supabase
+        .from('item_drafts')
+        .insert({
+          user_id: userId,
+          title: itemData.title,
+          brand: itemData.brand,
+          category: itemData.category,
+          description: itemData.description,
+          condition: itemData.condition,
+          price: parseFloat(itemData.price) || null,
+          location: itemData.location,
+          size: itemData.size,
+          trade_preference: itemData.tradePreference,
+          images: uploadedImageUrls,
+          videos: uploadedVideoUrls,
+        });
+
+      if (draftError) {
+        console.error('Draft save error:', draftError);
+        throw new Error('Failed to save draft');
+      }
+
+      setTimeout(() => {
+        addMessage("Draft saved! You can find it in your profile. ✨", "bot");
+        toast({
+          title: "Draft Saved!",
+          description: "Your draft has been saved to your profile.",
+        });
+
+        setTimeout(() => {
+          navigate("/profile");
+        }, 1500);
+      }, 1000);
+    } catch (error: any) {
+      console.error('Draft save error:', error);
+
+      const errorMessage = error.message || getUserFriendlyError(error);
+
+      addMessage(`Oops! ${errorMessage} Please try again.`, "bot");
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const submitListing = async () => {

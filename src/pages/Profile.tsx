@@ -81,6 +81,7 @@ const Profile = () => {
   const [reviewCount, setReviewCount] = useState(0);
   const [reviews, setReviews] = useState<any[]>([]);
   const [givenReviews, setGivenReviews] = useState<any[]>([]);
+  const [drafts, setDrafts] = useState<any[]>([]);
   const [profileData, setProfileData] = useState({
     name: "",
     bio: "",
@@ -106,6 +107,7 @@ const Profile = () => {
         await fetchUserRating(session.user.id);
         await fetchUserReviews(session.user.id);
         await fetchGivenReviews(session.user.id);
+        await fetchDrafts(session.user.id);
       }
     });
   }, [navigate]);
@@ -161,6 +163,46 @@ const Profile = () => {
       setMyListings(itemsWithStats);
     }
     setLoading(false);
+  };
+
+  const fetchDrafts = async (userId: string) => {
+    const { data, error } = await supabase
+      .from("item_drafts")
+      .select("*")
+      .eq("user_id", userId)
+      .order("updated_at", { ascending: false });
+
+    if (!error && data) {
+      setDrafts(data);
+    }
+  };
+
+  const deleteDraft = async (draftId: string) => {
+    try {
+      const { error } = await supabase
+        .from("item_drafts")
+        .delete()
+        .eq("id", draftId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Draft Deleted",
+        description: "Your draft has been removed.",
+      });
+
+      // Refresh drafts
+      if (user) {
+        await fetchDrafts(user.id);
+      }
+    } catch (error: any) {
+      console.error('Delete draft error:', error);
+      toast({
+        title: "Error",
+        description: getUserFriendlyError(error),
+        variant: "destructive",
+      });
+    }
   };
 
   const handleMarkAsSold = async (itemId: string) => {
@@ -781,17 +823,20 @@ const Profile = () => {
 
         {/* Listings Tabs */}
         <Tabs defaultValue="active" className="animate-fade-in" style={{ animationDelay: "0.1s" }}>
-          <TabsList className="grid w-full grid-cols-4 mb-6 p-1.5 bg-muted/50 backdrop-blur-sm rounded-2xl border border-border/50">
-            <TabsTrigger value="active" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-semibold rounded-xl transition-all text-xs sm:text-sm">
+          <TabsList className="grid w-full grid-cols-5 mb-6 p-1.5 bg-muted/50 backdrop-blur-sm rounded-2xl border border-border/50">
+            <TabsTrigger value="active" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-semibold rounded-xl transition-all text-[10px] sm:text-sm">
               Active
             </TabsTrigger>
-            <TabsTrigger value="sold" className="data-[state=active]:bg-secondary data-[state=active]:text-secondary-foreground font-semibold rounded-xl transition-all text-xs sm:text-sm">
+            <TabsTrigger value="sold" className="data-[state=active]:bg-secondary data-[state=active]:text-secondary-foreground font-semibold rounded-xl transition-all text-[10px] sm:text-sm">
               Sold
             </TabsTrigger>
-            <TabsTrigger value="reviews" className="data-[state=active]:bg-foreground data-[state=active]:text-background font-semibold rounded-xl transition-all text-xs sm:text-sm">
+            <TabsTrigger value="drafts" className="data-[state=active]:bg-yellow-600 data-[state=active]:text-white font-semibold rounded-xl transition-all text-[10px] sm:text-sm">
+              Drafts ({drafts.length})
+            </TabsTrigger>
+            <TabsTrigger value="reviews" className="data-[state=active]:bg-foreground data-[state=active]:text-background font-semibold rounded-xl transition-all text-[10px] sm:text-sm">
               Received ({reviewCount})
             </TabsTrigger>
-            <TabsTrigger value="given" className="data-[state=active]:bg-foreground data-[state=active]:text-background font-semibold rounded-xl transition-all text-xs sm:text-sm">
+            <TabsTrigger value="given" className="data-[state=active]:bg-foreground data-[state=active]:text-background font-semibold rounded-xl transition-all text-[10px] sm:text-sm">
               Given ({givenReviews.length})
             </TabsTrigger>
           </TabsList>
@@ -1056,6 +1101,75 @@ const Profile = () => {
                 <Star className="h-12 w-12 mx-auto text-muted-foreground/30 mb-3" />
                 <p className="text-muted-foreground font-medium">No reviews given yet</p>
                 <p className="text-sm text-muted-foreground mt-1">Reviews you give to other users will appear here</p>
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="drafts">
+            {drafts.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {drafts.map((draft) => (
+                  <Card key={draft.id} className="group overflow-hidden hover:shadow-xl transition-all border-border">
+                    <div className="relative aspect-[4/5] overflow-hidden bg-muted">
+                      {draft.images && draft.images.length > 0 ? (
+                        <img
+                          src={draft.images[0]}
+                          alt={draft.title || "Draft"}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <ImageIcon className="h-16 w-16 text-muted-foreground/30" />
+                        </div>
+                      )}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+
+                      {/* Draft Badge */}
+                      <div className="absolute top-3 left-3">
+                        <Badge className="bg-yellow-600 text-white border-0 shadow-lg">
+                          <Clock className="h-3 w-3 mr-1" />
+                          Draft
+                        </Badge>
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div className="absolute top-3 right-3 flex gap-2">
+                        <Button
+                          size="icon"
+                          variant="secondary"
+                          className="h-8 w-8 rounded-full shadow-lg"
+                          onClick={() => deleteDraft(draft.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+
+                      {/* Info */}
+                      <div className="absolute bottom-0 left-0 right-0 p-4">
+                        <h3 className="font-bold text-white text-sm sm:text-base mb-1 line-clamp-1">
+                          {draft.title || "Untitled Draft"}
+                        </h3>
+                        <div className="flex items-center gap-2 text-white/90">
+                          {draft.price && (
+                            <p className="text-lg font-bold">${draft.price}</p>
+                          )}
+                          {draft.brand && (
+                            <p className="text-xs opacity-80">{draft.brand}</p>
+                          )}
+                        </div>
+                        <p className="text-xs text-white/70 mt-1">
+                          Last updated {new Date(draft.updated_at).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <Clock className="h-12 w-12 mx-auto text-muted-foreground/30 mb-3" />
+                <p className="text-muted-foreground font-medium">No drafts saved</p>
+                <p className="text-sm text-muted-foreground mt-1">Save incomplete listings as drafts to finish later</p>
               </div>
             )}
           </TabsContent>
