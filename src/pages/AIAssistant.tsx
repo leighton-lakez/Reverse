@@ -145,7 +145,7 @@ const AIAssistant = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background pb-28 flex flex-col">
+    <div className="min-h-screen bg-background pb-20 sm:pb-28 flex flex-col">
       {/* Header */}
       <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-lg border-b border-border">
         <div className="max-w-7xl mx-auto px-4 py-3">
@@ -218,7 +218,7 @@ const AIAssistant = () => {
       </main>
 
       {/* Input Area */}
-      <div className="fixed bottom-16 left-0 right-0 bg-background/95 backdrop-blur-lg border-t border-border">
+      <div className="fixed bottom-10 sm:bottom-16 left-0 right-0 bg-background/95 backdrop-blur-lg border-t border-border">
         <div className="max-w-4xl mx-auto px-4 py-3">
           {uploadedImage && (
             <div className="mb-3 relative inline-block">
