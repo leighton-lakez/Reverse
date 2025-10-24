@@ -36,41 +36,51 @@ interface MapViewProps {
   onItemClick: (item: Item) => void;
 }
 
-// Function to geocode location strings (simplified - in production use a real geocoding API)
-const getCoordinatesForLocation = (location: string): [number, number] => {
-  // Mock coordinates for common cities - in production, use a geocoding service
-  const cityCoordinates: { [key: string]: [number, number] } = {
-    "new york": [40.7128, -74.0060],
-    "los angeles": [34.0522, -118.2437],
-    "chicago": [41.8781, -87.6298],
-    "houston": [29.7604, -95.3698],
-    "miami": [25.7617, -80.1918],
-    "san francisco": [37.7749, -122.4194],
-    "seattle": [47.6062, -122.3321],
-    "boston": [42.3601, -71.0589],
-    "atlanta": [33.7490, -84.3880],
-    "dallas": [32.7767, -96.7970],
-    "philadelphia": [39.9526, -75.1652],
-    "phoenix": [33.4484, -112.0740],
-    "san diego": [32.7157, -117.1611],
-    "denver": [39.7392, -104.9903],
-    "austin": [30.2672, -97.7431],
-  };
+// Cache for geocoded locations to avoid redundant API calls
+const geocodeCache = new Map<string, [number, number]>();
 
+// Function to geocode location strings using Nominatim API
+const getCoordinatesForLocation = async (location: string): Promise<[number, number]> => {
   const normalizedLocation = location.toLowerCase().trim();
 
-  // Check for exact city match
-  for (const [city, coords] of Object.entries(cityCoordinates)) {
-    if (normalizedLocation.includes(city)) {
-      // Add some randomness so items in same city don't stack
-      return [
-        coords[0] + (Math.random() - 0.5) * 0.1,
-        coords[1] + (Math.random() - 0.5) * 0.1
-      ];
-    }
+  // Check cache first
+  if (geocodeCache.has(normalizedLocation)) {
+    const coords = geocodeCache.get(normalizedLocation)!;
+    // Add small randomness so items in same city don't stack exactly
+    return [
+      coords[0] + (Math.random() - 0.5) * 0.01,
+      coords[1] + (Math.random() - 0.5) * 0.01
+    ];
   }
 
-  // Default to center of US with some randomness
+  try {
+    // Use Nominatim geocoding API (free, no API key required)
+    const response = await fetch(
+      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(location)}&limit=1`,
+      {
+        headers: {
+          'User-Agent': 'ReverseMarketplace/1.0'
+        }
+      }
+    );
+
+    if (response.ok) {
+      const data = await response.json();
+      if (data && data.length > 0) {
+        const coords: [number, number] = [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+        geocodeCache.set(normalizedLocation, coords);
+        // Add small randomness
+        return [
+          coords[0] + (Math.random() - 0.5) * 0.01,
+          coords[1] + (Math.random() - 0.5) * 0.01
+        ];
+      }
+    }
+  } catch (error) {
+    console.error('Geocoding error for location:', location, error);
+  }
+
+  // Fallback to center of US with some randomness if geocoding fails
   return [
     39.8283 + (Math.random() - 0.5) * 10,
     -98.5795 + (Math.random() - 0.5) * 10
@@ -86,24 +96,37 @@ const MapView = ({ items, onItemClick }: MapViewProps) => {
   const [maxPrice, setMaxPrice] = useState(10000);
 
   useEffect(() => {
-    // Add coordinates to items that don't have them
-    const itemsWithGeo = items.map(item => {
-      if (item.latitude && item.longitude) {
-        return item;
-      }
-      const [lat, lng] = getCoordinatesForLocation(item.location);
-      return {
-        ...item,
-        latitude: lat,
-        longitude: lng
-      };
-    });
-    setItemsWithCoords(itemsWithGeo);
+    const geocodeItems = async () => {
+      // Add coordinates to items that don't have them
+      // Process sequentially with delay to respect Nominatim's rate limit (1 req/sec)
+      const itemsWithGeo: Item[] = [];
 
-    // Calculate max price from items
-    const max = Math.max(...items.map(item => item.price), 10000);
-    setMaxPrice(max);
-    setPriceRange([0, max]);
+      for (const item of items) {
+        if (item.latitude && item.longitude) {
+          itemsWithGeo.push(item);
+        } else {
+          const [lat, lng] = await getCoordinatesForLocation(item.location);
+          itemsWithGeo.push({
+            ...item,
+            latitude: lat,
+            longitude: lng
+          });
+          // Add delay only if we're making API calls (not using cache)
+          if (!geocodeCache.has(item.location.toLowerCase().trim())) {
+            await new Promise(resolve => setTimeout(resolve, 1000));
+          }
+        }
+      }
+
+      setItemsWithCoords(itemsWithGeo);
+
+      // Calculate max price from items
+      const max = Math.max(...items.map(item => item.price), 10000);
+      setMaxPrice(max);
+      setPriceRange([0, max]);
+    };
+
+    geocodeItems();
   }, [items]);
 
   // Filter items based on location search and price range

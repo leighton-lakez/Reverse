@@ -359,9 +359,10 @@ const Index = () => {
         className={`fixed left-0 top-1/2 -translate-y-1/2 z-50 flex flex-col items-center justify-center py-8 px-3 rounded-r-2xl shadow-2xl transition-all duration-300 ${
           showMapView
             ? 'bg-primary text-primary-foreground hover:bg-primary/90'
-            : 'bg-gradient-to-br from-primary/90 to-primary text-primary-foreground hover:from-primary hover:to-primary/90 animate-pulse'
+            : 'bg-gradient-to-br from-primary/90 to-primary text-primary-foreground hover:from-primary hover:to-primary/90'
         }`}
         title={showMapView ? "Show Cards" : "Show Map"}
+        style={!showMapView ? { animation: 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite' } : undefined}
       >
         <Map className="h-7 w-7 mb-2" />
         <span className="text-xs font-black tracking-wider [writing-mode:vertical-lr] rotate-180">
