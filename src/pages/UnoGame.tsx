@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowLeft, RotateCcw, Users, Copy, Share2, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -150,6 +150,48 @@ const UnoGame = () => {
     init();
   }, [roomCode]);
 
+  // Real-time subscription for multiplayer - memoized handler to prevent re-subscriptions
+  const handleGameUpdate = useCallback((payload: any) => {
+    console.log('Real-time update received:', payload);
+    if (payload.new) {
+      const updatedRoom = payload.new;
+
+      // Update game room state
+      setGameRoom(updatedRoom);
+
+      // Handle different game statuses
+      if (updatedRoom.status === 'ready' && updatedRoom.host_id === currentUserId) {
+        // Guest has arrived, host should initialize
+        console.log('Guest arrived, host initializing game...');
+        initializeMultiplayerGame(updatedRoom);
+      } else if (updatedRoom.status === 'playing') {
+        setWaitingForOpponent(false);
+
+        // Load the updated game state
+        const playerId = currentUserId;
+        const opponentId = updatedRoom.host_id === playerId ? updatedRoom.guest_id : updatedRoom.host_id;
+
+        setPlayerHand(updatedRoom.game_state.playerHands[playerId] || []);
+        setOpponentHand(updatedRoom.game_state.playerHands[opponentId] || []);
+        setDiscardPile(updatedRoom.game_state.discardPile || []);
+        setCurrentColor(updatedRoom.game_state.currentColor || 'red');
+        setIsPlayerTurn(updatedRoom.game_state.currentTurn === playerId);
+        setIsReversed(updatedRoom.game_state.isReversed || false);
+
+        console.log('Game state loaded - My turn:', updatedRoom.game_state.currentTurn === playerId);
+      } else if (updatedRoom.status === 'finished') {
+        setGameOver(true);
+        if (updatedRoom.winner_id === currentUserId) {
+          sounds.playWin();
+          setWinner("You");
+        } else {
+          setWinner(opponentProfile?.display_name || "Opponent");
+          sounds.playLose();
+        }
+      }
+    }
+  }, [currentUserId, sounds, opponentProfile]);
+
   // Real-time subscription for multiplayer
   useEffect(() => {
     if (!isMultiplayer || !roomCode || !currentUserId) return;
@@ -166,48 +208,7 @@ const UnoGame = () => {
           table: 'uno_game_rooms',
           filter: `room_code=eq.${roomCode}`
         },
-        (payload) => {
-          console.log('Real-time update received:', payload);
-          if (payload.new) {
-            const updatedRoom = payload.new;
-
-            // Update game room state
-            setGameRoom(updatedRoom);
-
-            // Handle different game statuses
-            if (updatedRoom.status === 'ready' && updatedRoom.host_id === currentUserId) {
-              // Guest has arrived, host should initialize
-              console.log('Guest arrived, host initializing game...');
-              initializeMultiplayerGame(updatedRoom);
-            } else if (updatedRoom.status === 'playing') {
-              if (waitingForOpponent) {
-                setWaitingForOpponent(false);
-              }
-
-              // Load the updated game state
-              const playerId = currentUserId;
-              const opponentId = updatedRoom.host_id === playerId ? updatedRoom.guest_id : updatedRoom.host_id;
-
-              setPlayerHand(updatedRoom.game_state.playerHands[playerId] || []);
-              setOpponentHand(updatedRoom.game_state.playerHands[opponentId] || []);
-              setDiscardPile(updatedRoom.game_state.discardPile || []);
-              setCurrentColor(updatedRoom.game_state.currentColor || 'red');
-              setIsPlayerTurn(updatedRoom.game_state.currentTurn === playerId);
-              setIsReversed(updatedRoom.game_state.isReversed || false);
-
-              console.log('Game state loaded - My turn:', updatedRoom.game_state.currentTurn === playerId);
-            } else if (updatedRoom.status === 'finished') {
-              setGameOver(true);
-              if (updatedRoom.winner_id === currentUserId) {
-                sounds.playWin();
-                setWinner("You");
-              } else {
-                sounds.playLose();
-                setWinner(opponentProfile?.display_name || "Opponent");
-              }
-            }
-          }
-        }
+        handleGameUpdate
       )
       .subscribe((status) => {
         console.log('Subscription status:', status);
@@ -217,7 +218,7 @@ const UnoGame = () => {
       console.log('Cleaning up real-time subscription');
       supabase.removeChannel(channel);
     };
-  }, [isMultiplayer, roomCode, currentUserId, waitingForOpponent, opponentProfile, sounds]);
+  }, [isMultiplayer, roomCode, currentUserId, handleGameUpdate]);
 
   const joinGameRoom = async (code: string, userId: string) => {
     try {
@@ -764,19 +765,14 @@ const UnoGame = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-900 via-green-800 to-green-900 pb-24 relative overflow-hidden">
-      {/* Realistic felt table texture with vignette */}
-      <div className="absolute inset-0 pointer-events-none" style={{
-        backgroundImage: `
-          radial-gradient(circle at 50% 50%, transparent 0%, rgba(0,0,0,0.4) 100%),
-          repeating-linear-gradient(90deg, rgba(0,0,0,0.03) 0px, transparent 1px, transparent 2px, rgba(0,0,0,0.03) 3px),
-          repeating-linear-gradient(0deg, rgba(0,0,0,0.03) 0px, transparent 1px, transparent 2px, rgba(0,0,0,0.03) 3px)
-        `,
-        backgroundSize: '100% 100%, 4px 4px, 4px 4px'
+      {/* Lightweight felt table texture - simplified for mobile performance */}
+      <div className="absolute inset-0 pointer-events-none opacity-30" style={{
+        backgroundImage: `radial-gradient(circle at 50% 50%, transparent 0%, rgba(0,0,0,0.4) 100%)`,
       }} />
 
-      {/* Ambient lighting */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-yellow-200/5 rounded-full blur-[150px] pointer-events-none" />
-      <div className="absolute bottom-0 left-1/4 w-[600px] h-[600px] bg-blue-200/3 rounded-full blur-[120px] pointer-events-none" />
+      {/* Ambient lighting - reduced for mobile */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[400px] h-[400px] bg-yellow-200/5 rounded-full blur-3xl pointer-events-none hidden sm:block" />
+      <div className="absolute bottom-0 left-1/4 w-[300px] h-[300px] bg-blue-200/3 rounded-full blur-2xl pointer-events-none hidden sm:block" />
 
       {/* Header */}
       <header className="sticky top-0 z-40 glass border-b border-border/50">
@@ -898,26 +894,19 @@ const UnoGame = () => {
                 <div className="relative w-40 h-60">
                   {/* Stack of cards underneath for depth */}
                   {discardPile.length > 1 && (
-                    <>
-                      <div className="absolute inset-0 bg-gradient-to-br from-gray-800 to-gray-900 rounded-[20px] border-4 border-gray-700 transform translate-y-2 translate-x-1 opacity-50" />
-                      <div className="absolute inset-0 bg-gradient-to-br from-gray-800 to-gray-900 rounded-[20px] border-4 border-gray-700 transform translate-y-1 translate-x-0.5 opacity-70" />
-                    </>
+                    <div className="absolute inset-0 bg-gradient-to-br from-gray-800 to-gray-900 rounded-[20px] border-4 border-gray-700 transform translate-y-1 translate-x-0.5 opacity-70" />
                   )}
 
-                  {/* Multiple shadow layers for ultra-realistic depth */}
-                  <div className="absolute inset-0 bg-black/70 rounded-[20px] blur-3xl transform translate-y-8 scale-95" />
-                  <div className="absolute inset-0 bg-black/50 rounded-[20px] blur-2xl transform translate-y-5" />
-                  <div className="absolute inset-0 bg-black/30 rounded-[20px] blur-xl transform translate-y-3" />
+                  {/* Simplified shadow for mobile performance */}
+                  <div className="absolute inset-0 bg-black/50 rounded-[20px] blur-xl transform translate-y-4" />
 
-                  {/* Main card with 3D transform */}
+                  {/* Main card with simplified transform */}
                   <div
-                    className={`relative w-full h-full rounded-[20px] border-[7px] transition-all duration-500 hover:scale-105 hover:rotate-2 ${getColorClass(
+                    className={`relative w-full h-full rounded-[20px] border-[6px] transition-transform duration-300 ${getColorClass(
                       currentColor
                     )}`}
                     style={{
-                      transformStyle: 'preserve-3d',
-                      transform: 'rotateX(2deg) rotateY(-2deg)',
-                      boxShadow: '0 25px 60px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.2)'
+                      boxShadow: '0 20px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.2)'
                     }}
                   >
                     {/* Glossy highlight */}
@@ -1026,10 +1015,9 @@ const UnoGame = () => {
               </Button>
             )}
           </div>
-          <div className="flex justify-center gap-2 flex-wrap" style={{ perspective: '1500px' }}>
+          <div className="flex justify-center gap-1 flex-wrap">
             {playerHand.map((card, index) => {
-              const rotation = (index - playerHand.length / 2) * 3;
-              const yOffset = Math.abs(index - playerHand.length / 2) * 4;
+              const rotation = (index - playerHand.length / 2) * 2;
               const canPlay = isPlayerTurn && !gameOver && canPlayCard(card);
 
               return (
@@ -1037,35 +1025,31 @@ const UnoGame = () => {
                   key={card.id}
                   onClick={() => handleCardClick(card)}
                   disabled={!isPlayerTurn || gameOver}
-                  className={`relative w-32 h-48 transition-all duration-300 ${
+                  className={`relative w-24 h-36 sm:w-32 sm:h-48 transition-all duration-200 ${
                     canPlay
-                      ? "hover:scale-110 hover:-translate-y-8 hover:rotate-0 cursor-pointer"
+                      ? "hover:scale-105 hover:-translate-y-4 sm:hover:-translate-y-8 cursor-pointer active:scale-95"
                       : "opacity-60 cursor-not-allowed"
                   }`}
                   style={{
-                    transform: `rotateZ(${rotation}deg) translateY(${yOffset}px) rotateX(5deg)`,
-                    zIndex: playerHand.length - Math.abs(index - playerHand.length / 2),
-                    transformStyle: 'preserve-3d'
+                    transform: `rotateZ(${rotation}deg)`,
+                    zIndex: playerHand.length - Math.abs(index - playerHand.length / 2)
                   }}
                 >
-                  {/* Multiple layered shadows for depth */}
-                  <div className="absolute inset-0 bg-black/70 rounded-[22px] blur-3xl transform translate-y-8 scale-95" />
-                  <div className="absolute inset-0 bg-black/50 rounded-[22px] blur-2xl transform translate-y-5" />
-                  <div className="absolute inset-0 bg-black/30 rounded-[22px] blur-lg transform translate-y-3" />
+                  {/* Simplified shadow for mobile performance */}
+                  <div className="absolute inset-0 bg-black/50 rounded-[22px] blur-lg transform translate-y-3" />
 
-                  {/* Card with photorealistic effects */}
+                  {/* Card with optimized effects */}
                   <div
-                    className={`relative w-full h-full rounded-[22px] border-[7px] ${getColorClass(card.color)}`}
+                    className={`relative w-full h-full rounded-[16px] sm:rounded-[22px] border-4 sm:border-[6px] ${getColorClass(card.color)}`}
                     style={{
-                      transformStyle: 'preserve-3d',
-                      boxShadow: '0 20px 50px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.2), inset 0 -1px 0 rgba(0,0,0,0.2)'
+                      boxShadow: '0 12px 30px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.2)'
                     }}
                   >
                     {/* Glossy reflection */}
-                    <div className="absolute top-0 left-0 right-0 h-2/5 bg-gradient-to-b from-white/15 to-transparent rounded-t-[16px] pointer-events-none" />
+                    <div className="absolute top-0 left-0 right-0 h-2/5 bg-gradient-to-b from-white/15 to-transparent rounded-t-[12px] sm:rounded-t-[16px] pointer-events-none" />
 
-                    {/* Top corner with drop shadow */}
-                    <div className="absolute top-3 left-3 text-white font-black text-xl drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">
+                    {/* Top corner */}
+                    <div className="absolute top-2 left-2 sm:top-3 sm:left-3 text-white font-black text-base sm:text-xl drop-shadow">
                       {card.value === "skip" ? "⊘" :
                        card.value === "reverse" ? "⟲" :
                        card.value === "draw2" ? "+2" :
@@ -1074,36 +1058,28 @@ const UnoGame = () => {
                        card.value.toUpperCase()}
                     </div>
 
-                    {/* Center oval with realistic depth */}
+                    {/* Center oval */}
                     <div className="flex-1 flex items-center justify-center absolute inset-0">
-                      <div className="relative">
-                        {/* Shadow beneath oval */}
-                        <div className="absolute inset-0 transform translate-y-3 blur-xl opacity-40">
-                          <div className="bg-black/70 rounded-full w-24 h-24" />
-                        </div>
-
-                        {/* Main white oval */}
-                        <div className="relative bg-white rounded-full w-24 h-24 flex items-center justify-center shadow-[0_6px_16px_rgba(0,0,0,0.3),inset_0_2px_4px_rgba(255,255,255,0.6),inset_0_-2px_4px_rgba(0,0,0,0.1)]">
-                          <div className={`text-4xl font-black drop-shadow-md ${
-                            card.color === "yellow" ? "text-yellow-600" :
-                            card.color === "red" ? "text-red-600" :
-                            card.color === "blue" ? "text-blue-600" :
-                            card.color === "green" ? "text-green-600" :
-                            "bg-gradient-to-br from-red-500 via-blue-500 to-green-500 bg-clip-text text-transparent"
-                          }`}>
-                            {card.value === "skip" ? "⊘" :
-                             card.value === "reverse" ? "⟲" :
-                             card.value === "draw2" ? "+2" :
-                             card.value === "wild" ? "W" :
-                             card.value === "wild4" ? "+4" :
-                             card.value.toUpperCase()}
-                          </div>
+                      <div className="relative bg-white rounded-full w-16 h-16 sm:w-24 sm:h-24 flex items-center justify-center shadow-lg">
+                        <div className={`text-2xl sm:text-4xl font-black ${
+                          card.color === "yellow" ? "text-yellow-600" :
+                          card.color === "red" ? "text-red-600" :
+                          card.color === "blue" ? "text-blue-600" :
+                          card.color === "green" ? "text-green-600" :
+                          "bg-gradient-to-br from-red-500 via-blue-500 to-green-500 bg-clip-text text-transparent"
+                        }`}>
+                          {card.value === "skip" ? "⊘" :
+                           card.value === "reverse" ? "⟲" :
+                           card.value === "draw2" ? "+2" :
+                           card.value === "wild" ? "W" :
+                           card.value === "wild4" ? "+4" :
+                           card.value.toUpperCase()}
                         </div>
                       </div>
                     </div>
 
-                    {/* Bottom corner rotated with shadow */}
-                    <div className="absolute bottom-3 right-3 text-white font-black text-xl rotate-180 drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">
+                    {/* Bottom corner rotated */}
+                    <div className="absolute bottom-2 right-2 sm:bottom-3 sm:right-3 text-white font-black text-base sm:text-xl rotate-180 drop-shadow">
                       {card.value === "skip" ? "⊘" :
                        card.value === "reverse" ? "⟲" :
                        card.value === "draw2" ? "+2" :
@@ -1112,20 +1088,14 @@ const UnoGame = () => {
                        card.value.toUpperCase()}
                     </div>
 
-                    {/* UNO logo with glow */}
-                    <div className="absolute bottom-3 left-1/2 transform -translate-x-1/2">
-                      <div className="relative">
-                        <div className="text-white font-black text-xs tracking-widest drop-shadow-[0_0_6px_rgba(255,255,255,0.5)]">UNO</div>
-                        <div className="absolute inset-0 text-white font-black text-xs tracking-widest blur-sm opacity-60">UNO</div>
-                      </div>
+                    {/* UNO logo */}
+                    <div className="absolute bottom-2 sm:bottom-3 left-1/2 transform -translate-x-1/2">
+                      <div className="text-white font-black text-xs tracking-widest drop-shadow">UNO</div>
                     </div>
-
-                    {/* Edge lighting and depth */}
-                    <div className="absolute inset-0 rounded-[16px] shadow-[inset_0_-3px_10px_rgba(0,0,0,0.25),inset_0_3px_10px_rgba(255,255,255,0.1)]" />
 
                     {/* Playable card glow effect */}
                     {canPlay && (
-                      <div className="absolute inset-0 rounded-[16px] shadow-[0_0_20px_rgba(255,215,0,0.4)] animate-pulse" />
+                      <div className="absolute inset-0 rounded-[16px] sm:rounded-[22px] ring-2 ring-yellow-400 ring-opacity-50" />
                     )}
                   </div>
                 </button>
