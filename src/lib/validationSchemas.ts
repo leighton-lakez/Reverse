@@ -24,7 +24,7 @@ export const itemSchema = z.object({
   
   description: z.string()
     .trim()
-    .min(10, 'Description must be at least 10 characters')
+    .min(3, 'Description must be at least 3 characters')
     .max(2000, 'Description must be less than 2000 characters'),
   
   condition: z.string()

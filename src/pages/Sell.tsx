@@ -499,7 +499,21 @@ Please provide a price suggestion considering any visible damage or wear in the 
       if (!validationResult.success) {
         const firstError = validationResult.error.errors[0];
         console.error('Validation errors:', validationResult.error.errors);
-        throw new Error(firstError.message);
+
+        // User-friendly field names
+        const fieldNames: Record<string, string> = {
+          title: 'Title',
+          brand: 'Brand',
+          category: 'Category',
+          description: 'Description',
+          condition: 'Condition',
+          price: 'Price',
+          location: 'Location',
+          size: 'Size'
+        };
+
+        const fieldName = fieldNames[firstError.path[0] as string] || firstError.path[0];
+        throw new Error(`${fieldName}: ${firstError.message}`);
       }
 
       // Upload images
