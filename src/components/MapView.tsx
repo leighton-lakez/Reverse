@@ -94,31 +94,74 @@ const MapView = ({ items, onItemClick }: MapViewProps) => {
   const [locationSearch, setLocationSearch] = useState("");
   const [priceRange, setPriceRange] = useState([0, 10000]);
   const [maxPrice, setMaxPrice] = useState(10000);
+  const [isGeocoding, setIsGeocoding] = useState(false);
+  const [geocodingProgress, setGeocodingProgress] = useState({ current: 0, total: 0 });
 
   useEffect(() => {
     const geocodeItems = async () => {
-      // Add coordinates to items that don't have them
-      // Process sequentially with delay to respect Nominatim's rate limit (1 req/sec)
+      // First, immediately show items that already have coordinates or are in cache
       const itemsWithGeo: Item[] = [];
+      const itemsNeedingGeocode: Item[] = [];
 
+      // Separate items that need geocoding from those that don't
       for (const item of items) {
         if (item.latitude && item.longitude) {
           itemsWithGeo.push(item);
-        } else {
+        } else if (geocodeCache.has(item.location.toLowerCase().trim())) {
+          // Use cached coordinates immediately
           const [lat, lng] = await getCoordinatesForLocation(item.location);
           itemsWithGeo.push({
             ...item,
             latitude: lat,
             longitude: lng
           });
-          // Add delay only if we're making API calls (not using cache)
-          if (!geocodeCache.has(item.location.toLowerCase().trim())) {
-            await new Promise(resolve => setTimeout(resolve, 1000));
-          }
+        } else {
+          itemsNeedingGeocode.push(item);
         }
       }
 
-      setItemsWithCoords(itemsWithGeo);
+      // Show cached items immediately
+      setItemsWithCoords([...itemsWithGeo]);
+
+      // Geocode remaining items in small batches with delays between batches
+      if (itemsNeedingGeocode.length > 0) {
+        setIsGeocoding(true);
+        setGeocodingProgress({ current: 0, total: itemsNeedingGeocode.length });
+
+        const batchSize = 3; // Process 3 items per batch
+        const delayBetweenBatches = 1500; // 1.5 seconds between batches
+        let processed = 0;
+
+        for (let i = 0; i < itemsNeedingGeocode.length; i += batchSize) {
+          const batch = itemsNeedingGeocode.slice(i, i + batchSize);
+
+          // Geocode batch in parallel
+          const geocodedBatch = await Promise.all(
+            batch.map(async (item) => {
+              const [lat, lng] = await getCoordinatesForLocation(item.location);
+              return {
+                ...item,
+                latitude: lat,
+                longitude: lng
+              };
+            })
+          );
+
+          // Add geocoded batch to existing items
+          setItemsWithCoords(prev => [...prev, ...geocodedBatch]);
+
+          // Update progress
+          processed += batch.length;
+          setGeocodingProgress({ current: processed, total: itemsNeedingGeocode.length });
+
+          // Wait before processing next batch (unless this was the last batch)
+          if (i + batchSize < itemsNeedingGeocode.length) {
+            await new Promise(resolve => setTimeout(resolve, delayBetweenBatches));
+          }
+        }
+
+        setIsGeocoding(false);
+      }
 
       // Calculate max price from items
       const max = Math.max(...items.map(item => item.price), 10000);
@@ -166,6 +209,18 @@ const MapView = ({ items, onItemClick }: MapViewProps) => {
 
   return (
     <div className="h-full w-full relative">
+      {/* Loading Indicator */}
+      {isGeocoding && (
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[1000] bg-background/95 backdrop-blur-sm shadow-2xl rounded-full px-6 py-3 border-2 border-primary">
+          <div className="flex items-center gap-3">
+            <div className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+            <span className="text-sm font-semibold">
+              Loading locations... {geocodingProgress.current} / {geocodingProgress.total}
+            </span>
+          </div>
+        </div>
+      )}
+
       {/* Filter Controls */}
       <div className="absolute top-4 left-4 right-4 z-[1000] flex gap-2">
         {/* Location Search */}
