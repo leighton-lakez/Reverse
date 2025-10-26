@@ -50,6 +50,7 @@ const UnoGame = () => {
   const [gameRoom, setGameRoom] = useState<any>(null);
   const [opponentProfile, setOpponentProfile] = useState<any>(null);
   const [waitingForOpponent, setWaitingForOpponent] = useState(false);
+  const [rotationPromptDismissed, setRotationPromptDismissed] = useState(false);
 
   const colors: CardColor[] = ["red", "blue", "green", "yellow"];
   const values: CardValue[] = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "skip", "reverse", "draw2"];
@@ -794,16 +795,24 @@ const UnoGame = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-900 via-green-800 to-green-900 pb-0 sm:pb-24 relative overflow-hidden">
       {/* Landscape mode message for mobile portrait */}
-      <div className="portrait:flex landscape:hidden sm:hidden items-center justify-center fixed inset-0 z-[100] bg-gradient-to-br from-green-900 via-green-800 to-green-900 p-8">
-        <div className="text-center space-y-6">
-          <div className="text-8xl animate-bounce">📱</div>
-          <div className="space-y-2">
-            <h2 className="text-2xl font-black text-white">Please Rotate Your Device</h2>
-            <p className="text-white/80">UNO plays better in landscape mode</p>
+      {!rotationPromptDismissed && (
+        <div className="portrait:flex landscape:hidden sm:hidden items-center justify-center fixed inset-0 z-[100] bg-gradient-to-br from-green-900 via-green-800 to-green-900 p-8">
+          <div className="text-center space-y-6">
+            <div className="text-8xl animate-bounce">📱</div>
+            <div className="space-y-2">
+              <h2 className="text-2xl font-black text-white">Please Rotate Your Device</h2>
+              <p className="text-white/80">UNO plays better in landscape mode</p>
+            </div>
+            <div className="text-6xl">⤾</div>
+            <Button
+              onClick={() => setRotationPromptDismissed(true)}
+              className="mt-6 bg-white text-green-900 hover:bg-white/90 font-bold px-8 py-6 text-lg rounded-full shadow-2xl"
+            >
+              My Screen is Rotated - Play Anyway
+            </Button>
           </div>
-          <div className="text-6xl">⤾</div>
         </div>
-      </div>
+      )}
 
       {/* Lightweight felt table texture - simplified for mobile performance */}
       <div className="absolute inset-0 pointer-events-none opacity-30" style={{
