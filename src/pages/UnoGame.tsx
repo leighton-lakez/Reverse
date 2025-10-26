@@ -794,7 +794,7 @@ const UnoGame = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-900 via-green-800 to-green-900 pb-0 sm:pb-24 relative overflow-hidden">
       {/* Landscape mode message for mobile portrait */}
-      <div className="sm:hidden portrait:flex hidden items-center justify-center fixed inset-0 z-[100] bg-gradient-to-br from-green-900 via-green-800 to-green-900 p-8">
+      <div className="portrait:flex landscape:hidden sm:hidden items-center justify-center fixed inset-0 z-[100] bg-gradient-to-br from-green-900 via-green-800 to-green-900 p-8">
         <div className="text-center space-y-6">
           <div className="text-8xl animate-bounce">📱</div>
           <div className="space-y-2">
