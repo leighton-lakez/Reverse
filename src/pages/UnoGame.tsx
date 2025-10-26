@@ -763,8 +763,48 @@ const UnoGame = () => {
   };
 
 
+  useEffect(() => {
+    // Lock to landscape on mobile for better gameplay
+    const lockOrientation = async () => {
+      try {
+        if (window.screen.orientation && 'lock' in window.screen.orientation) {
+          await (window.screen.orientation as any).lock('landscape').catch(() => {
+            // Silently fail if browser doesn't support it
+          });
+        }
+      } catch (e) {
+        // Orientation lock not supported, continue anyway
+      }
+    };
+
+    lockOrientation();
+
+    // Cleanup: unlock when leaving
+    return () => {
+      try {
+        if (window.screen.orientation && 'unlock' in window.screen.orientation) {
+          (window.screen.orientation as any).unlock();
+        }
+      } catch (e) {
+        // Ignore errors
+      }
+    };
+  }, []);
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-900 via-green-800 to-green-900 pb-24 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-green-900 via-green-800 to-green-900 pb-0 sm:pb-24 relative overflow-hidden">
+      {/* Landscape mode message for mobile portrait */}
+      <div className="sm:hidden portrait:flex hidden items-center justify-center fixed inset-0 z-[100] bg-gradient-to-br from-green-900 via-green-800 to-green-900 p-8">
+        <div className="text-center space-y-6">
+          <div className="text-8xl animate-bounce">📱</div>
+          <div className="space-y-2">
+            <h2 className="text-2xl font-black text-white">Please Rotate Your Device</h2>
+            <p className="text-white/80">UNO plays better in landscape mode</p>
+          </div>
+          <div className="text-6xl">⤾</div>
+        </div>
+      </div>
+
       {/* Lightweight felt table texture - simplified for mobile performance */}
       <div className="absolute inset-0 pointer-events-none opacity-30" style={{
         backgroundImage: `radial-gradient(circle at 50% 50%, transparent 0%, rgba(0,0,0,0.4) 100%)`,
@@ -776,7 +816,7 @@ const UnoGame = () => {
 
       {/* Header */}
       <header className="sticky top-0 z-40 glass border-b border-border/50">
-        <div className="max-w-7xl mx-auto px-4 py-4">
+        <div className="max-w-7xl mx-auto px-2 sm:px-4 py-2 sm:py-4">
           <div className="flex items-center justify-between">
             <Button
               variant="ghost"
@@ -814,7 +854,7 @@ const UnoGame = () => {
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto px-4 py-6 relative z-10">
+      <main className="max-w-6xl mx-auto px-2 sm:px-4 py-2 sm:py-6 relative z-10 landscape:py-1">
         {/* Waiting for opponent overlay */}
         {waitingForOpponent && (
           <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center">
@@ -827,8 +867,8 @@ const UnoGame = () => {
         )}
 
         {/* Opponent/Bot Hand */}
-        <div className="mb-8">
-          <div className="flex items-center justify-center gap-2 mb-4">
+        <div className="mb-4 sm:mb-8 landscape:mb-2">
+          <div className="flex items-center justify-center gap-2 mb-2 sm:mb-4 landscape:mb-1">
             <div className="px-4 py-2 rounded-full bg-black/40 backdrop-blur-sm border border-white/20">
               <p className="text-sm font-semibold text-white">
                 {isMultiplayer
@@ -844,7 +884,7 @@ const UnoGame = () => {
               return (
                 <div
                   key={card.id}
-                  className="w-24 h-36 relative transition-all duration-300"
+                  className="w-16 h-24 sm:w-24 sm:h-36 landscape:w-20 landscape:h-28 relative transition-all duration-300"
                   style={{
                     transform: `rotateZ(${rotation}deg) translateY(${yOffset}px) rotateX(-5deg)`,
                     zIndex: botHand.length - Math.abs(index - botHand.length / 2),
@@ -885,13 +925,13 @@ const UnoGame = () => {
         </div>
 
         {/* Game Board */}
-        <div className="mb-8">
-          <div className="flex items-center justify-center gap-8">
+        <div className="mb-4 sm:mb-8 landscape:mb-2">
+          <div className="flex items-center justify-center gap-4 sm:gap-8 landscape:gap-6">
             {/* Discard Pile */}
             <div className="relative" style={{ perspective: '1200px' }}>
-              <p className="text-xs font-semibold text-center mb-3 text-white/70 drop-shadow-lg">Discard Pile</p>
+              <p className="text-xs font-semibold text-center mb-1 sm:mb-3 landscape:mb-1 text-white/70 drop-shadow-lg">Discard Pile</p>
               {discardPile.length > 0 && (
-                <div className="relative w-40 h-60">
+                <div className="relative w-28 h-40 sm:w-40 sm:h-60 landscape:w-32 landscape:h-48">
                   {/* Stack of cards underneath for depth */}
                   {discardPile.length > 1 && (
                     <div className="absolute inset-0 bg-gradient-to-br from-gray-800 to-gray-900 rounded-[20px] border-4 border-gray-700 transform translate-y-1 translate-x-0.5 opacity-70" />
@@ -977,7 +1017,7 @@ const UnoGame = () => {
 
             {/* Game Info */}
             <div className="text-center">
-              <div className="bg-black/40 backdrop-blur-sm rounded-2xl p-6 border border-white/20 space-y-3">
+              <div className="bg-black/40 backdrop-blur-sm rounded-2xl p-3 sm:p-6 landscape:p-4 border border-white/20 space-y-2 sm:space-y-3 landscape:space-y-2">
                 <div className={`w-16 h-16 rounded-full mx-auto border-4 border-white shadow-xl ${getColorClass(currentColor)}`} />
                 <p className="text-sm font-semibold text-white/80">Current Color</p>
                 {!gameOver && (
@@ -1001,7 +1041,7 @@ const UnoGame = () => {
 
         {/* Player Hand */}
         <div>
-          <div className="flex items-center justify-center gap-2 mb-4">
+          <div className="flex items-center justify-center gap-2 mb-2 sm:mb-4 landscape:mb-2">
             <div className="px-4 py-2 rounded-full bg-black/40 backdrop-blur-sm border border-white/20">
               <p className="text-sm font-semibold text-white">Your Hand: {playerHand.length} cards</p>
             </div>
@@ -1025,9 +1065,9 @@ const UnoGame = () => {
                   key={card.id}
                   onClick={() => handleCardClick(card)}
                   disabled={!isPlayerTurn || gameOver}
-                  className={`relative w-24 h-36 sm:w-32 sm:h-48 transition-all duration-200 ${
+                  className={`relative w-20 h-28 sm:w-32 sm:h-48 landscape:w-24 landscape:h-36 transition-all duration-200 ${
                     canPlay
-                      ? "hover:scale-105 hover:-translate-y-4 sm:hover:-translate-y-8 cursor-pointer active:scale-95"
+                      ? "hover:scale-105 hover:-translate-y-4 sm:hover:-translate-y-8 landscape:hover:-translate-y-6 cursor-pointer active:scale-95"
                       : "opacity-60 cursor-not-allowed"
                   }`}
                   style={{
