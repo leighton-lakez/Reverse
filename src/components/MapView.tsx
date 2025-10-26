@@ -52,7 +52,7 @@ const CITY_COORDINATES: Record<string, [number, number]> = {
   'austin': [30.2672, -97.7431],
   'jacksonville': [30.3322, -81.6557],
   'fort worth': [32.7555, -97.3308],
-  'columbus': [39.9612, -82.9988],
+  'columbus': [39.9612, -82.9988], // Columbus, OH (larger city)
   'charlotte': [35.2271, -80.8431],
   'san francisco': [37.7749, -122.4194], 'sf': [37.7749, -122.4194],
   'indianapolis': [39.7684, -86.1581],
@@ -90,6 +90,42 @@ const CITY_COORDINATES: Record<string, [number, number]> = {
   'cincinnati': [39.1031, -84.5120],
   'cleveland': [41.4993, -81.6944],
   'salt lake city': [40.7608, -111.8910],
+  'anaheim': [33.8366, -117.9143],
+  'riverside': [33.9806, -117.3755],
+  'corpus christi': [27.8006, -97.3964],
+  'lexington': [38.0406, -84.5037],
+  'stockton': [37.9577, -121.2908],
+  'anchorage': [61.2181, -149.9003],
+  'newark': [40.7357, -74.1724],
+  'plano': [33.0198, -96.6989],
+  'buffalo': [42.8864, -78.8784],
+  'henderson': [36.0395, -114.9817],
+  'lincoln': [40.8136, -96.7026],
+  'glendale': [33.5387, -112.1859],
+  'chandler': [33.3062, -111.8413],
+  'st paul': [44.9537, -93.0900], 'saint paul': [44.9537, -93.0900],
+  'jersey city': [40.7178, -74.0431],
+  'scottsdale': [33.4942, -111.9261],
+  'norfolk': [36.8508, -76.2859],
+  'madison': [43.0731, -89.4012],
+  'birmingham': [33.5207, -86.8025],
+  'baton rouge': [30.4515, -91.1871],
+  'rochester': [43.1566, -77.6088],
+  'richmond': [37.5407, -77.4360],
+  'spokane': [47.6588, -117.4260],
+  'des moines': [41.6005, -93.6091],
+  'montgomery': [32.3668, -86.3000],
+  'modesto': [37.6391, -120.9969],
+  'fayetteville': [36.0626, -94.1574],
+  'tacoma': [47.2529, -122.4443],
+  'shreveport': [32.5252, -93.7502],
+  'fontana': [34.0922, -117.4350],
+  'oxnard': [34.1975, -119.1771],
+  'aurora': [39.7294, -104.8319],
+  'moreno valley': [33.9425, -117.2297],
+  'akron': [41.0814, -81.5190],
+  'yonkers': [40.9312, -73.8987],
+  'augusta': [33.4735, -82.0105],
   // US States (fallback to state center)
   'california': [36.7783, -119.4179], 'ca': [36.7783, -119.4179],
   'texas': [31.9686, -99.9018], 'tx': [31.9686, -99.9018],
@@ -131,26 +167,13 @@ const geocodeCache = new Map<string, [number, number]>();
 const getCoordinatesForLocation = (location: string): [number, number] => {
   const normalizedLocation = location.toLowerCase().trim();
 
-  // Check pre-populated city database FIRST (instant!)
+  // Check pre-populated city database FIRST (exact match - instant!)
   if (CITY_COORDINATES[normalizedLocation]) {
     const coords = CITY_COORDINATES[normalizedLocation];
-    // Add small randomness so items in same city don't stack exactly
     return [
       coords[0] + (Math.random() - 0.5) * 0.01,
       coords[1] + (Math.random() - 0.5) * 0.01
     ];
-  }
-
-  // Check for partial matches (e.g., "New York, NY" contains "new york")
-  for (const [city, coords] of Object.entries(CITY_COORDINATES)) {
-    if (normalizedLocation.includes(city) || city.includes(normalizedLocation.split(',')[0].trim())) {
-      const randomCoords: [number, number] = [
-        coords[0] + (Math.random() - 0.5) * 0.01,
-        coords[1] + (Math.random() - 0.5) * 0.01
-      ];
-      geocodeCache.set(normalizedLocation, randomCoords);
-      return randomCoords;
-    }
   }
 
   // Check runtime cache
@@ -162,11 +185,55 @@ const getCoordinatesForLocation = (location: string): [number, number] => {
     ];
   }
 
+  // Extract city name from "City, State" format and match more carefully
+  const parts = normalizedLocation.split(',').map(p => p.trim());
+  const cityPart = parts[0];
+  const statePart = parts.length > 1 ? parts[1] : '';
+
+  // Try exact city match first
+  if (CITY_COORDINATES[cityPart]) {
+    const coords = CITY_COORDINATES[cityPart];
+    const randomCoords: [number, number] = [
+      coords[0] + (Math.random() - 0.5) * 0.01,
+      coords[1] + (Math.random() - 0.5) * 0.01
+    ];
+    geocodeCache.set(normalizedLocation, randomCoords);
+    return randomCoords;
+  }
+
+  // Try state match as fallback
+  if (statePart && CITY_COORDINATES[statePart]) {
+    const coords = CITY_COORDINATES[statePart];
+    const randomCoords: [number, number] = [
+      coords[0] + (Math.random() - 0.5) * 0.01,
+      coords[1] + (Math.random() - 0.5) * 0.01
+    ];
+    geocodeCache.set(normalizedLocation, randomCoords);
+    return randomCoords;
+  }
+
+  // Only do substring matching for VERY specific cases to avoid false matches
+  // Match only if the city name is at the START of the location string
+  for (const [city, coords] of Object.entries(CITY_COORDINATES)) {
+    if (normalizedLocation.startsWith(city + ',') || normalizedLocation.startsWith(city + ' ')) {
+      const randomCoords: [number, number] = [
+        coords[0] + (Math.random() - 0.5) * 0.01,
+        coords[1] + (Math.random() - 0.5) * 0.01
+      ];
+      geocodeCache.set(normalizedLocation, randomCoords);
+      return randomCoords;
+    }
+  }
+
+  console.warn('Unknown location, using US center fallback:', location);
+
   // Fallback to center of US with some randomness
-  return [
+  const fallbackCoords: [number, number] = [
     39.8283 + (Math.random() - 0.5) * 10,
     -98.5795 + (Math.random() - 0.5) * 10
   ];
+  geocodeCache.set(normalizedLocation, fallbackCoords);
+  return fallbackCoords;
 };
 
 const MapView = ({ items, onItemClick }: MapViewProps) => {
