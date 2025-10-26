@@ -36,16 +36,104 @@ interface MapViewProps {
   onItemClick: (item: Item) => void;
 }
 
+// Pre-populated coordinates for instant loading (top 100+ US cities and states)
+const CITY_COORDINATES: Record<string, [number, number]> = {
+  // Major US Cities
+  'new york city': [40.7128, -74.0060], 'nyc': [40.7128, -74.0060],
+  'los angeles': [34.0522, -118.2437],
+  'chicago': [41.8781, -87.6298],
+  'houston': [29.7604, -95.3698],
+  'phoenix': [33.4484, -112.0740],
+  'philadelphia': [39.9526, -75.1652],
+  'san antonio': [29.4241, -98.4936],
+  'san diego': [32.7157, -117.1611],
+  'dallas': [32.7767, -96.7970],
+  'san jose': [37.3382, -121.8863],
+  'austin': [30.2672, -97.7431],
+  'jacksonville': [30.3322, -81.6557],
+  'fort worth': [32.7555, -97.3308],
+  'columbus': [39.9612, -82.9988],
+  'charlotte': [35.2271, -80.8431],
+  'san francisco': [37.7749, -122.4194], 'sf': [37.7749, -122.4194],
+  'indianapolis': [39.7684, -86.1581],
+  'seattle': [47.6062, -122.3321],
+  'denver': [39.7392, -104.9903],
+  'washington dc': [38.9072, -77.0369], 'dc': [38.9072, -77.0369],
+  'boston': [42.3601, -71.0589],
+  'nashville': [36.1627, -86.7816],
+  'detroit': [42.3314, -83.0458],
+  'portland': [45.5152, -122.6784],
+  'memphis': [35.1495, -90.0490],
+  'oklahoma city': [35.4676, -97.5164],
+  'las vegas': [36.1699, -115.1398],
+  'louisville': [38.2527, -85.7585],
+  'baltimore': [39.2904, -76.6122],
+  'milwaukee': [43.0389, -87.9065],
+  'albuquerque': [35.0844, -106.6504],
+  'tucson': [32.2226, -110.9747],
+  'fresno': [36.7378, -119.7871],
+  'mesa': [33.4152, -111.8315],
+  'sacramento': [38.5816, -121.4944],
+  'atlanta': [33.7490, -84.3880],
+  'kansas city': [39.0997, -94.5786],
+  'colorado springs': [38.8339, -104.8214],
+  'raleigh': [35.7796, -78.6382],
+  'miami': [25.7617, -80.1918],
+  'long beach': [33.7701, -118.1937],
+  'virginia beach': [36.8529, -75.9780],
+  'oakland': [37.8044, -122.2712],
+  'minneapolis': [44.9778, -93.2650],
+  'tampa': [27.9506, -82.4572],
+  'orlando': [28.5383, -81.3792],
+  'st louis': [38.6270, -90.1994], 'saint louis': [38.6270, -90.1994],
+  'pittsburgh': [40.4406, -79.9959],
+  'cincinnati': [39.1031, -84.5120],
+  'cleveland': [41.4993, -81.6944],
+  'salt lake city': [40.7608, -111.8910],
+  // US States (fallback to state center)
+  'california': [36.7783, -119.4179], 'ca': [36.7783, -119.4179],
+  'texas': [31.9686, -99.9018], 'tx': [31.9686, -99.9018],
+  'florida': [27.6648, -81.5158], 'fl': [27.6648, -81.5158],
+  'new york': [42.1657, -74.9481], 'ny': [42.1657, -74.9481], // NY state center, not NYC
+  'pennsylvania': [41.2033, -77.1945], 'pa': [41.2033, -77.1945],
+  'illinois': [40.6331, -89.3985], 'il': [40.6331, -89.3985],
+  'ohio': [40.4173, -82.9071], 'oh': [40.4173, -82.9071],
+  'georgia': [32.1656, -82.9001], 'ga': [32.1656, -82.9001],
+  'north carolina': [35.7596, -79.0193], 'nc': [35.7596, -79.0193],
+  'michigan': [44.3148, -85.6024], 'mi': [44.3148, -85.6024],
+  'new jersey': [40.0583, -74.4057], 'nj': [40.0583, -74.4057],
+  'virginia': [37.4316, -78.6569], 'va': [37.4316, -78.6569],
+  'washington': [47.7511, -120.7401], 'wa': [47.7511, -120.7401], // Washington state
+  'arizona': [34.0489, -111.0937], 'az': [34.0489, -111.0937],
+  'massachusetts': [42.4072, -71.3824], 'ma': [42.4072, -71.3824],
+  'tennessee': [35.5175, -86.5804], 'tn': [35.5175, -86.5804],
+  'indiana': [40.2672, -86.1349], 'in': [40.2672, -86.1349],
+  'missouri': [37.9643, -91.8318], 'mo': [37.9643, -91.8318],
+  'maryland': [39.0458, -76.6413], 'md': [39.0458, -76.6413],
+  'wisconsin': [43.7844, -88.7879], 'wi': [43.7844, -88.7879],
+  'colorado': [39.5501, -105.7821], 'co': [39.5501, -105.7821],
+  'minnesota': [46.7296, -94.6859], 'mn': [46.7296, -94.6859],
+  'south carolina': [33.8361, -81.1637], 'sc': [33.8361, -81.1637],
+  'alabama': [32.3182, -86.9023], 'al': [32.3182, -86.9023],
+  'louisiana': [31.2448, -92.1450],
+  'kentucky': [37.8393, -84.2700], 'ky': [37.8393, -84.2700],
+  'oregon': [43.8041, -120.5542], 'or': [43.8041, -120.5542],
+  'oklahoma': [35.0078, -97.0929], 'ok': [35.0078, -97.0929],
+  'connecticut': [41.6032, -73.0877], 'ct': [41.6032, -73.0877],
+  'utah': [39.3210, -111.0937], 'ut': [39.3210, -111.0937],
+  'nevada': [38.8026, -116.4194], 'nv': [38.8026, -116.4194],
+};
+
 // Cache for geocoded locations to avoid redundant API calls
 const geocodeCache = new Map<string, [number, number]>();
 
-// Function to geocode location strings using Nominatim API
-const getCoordinatesForLocation = async (location: string): Promise<[number, number]> => {
+// Function to get coordinates - instant for known cities, no API delays
+const getCoordinatesForLocation = (location: string): [number, number] => {
   const normalizedLocation = location.toLowerCase().trim();
 
-  // Check cache first
-  if (geocodeCache.has(normalizedLocation)) {
-    const coords = geocodeCache.get(normalizedLocation)!;
+  // Check pre-populated city database FIRST (instant!)
+  if (CITY_COORDINATES[normalizedLocation]) {
+    const coords = CITY_COORDINATES[normalizedLocation];
     // Add small randomness so items in same city don't stack exactly
     return [
       coords[0] + (Math.random() - 0.5) * 0.01,
@@ -53,34 +141,28 @@ const getCoordinatesForLocation = async (location: string): Promise<[number, num
     ];
   }
 
-  try {
-    // Use Nominatim geocoding API (free, no API key required)
-    const response = await fetch(
-      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(location)}&limit=1`,
-      {
-        headers: {
-          'User-Agent': 'ReverseMarketplace/1.0'
-        }
-      }
-    );
-
-    if (response.ok) {
-      const data = await response.json();
-      if (data && data.length > 0) {
-        const coords: [number, number] = [parseFloat(data[0].lat), parseFloat(data[0].lon)];
-        geocodeCache.set(normalizedLocation, coords);
-        // Add small randomness
-        return [
-          coords[0] + (Math.random() - 0.5) * 0.01,
-          coords[1] + (Math.random() - 0.5) * 0.01
-        ];
-      }
+  // Check for partial matches (e.g., "New York, NY" contains "new york")
+  for (const [city, coords] of Object.entries(CITY_COORDINATES)) {
+    if (normalizedLocation.includes(city) || city.includes(normalizedLocation.split(',')[0].trim())) {
+      const randomCoords: [number, number] = [
+        coords[0] + (Math.random() - 0.5) * 0.01,
+        coords[1] + (Math.random() - 0.5) * 0.01
+      ];
+      geocodeCache.set(normalizedLocation, randomCoords);
+      return randomCoords;
     }
-  } catch (error) {
-    console.error('Geocoding error for location:', location, error);
   }
 
-  // Fallback to center of US with some randomness if geocoding fails
+  // Check runtime cache
+  if (geocodeCache.has(normalizedLocation)) {
+    const coords = geocodeCache.get(normalizedLocation)!;
+    return [
+      coords[0] + (Math.random() - 0.5) * 0.01,
+      coords[1] + (Math.random() - 0.5) * 0.01
+    ];
+  }
+
+  // Fallback to center of US with some randomness
   return [
     39.8283 + (Math.random() - 0.5) * 10,
     -98.5795 + (Math.random() - 0.5) * 10
@@ -94,82 +176,29 @@ const MapView = ({ items, onItemClick }: MapViewProps) => {
   const [locationSearch, setLocationSearch] = useState("");
   const [priceRange, setPriceRange] = useState([0, 10000]);
   const [maxPrice, setMaxPrice] = useState(10000);
-  const [isGeocoding, setIsGeocoding] = useState(false);
-  const [geocodingProgress, setGeocodingProgress] = useState({ current: 0, total: 0 });
 
   useEffect(() => {
-    const geocodeItems = async () => {
-      // First, immediately show items that already have coordinates or are in cache
-      const itemsWithGeo: Item[] = [];
-      const itemsNeedingGeocode: Item[] = [];
-
-      // Separate items that need geocoding from those that don't
-      for (const item of items) {
-        if (item.latitude && item.longitude) {
-          itemsWithGeo.push(item);
-        } else if (geocodeCache.has(item.location.toLowerCase().trim())) {
-          // Use cached coordinates immediately
-          const [lat, lng] = await getCoordinatesForLocation(item.location);
-          itemsWithGeo.push({
-            ...item,
-            latitude: lat,
-            longitude: lng
-          });
-        } else {
-          itemsNeedingGeocode.push(item);
-        }
+    // Geocode all items INSTANTLY (synchronous, no API calls for known cities)
+    const itemsWithGeo: Item[] = items.map(item => {
+      if (item.latitude && item.longitude) {
+        return item;
       }
 
-      // Show cached items immediately
-      setItemsWithCoords([...itemsWithGeo]);
+      const [lat, lng] = getCoordinatesForLocation(item.location);
+      return {
+        ...item,
+        latitude: lat,
+        longitude: lng
+      };
+    });
 
-      // Geocode remaining items in small batches with delays between batches
-      if (itemsNeedingGeocode.length > 0) {
-        setIsGeocoding(true);
-        setGeocodingProgress({ current: 0, total: itemsNeedingGeocode.length });
+    // Show ALL items immediately
+    setItemsWithCoords(itemsWithGeo);
 
-        const batchSize = 3; // Process 3 items per batch
-        const delayBetweenBatches = 1500; // 1.5 seconds between batches
-        let processed = 0;
-
-        for (let i = 0; i < itemsNeedingGeocode.length; i += batchSize) {
-          const batch = itemsNeedingGeocode.slice(i, i + batchSize);
-
-          // Geocode batch in parallel
-          const geocodedBatch = await Promise.all(
-            batch.map(async (item) => {
-              const [lat, lng] = await getCoordinatesForLocation(item.location);
-              return {
-                ...item,
-                latitude: lat,
-                longitude: lng
-              };
-            })
-          );
-
-          // Add geocoded batch to existing items
-          setItemsWithCoords(prev => [...prev, ...geocodedBatch]);
-
-          // Update progress
-          processed += batch.length;
-          setGeocodingProgress({ current: processed, total: itemsNeedingGeocode.length });
-
-          // Wait before processing next batch (unless this was the last batch)
-          if (i + batchSize < itemsNeedingGeocode.length) {
-            await new Promise(resolve => setTimeout(resolve, delayBetweenBatches));
-          }
-        }
-
-        setIsGeocoding(false);
-      }
-
-      // Calculate max price from items
-      const max = Math.max(...items.map(item => item.price), 10000);
-      setMaxPrice(max);
-      setPriceRange([0, max]);
-    };
-
-    geocodeItems();
+    // Calculate max price from items
+    const max = Math.max(...items.map(item => item.price), 10000);
+    setMaxPrice(max);
+    setPriceRange([0, max]);
   }, [items]);
 
   // Filter items based on location search and price range
@@ -209,18 +238,6 @@ const MapView = ({ items, onItemClick }: MapViewProps) => {
 
   return (
     <div className="h-full w-full relative">
-      {/* Loading Indicator */}
-      {isGeocoding && (
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[1000] bg-background/95 backdrop-blur-sm shadow-2xl rounded-full px-6 py-3 border-2 border-primary">
-          <div className="flex items-center gap-3">
-            <div className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-            <span className="text-sm font-semibold">
-              Loading locations... {geocodingProgress.current} / {geocodingProgress.total}
-            </span>
-          </div>
-        </div>
-      )}
-
       {/* Filter Controls */}
       <div className="absolute top-4 left-4 right-4 z-[1000] flex gap-2">
         {/* Location Search */}
