@@ -163,13 +163,46 @@ const CITY_COORDINATES: Record<string, [number, number]> = {
 // Cache for geocoded locations to avoid redundant API calls
 const geocodeCache = new Map<string, [number, number]>();
 
-// Function to get coordinates - instant for known cities, no API delays
-const getCoordinatesForLocation = (location: string): [number, number] => {
+// Async function to geocode using API for unknown locations
+const geocodeWithAPI = async (location: string): Promise<[number, number]> => {
+  try {
+    const response = await fetch(
+      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(location)}&countrycodes=us&limit=1`,
+      {
+        headers: {
+          'User-Agent': 'ReverseMarketplace/1.0'
+        }
+      }
+    );
+
+    if (response.ok) {
+      const data = await response.json();
+      if (data && data.length > 0) {
+        const coords: [number, number] = [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+        console.log(`✅ Geocoded "${location}" via API:`, coords);
+        geocodeCache.set(location.toLowerCase().trim(), coords);
+        return coords;
+      }
+    }
+  } catch (error) {
+    console.error('Geocoding API error for:', location, error);
+  }
+
+  // Ultimate fallback
+  console.warn('❌ Geocoding failed for:', location, '- using US center');
+  return [39.8283, -98.5795];
+};
+
+// Synchronous function for instant lookup, returns null if needs API call
+const getCoordinatesSync = (location: string): [number, number] | null => {
   const normalizedLocation = location.toLowerCase().trim();
+
+  console.log('🔍 Geocoding:', location);
 
   // Check pre-populated city database FIRST (exact match - instant!)
   if (CITY_COORDINATES[normalizedLocation]) {
     const coords = CITY_COORDINATES[normalizedLocation];
+    console.log('  ✅ Exact match found:', normalizedLocation, '→', coords);
     return [
       coords[0] + (Math.random() - 0.5) * 0.01,
       coords[1] + (Math.random() - 0.5) * 0.01
@@ -179,6 +212,7 @@ const getCoordinatesForLocation = (location: string): [number, number] => {
   // Check runtime cache
   if (geocodeCache.has(normalizedLocation)) {
     const coords = geocodeCache.get(normalizedLocation)!;
+    console.log('  ✅ Cache hit:', normalizedLocation);
     return [
       coords[0] + (Math.random() - 0.5) * 0.01,
       coords[1] + (Math.random() - 0.5) * 0.01
@@ -190,9 +224,12 @@ const getCoordinatesForLocation = (location: string): [number, number] => {
   const cityPart = parts[0];
   const statePart = parts.length > 1 ? parts[1] : '';
 
+  console.log('  📍 Parsed:', { city: cityPart, state: statePart });
+
   // Try exact city match first
   if (CITY_COORDINATES[cityPart]) {
     const coords = CITY_COORDINATES[cityPart];
+    console.log('  ✅ City match:', cityPart, '→', coords);
     const randomCoords: [number, number] = [
       coords[0] + (Math.random() - 0.5) * 0.01,
       coords[1] + (Math.random() - 0.5) * 0.01
@@ -204,6 +241,7 @@ const getCoordinatesForLocation = (location: string): [number, number] => {
   // Try state match as fallback
   if (statePart && CITY_COORDINATES[statePart]) {
     const coords = CITY_COORDINATES[statePart];
+    console.log('  ⚠️ Using state fallback:', statePart, '→', coords);
     const randomCoords: [number, number] = [
       coords[0] + (Math.random() - 0.5) * 0.01,
       coords[1] + (Math.random() - 0.5) * 0.01
@@ -213,9 +251,9 @@ const getCoordinatesForLocation = (location: string): [number, number] => {
   }
 
   // Only do substring matching for VERY specific cases to avoid false matches
-  // Match only if the city name is at the START of the location string
   for (const [city, coords] of Object.entries(CITY_COORDINATES)) {
     if (normalizedLocation.startsWith(city + ',') || normalizedLocation.startsWith(city + ' ')) {
+      console.log('  ✅ Prefix match:', city, '→', coords);
       const randomCoords: [number, number] = [
         coords[0] + (Math.random() - 0.5) * 0.01,
         coords[1] + (Math.random() - 0.5) * 0.01
@@ -225,15 +263,8 @@ const getCoordinatesForLocation = (location: string): [number, number] => {
     }
   }
 
-  console.warn('Unknown location, using US center fallback:', location);
-
-  // Fallback to center of US with some randomness
-  const fallbackCoords: [number, number] = [
-    39.8283 + (Math.random() - 0.5) * 10,
-    -98.5795 + (Math.random() - 0.5) * 10
-  ];
-  geocodeCache.set(normalizedLocation, fallbackCoords);
-  return fallbackCoords;
+  console.log('  ⏳ Needs API geocoding:', location);
+  return null; // Signal that API call is needed
 };
 
 const MapView = ({ items, onItemClick }: MapViewProps) => {
@@ -245,27 +276,70 @@ const MapView = ({ items, onItemClick }: MapViewProps) => {
   const [maxPrice, setMaxPrice] = useState(10000);
 
   useEffect(() => {
-    // Geocode all items INSTANTLY (synchronous, no API calls for known cities)
-    const itemsWithGeo: Item[] = items.map(item => {
-      if (item.latitude && item.longitude) {
-        return item;
+    const geocodeItems = async () => {
+      console.log('📍 Starting geocoding for', items.length, 'items');
+
+      // Phase 1: Instant sync geocoding for known cities
+      const instantItems: Item[] = [];
+      const needsAPIItems: { item: Item; index: number }[] = [];
+
+      items.forEach((item, index) => {
+        if (item.latitude && item.longitude) {
+          instantItems.push(item);
+          return;
+        }
+
+        const coords = getCoordinatesSync(item.location);
+        if (coords) {
+          // Got instant coordinates
+          instantItems.push({
+            ...item,
+            latitude: coords[0],
+            longitude: coords[1]
+          });
+        } else {
+          // Needs API call
+          needsAPIItems.push({ item, index });
+        }
+      });
+
+      // Show instant items immediately
+      console.log('⚡ Showing', instantItems.length, 'items instantly');
+      setItemsWithCoords([...instantItems]);
+
+      // Phase 2: Geocode unknown locations via API (with delay to respect rate limits)
+      if (needsAPIItems.length > 0) {
+        console.log('⏳ Need to geocode', needsAPIItems.length, 'items via API');
+
+        for (let i = 0; i < needsAPIItems.length; i++) {
+          const { item } = needsAPIItems[i];
+
+          // Add delay between API calls (1 req/sec limit)
+          if (i > 0) {
+            await new Promise(resolve => setTimeout(resolve, 1100));
+          }
+
+          const coords = await geocodeWithAPI(item.location);
+          const geocodedItem = {
+            ...item,
+            latitude: coords[0] + (Math.random() - 0.5) * 0.01,
+            longitude: coords[1] + (Math.random() - 0.5) * 0.01
+          };
+
+          // Add to display progressively
+          setItemsWithCoords(prev => [...prev, geocodedItem]);
+        }
+
+        console.log('✅ All items geocoded');
       }
 
-      const [lat, lng] = getCoordinatesForLocation(item.location);
-      return {
-        ...item,
-        latitude: lat,
-        longitude: lng
-      };
-    });
+      // Calculate max price from items
+      const max = Math.max(...items.map(item => item.price), 10000);
+      setMaxPrice(max);
+      setPriceRange([0, max]);
+    };
 
-    // Show ALL items immediately
-    setItemsWithCoords(itemsWithGeo);
-
-    // Calculate max price from items
-    const max = Math.max(...items.map(item => item.price), 10000);
-    setMaxPrice(max);
-    setPriceRange([0, max]);
+    geocodeItems();
   }, [items]);
 
   // Filter items based on location search and price range
