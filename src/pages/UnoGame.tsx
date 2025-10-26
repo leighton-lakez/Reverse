@@ -50,7 +50,6 @@ const UnoGame = () => {
   const [gameRoom, setGameRoom] = useState<any>(null);
   const [opponentProfile, setOpponentProfile] = useState<any>(null);
   const [waitingForOpponent, setWaitingForOpponent] = useState(false);
-  const [rotationPromptDismissed, setRotationPromptDismissed] = useState(false);
 
   const colors: CardColor[] = ["red", "blue", "green", "yellow"];
   const values: CardValue[] = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "skip", "reverse", "draw2"];
@@ -764,55 +763,9 @@ const UnoGame = () => {
   };
 
 
-  useEffect(() => {
-    // Lock to landscape on mobile for better gameplay
-    const lockOrientation = async () => {
-      try {
-        if (window.screen.orientation && 'lock' in window.screen.orientation) {
-          await (window.screen.orientation as any).lock('landscape').catch(() => {
-            // Silently fail if browser doesn't support it
-          });
-        }
-      } catch (e) {
-        // Orientation lock not supported, continue anyway
-      }
-    };
-
-    lockOrientation();
-
-    // Cleanup: unlock when leaving
-    return () => {
-      try {
-        if (window.screen.orientation && 'unlock' in window.screen.orientation) {
-          (window.screen.orientation as any).unlock();
-        }
-      } catch (e) {
-        // Ignore errors
-      }
-    };
-  }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-900 via-green-800 to-green-900 pb-0 sm:pb-24 relative overflow-hidden">
-      {/* Landscape mode message for mobile portrait */}
-      {!rotationPromptDismissed && (
-        <div className="portrait:flex landscape:hidden sm:hidden items-center justify-center fixed inset-0 z-[100] bg-gradient-to-br from-green-900 via-green-800 to-green-900 p-8">
-          <div className="text-center space-y-6">
-            <div className="text-8xl animate-bounce">📱</div>
-            <div className="space-y-2">
-              <h2 className="text-2xl font-black text-white">Please Rotate Your Device</h2>
-              <p className="text-white/80">UNO plays better in landscape mode</p>
-            </div>
-            <div className="text-6xl">⤾</div>
-            <Button
-              onClick={() => setRotationPromptDismissed(true)}
-              className="mt-6 bg-white text-green-900 hover:bg-white/90 font-bold px-8 py-6 text-lg rounded-full shadow-2xl"
-            >
-              My Screen is Rotated - Play Anyway
-            </Button>
-          </div>
-        </div>
-      )}
+    <div className="min-h-screen bg-gradient-to-br from-green-900 via-green-800 to-green-900 pb-24 relative overflow-hidden">
 
       {/* Lightweight felt table texture - simplified for mobile performance */}
       <div className="absolute inset-0 pointer-events-none opacity-30" style={{
@@ -1000,7 +953,7 @@ const UnoGame = () => {
                     </div>
 
                     {/* Bottom corner (rotated) with shadow */}
-                    <div className="absolute bottom-3 right-3 text-white font-black text-xl rotate-180 drop-shadow-[0_2px_4px_rgba(0,0,0,0.4)]">
+                    <div className="absolute top-3 right-3 text-white font-black text-xl rotate-180 drop-shadow-[0_2px_4px_rgba(0,0,0,0.4)]">
                       {discardPile[discardPile.length - 1].value === "skip" ? "⊘" :
                        discardPile[discardPile.length - 1].value === "reverse" ? "⟲" :
                        discardPile[discardPile.length - 1].value === "draw2" ? "+2" :
@@ -1010,10 +963,10 @@ const UnoGame = () => {
                     </div>
 
                     {/* UNO logo with glow effect */}
-                    <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2">
+                    <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2">
                       <div className="relative">
-                        <div className="text-white font-black text-sm tracking-widest drop-shadow-[0_0_6px_rgba(255,255,255,0.5)]">UNO</div>
-                        <div className="absolute inset-0 text-white font-black text-sm tracking-widest blur-sm opacity-60">UNO</div>
+                        <div className="text-white font-black text-xs tracking-widest drop-shadow-[0_0_6px_rgba(255,255,255,0.5)]">UNO</div>
+                        <div className="absolute inset-0 text-white font-black text-xs tracking-widest blur-sm opacity-60">UNO</div>
                       </div>
                     </div>
 
@@ -1128,7 +1081,7 @@ const UnoGame = () => {
                     </div>
 
                     {/* Bottom corner rotated */}
-                    <div className="absolute bottom-2 right-2 sm:bottom-3 sm:right-3 text-white font-black text-base sm:text-xl rotate-180 drop-shadow">
+                    <div className="absolute top-2 right-2 sm:top-3 sm:right-3 text-white font-black text-base sm:text-xl rotate-180 drop-shadow">
                       {card.value === "skip" ? "⊘" :
                        card.value === "reverse" ? "⟲" :
                        card.value === "draw2" ? "+2" :
@@ -1138,8 +1091,8 @@ const UnoGame = () => {
                     </div>
 
                     {/* UNO logo */}
-                    <div className="absolute bottom-2 sm:bottom-3 left-1/2 transform -translate-x-1/2">
-                      <div className="text-white font-black text-xs tracking-widest drop-shadow">UNO</div>
+                    <div className="absolute bottom-1 sm:bottom-2 left-1/2 transform -translate-x-1/2">
+                      <div className="text-white font-black text-[10px] sm:text-xs tracking-widest drop-shadow">UNO</div>
                     </div>
 
                     {/* Playable card glow effect */}
