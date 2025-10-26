@@ -853,26 +853,27 @@ const UnoGame = () => {
                     transformStyle: 'preserve-3d'
                   }}
                 >
-                  {/* Multiple shadow layers for depth */}
-                  <div className="absolute inset-0 bg-black/60 rounded-[18px] blur-2xl transform translate-y-6" />
-                  <div className="absolute inset-0 bg-black/40 rounded-[18px] blur-lg transform translate-y-4" />
-                  <div className="absolute inset-0 bg-black/20 rounded-[18px] blur-md transform translate-y-2" />
+                  {/* Shadow */}
+                  <div className="absolute inset-0 bg-black/50 rounded-[18px] blur-lg transform translate-y-3" />
 
-                  {/* Card back with realistic design */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-[#1a1a1a] via-[#0d0d0d] to-black rounded-[18px] border-[5px] border-[#333] shadow-[0_8px_32px_rgba(0,0,0,0.8)]" style={{ transformStyle: 'preserve-3d' }}>
-                    {/* Inner card design */}
-                    <div className="absolute inset-[6px] bg-gradient-to-br from-red-700 via-red-800 to-red-900 rounded-[14px] shadow-inner">
-                      {/* Pattern overlay */}
-                      <div className="absolute inset-0 opacity-20" style={{
-                        backgroundImage: 'radial-gradient(circle at 20% 20%, rgba(255,255,255,0.1) 0%, transparent 50%)'
-                      }} />
+                  {/* Card back with official UNO design */}
+                  <div className="absolute inset-0 bg-black rounded-[18px] shadow-[0_8px_32px_rgba(0,0,0,0.8)]" style={{ border: '2px solid rgba(255,255,255,0.1)', transformStyle: 'preserve-3d' }}>
+                    {/* Red diagonal stripe design */}
+                    <div className="absolute inset-0 overflow-hidden rounded-[18px]">
+                      <div
+                        className="absolute inset-[-20%] bg-gradient-to-br from-red-600 via-red-700 to-red-600"
+                        style={{
+                          transform: 'rotate(-25deg)',
+                          clipPath: 'polygon(25% 0%, 75% 0%, 50% 100%, 0% 100%)'
+                        }}
+                      />
+                    </div>
 
-                      {/* Yellow border */}
-                      <div className="absolute inset-[8px] border-[3px] border-yellow-500/40 rounded-[10px] flex items-center justify-center">
-                        {/* UNO logo with glow */}
-                        <div className="relative">
-                          <div className="text-yellow-400 font-black text-2xl tracking-wider drop-shadow-[0_0_8px_rgba(250,204,21,0.5)]">UNO</div>
-                          <div className="absolute inset-0 text-yellow-300 font-black text-2xl tracking-wider blur-sm opacity-50">UNO</div>
+                    {/* UNO logo in center */}
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="relative">
+                        <div className="text-yellow-400 font-black text-lg sm:text-2xl tracking-wider drop-shadow-[0_0_10px_rgba(250,204,21,0.6)]" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.8)' }}>
+                          UNO
                         </div>
                       </div>
                     </div>
@@ -902,76 +903,68 @@ const UnoGame = () => {
                   {/* Simplified shadow for mobile performance */}
                   <div className="absolute inset-0 bg-black/50 rounded-[20px] blur-xl transform translate-y-4" />
 
-                  {/* Main card with simplified transform */}
+                  {/* Main card with official UNO design */}
                   <div
-                    className={`relative w-full h-full rounded-[20px] border-[6px] transition-transform duration-300 ${getColorClass(
+                    className={`relative w-full h-full rounded-[20px] transition-transform duration-300 ${getColorClass(
                       currentColor
                     )}`}
                     style={{
-                      boxShadow: '0 20px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.2)'
+                      boxShadow: '0 20px 40px rgba(0,0,0,0.5)',
+                      border: '2px solid rgba(0,0,0,0.2)'
                     }}
                   >
-                    {/* Glossy highlight */}
-                    <div className="absolute top-0 left-0 right-0 h-2/5 bg-gradient-to-b from-white/15 to-transparent rounded-t-[14px] pointer-events-none" />
-
-                    {/* Top corner with shadow */}
-                    <div className="absolute top-3 left-3 text-white font-black text-xl drop-shadow-[0_2px_4px_rgba(0,0,0,0.4)]">
-                      {discardPile[discardPile.length - 1].value === "skip" ? "⊘" :
-                       discardPile[discardPile.length - 1].value === "reverse" ? "⟲" :
-                       discardPile[discardPile.length - 1].value === "draw2" ? "+2" :
-                       discardPile[discardPile.length - 1].value === "wild" ? "W" :
-                       discardPile[discardPile.length - 1].value === "wild4" ? "+4" :
-                       discardPile[discardPile.length - 1].value.toUpperCase()}
-                    </div>
-
-                    {/* Center large oval with realistic shadow */}
-                    <div className="flex-1 flex items-center justify-center absolute inset-0">
-                      <div className="relative">
-                        {/* Oval shadow */}
-                        <div className="absolute inset-0 transform translate-y-2 blur-lg opacity-40">
-                          <div className="bg-black/60 rounded-full w-32 h-32" />
-                        </div>
-
-                        {/* Main oval */}
-                        <div className="relative bg-white rounded-full w-32 h-32 flex items-center justify-center shadow-[0_8px_20px_rgba(0,0,0,0.3),inset_0_2px_4px_rgba(255,255,255,0.5)]">
-                          <div className={`text-6xl font-black drop-shadow-md ${
-                            currentColor === "yellow" ? "text-yellow-600" :
+                    {/* White curved oval shape - official UNO style */}
+                    <div className="absolute inset-[8%] flex items-center justify-center">
+                      <div
+                        className="relative w-full h-full bg-white flex items-center justify-center"
+                        style={{
+                          borderRadius: '45% 45% 45% 45% / 50% 50% 50% 50%',
+                          boxShadow: 'inset 0 4px 12px rgba(0,0,0,0.15)',
+                          transform: 'rotate(-25deg)'
+                        }}
+                      >
+                        <div
+                          className={`text-7xl font-black ${
+                            currentColor === "yellow" ? "text-yellow-500" :
                             currentColor === "red" ? "text-red-600" :
                             currentColor === "blue" ? "text-blue-600" :
                             currentColor === "green" ? "text-green-600" :
                             "bg-gradient-to-br from-red-500 via-blue-500 to-green-500 bg-clip-text text-transparent"
-                          }`}>
-                            {discardPile[discardPile.length - 1].value === "skip" ? "⊘" :
-                             discardPile[discardPile.length - 1].value === "reverse" ? "⟲" :
-                             discardPile[discardPile.length - 1].value === "draw2" ? "+2" :
-                             discardPile[discardPile.length - 1].value === "wild" ? "W" :
-                             discardPile[discardPile.length - 1].value === "wild4" ? "+4" :
-                             discardPile[discardPile.length - 1].value.toUpperCase()}
-                          </div>
+                          }`}
+                          style={{
+                            transform: 'rotate(25deg)',
+                            textShadow: '3px 3px 6px rgba(0,0,0,0.25)'
+                          }}
+                        >
+                          {discardPile[discardPile.length - 1].value === "skip" ? "⊘" :
+                           discardPile[discardPile.length - 1].value === "reverse" ? "⟲" :
+                           discardPile[discardPile.length - 1].value === "draw2" ? "+2" :
+                           discardPile[discardPile.length - 1].value === "wild" ? "W" :
+                           discardPile[discardPile.length - 1].value === "wild4" ? "+4" :
+                           discardPile[discardPile.length - 1].value.toUpperCase()}
                         </div>
                       </div>
                     </div>
 
-                    {/* Bottom corner (rotated) with shadow */}
-                    <div className="absolute top-3 right-3 text-white font-black text-xl rotate-180 drop-shadow-[0_2px_4px_rgba(0,0,0,0.4)]">
+                    {/* Top left corner number */}
+                    <div className="absolute top-2 left-2 text-white font-black text-base" style={{ textShadow: '1px 1px 3px rgba(0,0,0,0.6)' }}>
                       {discardPile[discardPile.length - 1].value === "skip" ? "⊘" :
                        discardPile[discardPile.length - 1].value === "reverse" ? "⟲" :
                        discardPile[discardPile.length - 1].value === "draw2" ? "+2" :
-                       discardPile[discardPile.length - 1].value === "wild" ? "W" :
+                       discardPile[discardPile.length - 1].value === "wild" ? "" :
                        discardPile[discardPile.length - 1].value === "wild4" ? "+4" :
                        discardPile[discardPile.length - 1].value.toUpperCase()}
                     </div>
 
-                    {/* UNO logo with glow effect */}
-                    <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2">
-                      <div className="relative">
-                        <div className="text-white font-black text-xs tracking-widest drop-shadow-[0_0_6px_rgba(255,255,255,0.5)]">UNO</div>
-                        <div className="absolute inset-0 text-white font-black text-xs tracking-widest blur-sm opacity-60">UNO</div>
-                      </div>
+                    {/* Bottom right corner number (rotated) */}
+                    <div className="absolute bottom-2 right-2 text-white font-black text-base rotate-180" style={{ textShadow: '1px 1px 3px rgba(0,0,0,0.6)' }}>
+                      {discardPile[discardPile.length - 1].value === "skip" ? "⊘" :
+                       discardPile[discardPile.length - 1].value === "reverse" ? "⟲" :
+                       discardPile[discardPile.length - 1].value === "draw2" ? "+2" :
+                       discardPile[discardPile.length - 1].value === "wild" ? "" :
+                       discardPile[discardPile.length - 1].value === "wild4" ? "+4" :
+                       discardPile[discardPile.length - 1].value.toUpperCase()}
                     </div>
-
-                    {/* Edge lighting */}
-                    <div className="absolute inset-0 rounded-[14px] shadow-[inset_0_-2px_8px_rgba(0,0,0,0.3),inset_0_2px_8px_rgba(255,255,255,0.1)]" />
                   </div>
                 </div>
               )}
@@ -1040,36 +1033,37 @@ const UnoGame = () => {
                   {/* Simplified shadow for mobile performance */}
                   <div className="absolute inset-0 bg-black/50 rounded-[22px] blur-lg transform translate-y-3" />
 
-                  {/* Card with optimized effects */}
+                  {/* Card with official UNO design */}
                   <div
-                    className={`relative w-full h-full rounded-[16px] sm:rounded-[22px] border-4 sm:border-[6px] ${getColorClass(card.color)}`}
+                    className={`relative w-full h-full rounded-[16px] sm:rounded-[22px] ${getColorClass(card.color)}`}
                     style={{
-                      boxShadow: '0 12px 30px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.2)'
+                      boxShadow: '0 12px 30px rgba(0,0,0,0.4)',
+                      border: '2px solid rgba(0,0,0,0.2)'
                     }}
                   >
-                    {/* Glossy reflection */}
-                    <div className="absolute top-0 left-0 right-0 h-2/5 bg-gradient-to-b from-white/15 to-transparent rounded-t-[12px] sm:rounded-t-[16px] pointer-events-none" />
-
-                    {/* Top corner */}
-                    <div className="absolute top-2 left-2 sm:top-3 sm:left-3 text-white font-black text-base sm:text-xl drop-shadow">
-                      {card.value === "skip" ? "⊘" :
-                       card.value === "reverse" ? "⟲" :
-                       card.value === "draw2" ? "+2" :
-                       card.value === "wild" ? "W" :
-                       card.value === "wild4" ? "+4" :
-                       card.value.toUpperCase()}
-                    </div>
-
-                    {/* Center oval */}
-                    <div className="flex-1 flex items-center justify-center absolute inset-0">
-                      <div className="relative bg-white rounded-full w-16 h-16 sm:w-24 sm:h-24 flex items-center justify-center shadow-lg">
-                        <div className={`text-2xl sm:text-4xl font-black ${
-                          card.color === "yellow" ? "text-yellow-600" :
-                          card.color === "red" ? "text-red-600" :
-                          card.color === "blue" ? "text-blue-600" :
-                          card.color === "green" ? "text-green-600" :
-                          "bg-gradient-to-br from-red-500 via-blue-500 to-green-500 bg-clip-text text-transparent"
-                        }`}>
+                    {/* White curved oval shape - official UNO style */}
+                    <div className="absolute inset-[8%] flex items-center justify-center">
+                      <div
+                        className="relative w-full h-full bg-white flex items-center justify-center"
+                        style={{
+                          borderRadius: '45% 45% 45% 45% / 50% 50% 50% 50%',
+                          boxShadow: 'inset 0 2px 8px rgba(0,0,0,0.1)',
+                          transform: 'rotate(-25deg)'
+                        }}
+                      >
+                        <div
+                          className={`text-3xl sm:text-6xl font-black ${
+                            card.color === "yellow" ? "text-yellow-500" :
+                            card.color === "red" ? "text-red-600" :
+                            card.color === "blue" ? "text-blue-600" :
+                            card.color === "green" ? "text-green-600" :
+                            "bg-gradient-to-br from-red-500 via-blue-500 to-green-500 bg-clip-text text-transparent"
+                          }`}
+                          style={{
+                            transform: 'rotate(25deg)',
+                            textShadow: '2px 2px 4px rgba(0,0,0,0.2)'
+                          }}
+                        >
                           {card.value === "skip" ? "⊘" :
                            card.value === "reverse" ? "⟲" :
                            card.value === "draw2" ? "+2" :
@@ -1080,24 +1074,29 @@ const UnoGame = () => {
                       </div>
                     </div>
 
-                    {/* Bottom corner rotated */}
-                    <div className="absolute top-2 right-2 sm:top-3 sm:right-3 text-white font-black text-base sm:text-xl rotate-180 drop-shadow">
+                    {/* Top left corner number */}
+                    <div className="absolute top-1 left-1 sm:top-2 sm:left-2 text-white font-black text-xs sm:text-sm" style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.5)' }}>
                       {card.value === "skip" ? "⊘" :
                        card.value === "reverse" ? "⟲" :
                        card.value === "draw2" ? "+2" :
-                       card.value === "wild" ? "W" :
+                       card.value === "wild" ? "" :
                        card.value === "wild4" ? "+4" :
                        card.value.toUpperCase()}
                     </div>
 
-                    {/* UNO logo */}
-                    <div className="absolute bottom-1 sm:bottom-2 left-1/2 transform -translate-x-1/2">
-                      <div className="text-white font-black text-[10px] sm:text-xs tracking-widest drop-shadow">UNO</div>
+                    {/* Bottom right corner number (rotated) */}
+                    <div className="absolute bottom-1 right-1 sm:bottom-2 sm:right-2 text-white font-black text-xs sm:text-sm rotate-180" style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.5)' }}>
+                      {card.value === "skip" ? "⊘" :
+                       card.value === "reverse" ? "⟲" :
+                       card.value === "draw2" ? "+2" :
+                       card.value === "wild" ? "" :
+                       card.value === "wild4" ? "+4" :
+                       card.value.toUpperCase()}
                     </div>
 
                     {/* Playable card glow effect */}
                     {canPlay && (
-                      <div className="absolute inset-0 rounded-[16px] sm:rounded-[22px] ring-2 ring-yellow-400 ring-opacity-50" />
+                      <div className="absolute inset-0 rounded-[16px] sm:rounded-[22px] ring-2 ring-yellow-400 ring-opacity-50 animate-pulse" />
                     )}
                   </div>
                 </button>
