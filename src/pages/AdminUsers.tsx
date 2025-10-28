@@ -130,14 +130,19 @@ export default function AdminUsers() {
 
         if (error) throw error;
 
-        // Log admin action
-        await supabase.from("admin_actions").insert({
-          admin_id: (await supabase.auth.getUser()).data.user?.id,
-          action_type: actionDialog.action,
-          target_type: "user",
-          target_id: selectedUser.id,
-          details: { email: selectedUser.email },
-        });
+        // Try to log admin action (but don't fail if it doesn't work)
+        try {
+          await supabase.from("admin_actions").insert({
+            admin_id: (await supabase.auth.getUser()).data.user?.id,
+            action_type: actionDialog.action,
+            target_type: "user",
+            target_id: selectedUser.id,
+            metadata: { email: selectedUser.email },
+          });
+        } catch (logError) {
+          console.error("Failed to log admin action:", logError);
+          // Continue anyway - logging is not critical
+        }
 
         toast({
           title: "Success",
