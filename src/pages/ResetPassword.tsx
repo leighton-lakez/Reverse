@@ -23,20 +23,18 @@ export default function ResetPassword() {
 
     if (type === 'recovery' && accessToken) {
       setIsValidRecovery(true);
+      return; // Don't set up subscription if we already know this is a recovery
     }
 
     // Also listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'PASSWORD_RECOVERY') {
         setIsValidRecovery(true);
-      } else if (event === 'SIGNED_IN' && !isValidRecovery) {
-        // User is already logged in, redirect to home
-        navigate("/");
       }
     });
 
     return () => subscription.unsubscribe();
-  }, [navigate, isValidRecovery]);
+  }, [navigate]);
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();

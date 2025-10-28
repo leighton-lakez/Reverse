@@ -37,6 +37,11 @@ export default function Auth() {
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      // Ignore PASSWORD_RECOVERY events - let the reset password page handle those
+      if (event === 'PASSWORD_RECOVERY') {
+        return;
+      }
+
       if (session && (event === 'SIGNED_IN' || event === 'USER_UPDATED')) {
         // Check if profile exists
         supabase
