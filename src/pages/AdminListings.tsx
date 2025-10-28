@@ -88,17 +88,42 @@ const AdminListings = () => {
 
   const fetchListings = async () => {
     try {
-      const { data, error } = await supabase
+      // Fetch items first
+      const { data: itemsData, error: itemsError } = await supabase
         .from('items')
-        .select(`
-          *,
-          profiles!items_user_id_fkey(id, display_name)
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (itemsError) throw itemsError;
+      if (!itemsData || itemsData.length === 0) {
+        setListings([]);
+        setLoadingListings(false);
+        return;
+      }
 
-      setListings(data || []);
+      // Get unique user IDs
+      const userIds = [...new Set(itemsData.map(item => item.user_id))];
+
+      // Fetch all related profiles
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, display_name')
+        .in('id', userIds);
+
+      if (profilesError) throw profilesError;
+
+      // Create a map of profiles by ID
+      const profilesMap = new Map(
+        (profilesData || []).map(p => [p.id, p])
+      );
+
+      // Combine items with profile data
+      const enrichedItems = itemsData.map(item => ({
+        ...item,
+        profiles: profilesMap.get(item.user_id) || { id: item.user_id, display_name: 'Unknown' }
+      }));
+
+      setListings(enrichedItems || []);
     } catch (error) {
       console.error('Error fetching listings:', error);
       toast({

@@ -23,6 +23,7 @@ import Debug from "./pages/Debug";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminMessages from "./pages/AdminMessages";
 import AdminListings from "./pages/AdminListings";
+import AdminUsers from "./pages/AdminUsers";
 import NotFound from "./pages/NotFound";
 import UnoGame from "./pages/UnoGame";
 import FirstVisitReverse from "./components/FirstVisitReverse";
@@ -60,6 +61,7 @@ const App = () => (
           <Route path="/uno" element={<UnoGame />} />
           {/* Admin Routes */}
           <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/admin/users" element={<AdminUsers />} />
           <Route path="/admin/messages" element={<AdminMessages />} />
           <Route path="/admin/listings" element={<AdminListings />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
