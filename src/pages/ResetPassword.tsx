@@ -12,29 +12,29 @@ export default function ResetPassword() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [isValidRecovery, setIsValidRecovery] = useState(false);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    // Check if we have a recovery token in the URL
-    const hashParams = new URLSearchParams(window.location.hash.substring(1));
-    const accessToken = hashParams.get('access_token');
-    const type = hashParams.get('type');
+  // Check for recovery token immediately on mount
+  const hashParams = new URLSearchParams(window.location.hash.substring(1));
+  const type = hashParams.get('type');
+  const [isValidRecovery, setIsValidRecovery] = useState(type === 'recovery');
 
-    if (type === 'recovery' && accessToken) {
-      setIsValidRecovery(true);
-      return; // Don't set up subscription if we already know this is a recovery
-    }
+  useEffect(() => {
+    console.log('ResetPassword mounted, URL:', window.location.href);
+    console.log('Hash params:', window.location.hash);
+    console.log('Type:', type);
+    console.log('isValidRecovery:', isValidRecovery);
 
     // Also listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('Auth state change event:', event);
       if (event === 'PASSWORD_RECOVERY') {
         setIsValidRecovery(true);
       }
     });
 
     return () => subscription.unsubscribe();
-  }, [navigate]);
+  }, []);
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
