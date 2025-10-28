@@ -1,4 +1,4 @@
-import { LogOut, X, Heart, RotateCcw } from "lucide-react";
+import { LogOut, X, Heart, RotateCcw, Filter, Map } from "lucide-react";
 import BottomNav from "@/components/BottomNav";
 import { ReverseIcon } from "@/components/ReverseIcon";
 import { useState, useEffect, useRef } from "react";
@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
+import MapView from "@/components/MapView";
 
 interface Item {
   id: string;
@@ -17,7 +18,10 @@ interface Item {
   images: string[];
   user_id: string;
   description: string;
+  category: string;
 }
+
+const categories = ["All", "Handbags", "Shoes", "Clothing", "Accessories", "Jewelry", "Watches"];
 
 const Index = () => {
   const [items, setItems] = useState<Item[]>([]);
@@ -31,6 +35,8 @@ const Index = () => {
   const [showWelcomeCard, setShowWelcomeCard] = useState(false);
   const [welcomeCardAnimating, setWelcomeCardAnimating] = useState(false);
   const [showContent, setShowContent] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState("All");
+  const [showMapView, setShowMapView] = useState(false);
 
   const navigate = useNavigate();
   const cardRef = useRef<HTMLDivElement>(null);
@@ -64,7 +70,7 @@ const Index = () => {
 
   useEffect(() => {
     fetchItems();
-  }, [user]);
+  }, [user, selectedCategory]);
 
   useEffect(() => {
     // Check if user has started browsing before
@@ -90,10 +96,17 @@ const Index = () => {
       query = query.neq("user_id", user.id);
     }
 
+    // Filter by category if not "All"
+    if (selectedCategory !== "All") {
+      query = query.eq("category", selectedCategory.toLowerCase());
+    }
+
     const { data, error } = await query;
 
     if (!error && data) {
       setItems(data);
+      setCurrentIndex(0); // Reset to first item when category changes
+      setSkippedItems([]); // Clear skipped items
     }
     setLoading(false);
   };
@@ -264,15 +277,45 @@ const Index = () => {
               </h1>
             </div>
             {user ? (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleSignOut}
-                title="Sign out"
-                className="hover:bg-primary/10 transition-all h-9 w-9 sm:h-10 sm:w-10"
+              <button
+                onClick={() => navigate("/uno")}
+                title="Play UNO!"
+                className="group flex items-center gap-2 sm:gap-3 hover:scale-105 transition-all duration-500"
               >
-                <LogOut className="h-4 w-4 sm:h-5 sm:w-5" />
-              </Button>
+                {/* UNO Reverse Card Icon - Compact */}
+                <div
+                  className="relative w-8 h-8 sm:w-10 sm:h-10"
+                  style={{ perspective: '800px' }}
+                >
+                  {/* Shadow */}
+                  <div className="absolute inset-0 bg-black/60 rounded-lg blur-md transform translate-y-1" />
+
+                  {/* Card */}
+                  <div
+                    className="absolute inset-0 bg-gradient-to-br from-red-500 via-red-600 to-red-700 rounded-lg border-2 border-red-900/80 shadow-[0_4px_12px_rgba(0,0,0,0.6),inset_0_1px_0_rgba(255,255,255,0.3)] transition-all duration-500 group-hover:rotate-12"
+                    style={{
+                      transformStyle: 'preserve-3d',
+                      transform: 'rotateX(5deg) rotateY(-5deg)'
+                    }}
+                  >
+                    {/* Glossy highlight */}
+                    <div className="absolute inset-0 bg-gradient-to-b from-white/30 to-transparent rounded-t-md" />
+
+                    {/* Reverse symbol */}
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="text-white font-black text-xl sm:text-2xl drop-shadow-lg leading-none">⟲</div>
+                    </div>
+
+                    {/* Glow */}
+                    <div className="absolute inset-0 rounded-lg shadow-[0_0_15px_rgba(239,68,68,0.5)] group-hover:shadow-[0_0_20px_rgba(239,68,68,0.7)] transition-all duration-500" />
+                  </div>
+                </div>
+
+                {/* PLAY UNO Text */}
+                <h2 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tighter text-gradient">
+                  PLAY UNO
+                </h2>
+              </button>
             ) : (
               <Button
                 variant="default"
@@ -286,8 +329,67 @@ const Index = () => {
         </div>
       </header>
 
+      {/* Category Filter */}
+      <div className="flex-shrink-0 bg-background/95 backdrop-blur-lg border-b border-border">
+        <div className="max-w-7xl mx-auto px-2 sm:px-4 py-2">
+          <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
+            <Filter className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+            {categories.map((category) => (
+              <Button
+                key={category}
+                variant={selectedCategory === category ? "default" : "outline"}
+                size="sm"
+                onClick={() => setSelectedCategory(category)}
+                className={`flex-shrink-0 transition-all ${
+                  selectedCategory === category
+                    ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                    : "hover:bg-primary/10"
+                }`}
+              >
+                {category}
+              </Button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Map Toggle Button - Fixed on left side */}
+      <button
+        onClick={() => setShowMapView(!showMapView)}
+        className={`fixed left-0 top-1/2 -translate-y-1/2 z-50 flex flex-col items-center justify-center py-8 px-3 rounded-r-2xl shadow-2xl transition-all duration-300 ${
+          showMapView
+            ? 'bg-primary text-primary-foreground hover:bg-primary/90'
+            : 'bg-gradient-to-br from-primary/90 to-primary text-primary-foreground hover:from-primary hover:to-primary/90'
+        }`}
+        title={showMapView ? "Show Cards" : "Show Map"}
+        style={!showMapView ? { animation: 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite' } : undefined}
+      >
+        <Map className="h-7 w-7 mb-2" />
+        <span className="text-xs font-black tracking-wider [writing-mode:vertical-lr] rotate-180">
+          {showMapView ? "CARDS" : "MAP VIEW"}
+        </span>
+      </button>
+
       {/* Main Content */}
-      <main className="flex-1 max-w-md mx-auto w-full px-3 sm:px-4 pt-2 pb-1 sm:py-6 flex flex-col items-center justify-start overflow-hidden">
+      <main className={`flex-1 w-full flex flex-col items-center justify-start overflow-hidden ${
+        showMapView ? 'fixed inset-0 z-40 pt-16' : 'max-w-md mx-auto px-3 sm:px-4 pt-2 pb-1 sm:py-6'
+      }`}>
+        {showMapView ? (
+          <div className="w-full h-full">
+            <MapView
+              items={items}
+              onItemClick={(item) => {
+                // Navigate to the specific item in the card view
+                const itemIndex = items.findIndex(i => i.id === item.id);
+                if (itemIndex !== -1) {
+                  setCurrentIndex(itemIndex);
+                  setShowMapView(false);
+                }
+              }}
+            />
+          </div>
+        ) : (
+          <>
         {showWelcomeCard ? (
           <>
             {/* Welcome Card - UNO Reverse */}
@@ -485,6 +587,8 @@ const Index = () => {
               {currentIndex + 1} / {items.length}
             </div>
           </div>
+        )}
+        </>
         )}
       </main>
 

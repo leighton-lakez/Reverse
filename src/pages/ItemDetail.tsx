@@ -25,7 +25,7 @@ const ItemDetail = () => {
     const fetchItemDetails = async () => {
       if (location.state?.item?.id) {
         const itemId = location.state.item.id;
-        
+
         // Fetch item data
         const { data: itemData, error: itemError } = await supabase
           .from('items')
@@ -53,6 +53,24 @@ const ItemDetail = () => {
           seller: sellerData
         });
         setLoading(false);
+
+        // Track view (only if not the owner)
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session && session.user.id !== itemData.user_id) {
+          // Insert view record (will auto-increment view_count via trigger)
+          await supabase
+            .from('item_views')
+            .insert({
+              item_id: itemId,
+              user_id: session.user.id
+            })
+            .select()
+            .single()
+            .catch(() => {
+              // Ignore duplicate view errors (same user viewing again)
+              // The unique constraint will prevent duplicate entries
+            });
+        }
       } else {
         toast.error('Item not found');
         navigate('/');

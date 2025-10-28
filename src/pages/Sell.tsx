@@ -59,6 +59,7 @@ const Sell = () => {
   const [inputValue, setInputValue] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [isGettingAIPrice, setIsGettingAIPrice] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -120,6 +121,116 @@ const Sell = () => {
       setIsTyping(false);
       addMessage(content, "bot", options, inputType);
     }, delay);
+  };
+
+  const getAIPriceSuggestion = async () => {
+    const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
+
+    if (!apiKey || apiKey === "your-openai-api-key-here") {
+      toast({
+        title: "AI Feature Not Available",
+        description: "OpenAI API key is not configured.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (itemData.images.length === 0) {
+      toast({
+        title: "Image Required",
+        description: "Please upload at least one image first to use AI price suggestion.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsGettingAIPrice(true);
+    addMessage("I'd like AI to suggest a price for me", "user");
+
+    try {
+      const openai = new OpenAI({
+        apiKey: apiKey,
+        dangerouslyAllowBrowser: true,
+      });
+
+      // Convert first image to base64
+      const firstImage = itemData.images[0];
+      const reader = new FileReader();
+
+      reader.onloadend = async () => {
+        const base64Image = reader.result as string;
+
+        try {
+          const response = await openai.chat.completions.create({
+            model: "gpt-4o",
+            messages: [
+              {
+                role: "system",
+                content: `You are a luxury fashion resale pricing expert. Analyze the product image and any damage/condition notes to suggest a fair resale price. Consider:
+- Brand value and market demand
+- Item condition (visible wear, scratches, damages)
+- Current resale market trends
+- Authenticity indicators
+
+Provide a specific price range and explain your reasoning. Be concise but thorough.`,
+              },
+              {
+                role: "user",
+                content: [
+                  {
+                    type: "text",
+                    text: `Product Details:
+Title: ${itemData.title || "Not provided"}
+Brand: ${itemData.brand || "Not provided"}
+Category: ${itemData.category || "Not provided"}
+Condition: ${itemData.condition || "Not provided"}
+Description: ${itemData.description || "Please analyze the image and suggest a fair resale price based on visible condition."}
+
+Please provide a price suggestion considering any visible damage or wear in the image.`,
+                  },
+                  {
+                    type: "image_url",
+                    image_url: {
+                      url: base64Image,
+                      detail: "high",
+                    },
+                  },
+                ],
+              },
+            ],
+            max_tokens: 500,
+            temperature: 0.7,
+          });
+
+          const aiSuggestion = response.choices[0]?.message?.content || "Unable to generate price suggestion.";
+
+          addBotMessageWithDelay(
+            `🤖 AI Price Analysis:\n\n${aiSuggestion}\n\nWould you like to use this suggestion, or enter your own price?`,
+            800
+          );
+        } catch (error: any) {
+          console.error("OpenAI API Error:", error);
+          toast({
+            title: "AI Analysis Failed",
+            description: error.message || "Failed to get price suggestion. Please try again.",
+            variant: "destructive",
+          });
+          addBotMessageWithDelay("I had trouble analyzing the price. Please enter your price manually.", 600);
+        } finally {
+          setIsGettingAIPrice(false);
+        }
+      };
+
+      reader.readAsDataURL(firstImage);
+    } catch (error: any) {
+      setIsGettingAIPrice(false);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to analyze price.",
+        variant: "destructive",
+      });
+      addBotMessageWithDelay("I had trouble with that. Please enter your price manually.", 600);
+    }
   };
 
   const startConversation = () => {
@@ -253,7 +364,7 @@ const Sell = () => {
           "Fair": "fair",
         };
         setItemData({ ...itemData, condition: conditionMap[inputToSubmit] || inputToSubmit });
-        addBotMessageWithDelay("What price are you asking for it? (just the number, like 150)", 600);
+        addBotMessageWithDelay("What price are you asking for it? (just the number, like 150)\n\n💡 Not sure? I can analyze your photos with AI to suggest a fair price!", 600);
         setCurrentStep("price");
         break;
 
@@ -310,9 +421,9 @@ const Sell = () => {
 
       setTimeout(() => {
         addBotMessageWithDelay(
-          "Does everything look good? Click 'List Item' to publish or 'Start Over' to restart.",
+          "Does everything look good? Choose an option below:",
           1200,
-          ["List Item", "Start Over"],
+          ["List Item", "Save as Draft", "Start Over"],
           "select"
         );
         setCurrentStep("summary");
@@ -324,6 +435,8 @@ const Sell = () => {
     if (currentStep === "summary") {
       if (option === "List Item") {
         submitListing();
+      } else if (option === "Save as Draft") {
+        saveDraft();
       } else {
         resetConversation();
       }
@@ -360,6 +473,119 @@ const Sell = () => {
     startConversation();
   };
 
+  const saveDraft = async () => {
+    if (!userId) return;
+
+    setSubmitting(true);
+    addMessage("Save as Draft", "user");
+    addBotMessageWithDelay("Saving your draft... 💾", 300);
+
+    try {
+      // Upload images to storage first
+      const uploadedImageUrls: string[] = [];
+      for (const file of itemData.images) {
+        const fileExt = file.name.split(".").pop();
+        const fileName = `${userId}/drafts/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from("item-images")
+          .upload(fileName, file);
+
+        if (uploadError) {
+          console.error('Draft image upload error:', uploadError);
+          throw new Error(`Failed to upload images: ${uploadError.message}`);
+        }
+
+        const {
+          data: { publicUrl },
+        } = supabase.storage.from("item-images").getPublicUrl(uploadData.path);
+
+        uploadedImageUrls.push(publicUrl);
+      }
+
+      // Upload videos
+      const uploadedVideoUrls: string[] = [];
+      for (const file of itemData.videos) {
+        const fileExt = file.name.split(".").pop();
+        const fileName = `${userId}/drafts/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from("item-images")
+          .upload(fileName, file);
+
+        if (uploadError) {
+          console.error('Draft video upload error:', uploadError);
+          throw new Error(`Failed to upload videos: ${uploadError.message}`);
+        }
+
+        const {
+          data: { publicUrl },
+        } = supabase.storage.from("item-images").getPublicUrl(uploadData.path);
+
+        uploadedVideoUrls.push(publicUrl);
+      }
+
+      // Save draft to database
+      const { error: draftError } = await supabase
+        .from('item_drafts')
+        .insert({
+          user_id: userId,
+          title: itemData.title,
+          brand: itemData.brand,
+          category: itemData.category,
+          description: itemData.description,
+          condition: itemData.condition,
+          price: parseFloat(itemData.price) || null,
+          location: itemData.location,
+          size: itemData.size,
+          trade_preference: itemData.tradePreference,
+          images: uploadedImageUrls,
+          videos: uploadedVideoUrls,
+        });
+
+      if (draftError) {
+        console.error('Draft save error:', draftError);
+        console.error('Draft error details:', {
+          message: draftError.message,
+          code: draftError.code,
+          details: draftError.details,
+          hint: draftError.hint
+        });
+        throw new Error(draftError.message || 'Failed to save draft');
+      }
+
+      setTimeout(() => {
+        addMessage("Draft saved! You can find it in your profile. ✨", "bot");
+        toast({
+          title: "Draft Saved!",
+          description: "Your draft has been saved to your profile.",
+        });
+
+        setTimeout(() => {
+          navigate("/profile");
+        }, 1500);
+      }, 1000);
+    } catch (error: any) {
+      console.error('Draft save error:', error);
+
+      let errorMessage = error.message || getUserFriendlyError(error);
+
+      // Check if it's a table doesn't exist error
+      if (error.message && (error.message.includes('relation') || error.message.includes('does not exist'))) {
+        errorMessage = "Drafts feature is being set up. Please try listing your item instead or contact support.";
+      }
+
+      addMessage(`Oops! ${errorMessage} Please try again.`, "bot");
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const submitListing = async () => {
     if (!userId) return;
 
@@ -388,7 +614,21 @@ const Sell = () => {
       if (!validationResult.success) {
         const firstError = validationResult.error.errors[0];
         console.error('Validation errors:', validationResult.error.errors);
-        throw new Error(firstError.message);
+
+        // User-friendly field names
+        const fieldNames: Record<string, string> = {
+          title: 'Title',
+          brand: 'Brand',
+          category: 'Category',
+          description: 'Description',
+          condition: 'Condition',
+          price: 'Price',
+          location: 'Location',
+          size: 'Size'
+        };
+
+        const fieldName = fieldNames[firstError.path[0] as string] || firstError.path[0];
+        throw new Error(`${fieldName}: ${firstError.message}`);
       }
 
       // Upload images
@@ -520,43 +760,58 @@ const Sell = () => {
   const canSubmitInput = currentStep !== "images" && currentStep !== "summary" && currentStep !== "welcome";
 
   return (
-    <div className="min-h-screen bg-background pb-20 sm:pb-24 flex flex-col overflow-hidden relative">
+    <div className="min-h-screen bg-gradient-to-b from-background via-background to-card pb-20 sm:pb-24 flex flex-col overflow-hidden relative">
+      {/* Ambient gradient background */}
+      <div className="fixed inset-0 gradient-mesh pointer-events-none opacity-30" />
+
       {/* Header */}
-      <header className="sticky top-0 z-50 glass">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 py-3 sm:py-4">
-          <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate("/")}>
-            <ReverseIcon className="w-8 h-8" />
-            <h1 className="text-xl font-black tracking-tighter text-gradient">REVERSE</h1>
+      <header className="sticky top-0 z-50 glass border-b border-border/50">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4 sm:py-5">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3 cursor-pointer group" onClick={() => navigate("/")}>
+              <div className="relative">
+                <div className="absolute inset-0 bg-primary/20 rounded-lg blur-md group-hover:blur-lg transition-all" />
+                <ReverseIcon className="w-9 h-9 relative z-10 group-hover:scale-105 transition-transform" />
+              </div>
+              <h1 className="text-2xl font-black tracking-tighter text-gradient">REVERSE</h1>
+            </div>
+            <div className="flex items-center gap-2 px-4 py-2 rounded-full glass border border-primary/20">
+              <div className="h-2 w-2 bg-green-500 rounded-full animate-pulse" />
+              <span className="text-xs font-medium text-muted-foreground">Live Assistant</span>
+            </div>
           </div>
         </div>
       </header>
 
       {/* Chat Messages */}
-      <main className="flex-1 max-w-3xl mx-auto w-full px-3 sm:px-4 py-4 sm:py-6 overflow-y-auto pb-32 sm:pb-24">
-        <div className="space-y-4 pb-8">
-          {messages.map((message) => (
+      <main className="flex-1 max-w-4xl mx-auto w-full px-3 sm:px-6 py-3 sm:py-4 overflow-y-auto pb-48 sm:pb-24 relative z-10">
+        <div className="space-y-2 pb-4">
+          {messages.map((message, index) => (
             <div
               key={message.id}
               className={`flex ${message.type === "user" ? "justify-end" : "justify-start"} animate-fade-in`}
+              style={{ animationDelay: `${index * 50}ms` }}
             >
               <div
-                className={`max-w-[85%] sm:max-w-[80%] rounded-2xl px-3 sm:px-4 py-2.5 sm:py-3 shadow-md ${
+                className={`max-w-[85%] sm:max-w-[75%] rounded-xl px-2.5 sm:px-3 py-1.5 sm:py-2 shadow-lg transition-all hover:scale-[1.01] ${
                   message.type === "user"
-                    ? "gradient-primary text-primary-foreground shadow-glow"
-                    : "glass text-foreground"
+                    ? "bg-gradient-to-br from-primary via-primary to-primary/90 text-primary-foreground shadow-primary/20 border border-primary/30"
+                    : "glass text-foreground border border-border/50 backdrop-blur-xl"
                 }`}
               >
-                <p className="text-xs sm:text-sm whitespace-pre-line leading-relaxed">{message.content}</p>
+                <p className={`whitespace-pre-line leading-snug font-medium ${
+                  message.type === "bot" ? "text-sm sm:text-base" : "text-[11px] sm:text-xs"
+                }`}>{message.content}</p>
 
                 {message.options && (
-                  <div className="flex flex-wrap gap-1.5 sm:gap-2 mt-2 sm:mt-3">
+                  <div className="flex flex-wrap gap-1 sm:gap-1.5 mt-1.5 sm:mt-2">
                     {message.options.map((option) => (
                       <Button
                         key={option}
                         onClick={() => handleOptionClick(option)}
                         size="sm"
                         variant="outline"
-                        className="bg-background/50 hover:bg-background border-border text-xs sm:text-sm h-8 sm:h-9 px-2 sm:px-3"
+                        className="bg-background/80 hover:bg-primary/10 border-primary/30 hover:border-primary/50 text-[10px] sm:text-xs h-7 sm:h-8 px-2 sm:px-2.5 rounded-full font-semibold hover:shadow-md transition-all hover:scale-105"
                       >
                         {option}
                       </Button>
@@ -569,11 +824,11 @@ const Sell = () => {
 
           {isTyping && (
             <div className="flex justify-start animate-fade-in">
-              <div className="glass rounded-2xl px-3 sm:px-4 py-2.5 sm:py-3 shadow-md">
+              <div className="glass rounded-xl px-3 py-2 shadow-lg border border-border/50 backdrop-blur-xl">
                 <div className="flex gap-1">
-                  <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: "0ms" }}></div>
-                  <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: "150ms" }}></div>
-                  <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: "300ms" }}></div>
+                  <div className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce shadow-lg shadow-primary/50" style={{ animationDelay: "0ms" }}></div>
+                  <div className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce shadow-lg shadow-primary/50" style={{ animationDelay: "150ms" }}></div>
+                  <div className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce shadow-lg shadow-primary/50" style={{ animationDelay: "300ms" }}></div>
                 </div>
               </div>
             </div>
@@ -581,21 +836,25 @@ const Sell = () => {
 
           {/* Image Previews */}
           {imagePreviews.length > 0 && currentStep !== "summary" && (
-            <div className="flex justify-start">
-              <div className="glass rounded-2xl p-3 shadow-md">
-                <p className="text-xs text-muted-foreground mb-2">Photos</p>
-                <div className="grid grid-cols-3 gap-2">
+            <div className="flex justify-start animate-fade-in">
+              <div className="glass rounded-xl p-2 sm:p-2.5 shadow-lg border border-border/50 backdrop-blur-xl max-w-[85%] sm:max-w-[75%]">
+                <div className="flex items-center gap-1 mb-1.5">
+                  <div className="h-1 w-1 bg-primary rounded-full" />
+                  <p className="text-[9px] sm:text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Photos</p>
+                </div>
+                <div className="grid grid-cols-3 gap-1.5">
                   {imagePreviews.map((preview, index) => (
-                    <div key={index} className="relative aspect-square rounded-md overflow-hidden group">
-                      <img src={preview} alt={`Upload ${index + 1}`} className="w-full h-full object-cover" />
+                    <div key={index} className="relative aspect-square rounded-md overflow-hidden group ring-1 ring-border/50 hover:ring-primary/50 transition-all">
+                      <img src={preview} alt={`Upload ${index + 1}`} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                       <Button
                         type="button"
                         variant="destructive"
                         size="icon"
-                        className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                        className="absolute top-1 right-1 h-5 w-5 rounded-full opacity-0 group-hover:opacity-100 transition-all shadow-lg hover:scale-110"
                         onClick={() => removeImage(index)}
                       >
-                        <X className="h-3 w-3" />
+                        <X className="h-2.5 w-2.5" />
                       </Button>
                     </div>
                   ))}
@@ -606,24 +865,29 @@ const Sell = () => {
 
           {/* Video Previews */}
           {videoPreviews.length > 0 && currentStep !== "summary" && (
-            <div className="flex justify-start">
-              <div className="glass rounded-2xl p-3 shadow-md">
-                <p className="text-xs text-muted-foreground mb-2">Videos</p>
-                <div className="grid grid-cols-3 gap-2">
+            <div className="flex justify-start animate-fade-in">
+              <div className="glass rounded-xl p-2 sm:p-2.5 shadow-lg border border-border/50 backdrop-blur-xl max-w-[85%] sm:max-w-[75%]">
+                <div className="flex items-center gap-1 mb-1.5">
+                  <div className="h-1 w-1 bg-secondary rounded-full" />
+                  <p className="text-[9px] sm:text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Videos</p>
+                </div>
+                <div className="grid grid-cols-3 gap-1.5">
                   {videoPreviews.map((preview, index) => (
-                    <div key={index} className="relative aspect-square rounded-md overflow-hidden group">
+                    <div key={index} className="relative aspect-square rounded-md overflow-hidden group ring-1 ring-border/50 hover:ring-secondary/50 transition-all">
                       <video src={preview} className="w-full h-full object-cover" />
-                      <div className="absolute inset-0 flex items-center justify-center bg-black/30">
-                        <Video className="h-8 w-8 text-white" />
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/40 group-hover:bg-black/50 transition-colors">
+                        <div className="p-1.5 bg-white/90 rounded-full">
+                          <Video className="h-4 w-4 text-secondary" />
+                        </div>
                       </div>
                       <Button
                         type="button"
                         variant="destructive"
                         size="icon"
-                        className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                        className="absolute top-1 right-1 h-5 w-5 rounded-full opacity-0 group-hover:opacity-100 transition-all shadow-lg hover:scale-110"
                         onClick={() => removeVideo(index)}
                       >
-                        <X className="h-3 w-3" />
+                        <X className="h-2.5 w-2.5" />
                       </Button>
                     </div>
                   ))}
@@ -637,59 +901,87 @@ const Sell = () => {
       </main>
 
       {/* Input Area */}
-      <div className="sticky bottom-0 sm:bottom-16 safe-area-bottom">
-        <div className="max-w-3xl mx-auto px-3 sm:px-6 py-3 sm:py-4">
-          {currentStep === "images" && (
-            <div className="flex gap-2">
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*,video/*"
-                multiple
-                className="hidden"
-                onChange={handleImageUpload}
-              />
-              <Button
-                onClick={() => fileInputRef.current?.click()}
-                className="flex-1 h-11 sm:h-12 text-sm sm:text-base gradient-primary shadow-glow hover:shadow-glow-secondary transition-all"
-              >
-                <Upload className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
-                Upload Photos/Videos
-              </Button>
-            </div>
-          )}
+      <div className="fixed bottom-16 left-0 right-0 sm:sticky sm:bottom-16 safe-area-bottom z-20">
+        <div className="relative">
+          {/* Gradient fade effect */}
+          <div className="absolute bottom-full left-0 right-0 h-20 bg-gradient-to-t from-background via-background/90 to-transparent pointer-events-none" />
 
-          {canSubmitInput && (
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                handleSubmitInput();
-              }}
-              className="flex gap-2"
-            >
-              <Input
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                placeholder={getPlaceholder()}
-                type={getCurrentInputType()}
-                className="flex-1 h-11 sm:h-12 text-sm sm:text-base bg-muted border-border"
-                disabled={submitting}
-                autoFocus
-              />
-              <Button
-                type="submit"
-                size="icon"
-                className="h-11 w-11 sm:h-12 sm:w-12"
-                disabled={!inputValue.trim() || submitting}
-              >
-                {submitting ? (
-                  <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 animate-spin" />
-                ) : (
-                  <Send className="h-4 w-4 sm:h-5 sm:w-5" />
-                )}
-              </Button>
-            </form>
-          )}
+          <div className="glass border-t border-border/50 backdrop-blur-2xl">
+            <div className="max-w-4xl mx-auto px-3 sm:px-6 py-3 sm:py-5">
+              {currentStep === "images" && (
+                <div className="flex gap-3">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*,video/*"
+                    multiple
+                    className="hidden"
+                    onChange={handleImageUpload}
+                  />
+                  <Button
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex-1 h-12 sm:h-14 text-sm sm:text-base bg-gradient-to-r from-primary via-primary to-primary/90 hover:from-primary/90 hover:via-primary hover:to-primary shadow-xl shadow-primary/30 hover:shadow-2xl hover:shadow-primary/40 transition-all font-bold rounded-2xl border border-primary/20"
+                  >
+                    <Upload className="h-5 w-5 mr-2.5" />
+                    Upload Photos/Videos
+                  </Button>
+                </div>
+              )}
+
+              {canSubmitInput && (
+                <div className="space-y-3">
+                  {currentStep === "price" && (
+                    <Button
+                      onClick={getAIPriceSuggestion}
+                      disabled={isGettingAIPrice || itemData.images.length === 0}
+                      className="w-full h-12 sm:h-14 bg-gradient-to-r from-secondary via-secondary to-secondary/90 hover:from-secondary/90 hover:via-secondary hover:to-secondary shadow-xl shadow-secondary/30 hover:shadow-2xl hover:shadow-secondary/40 transition-all font-bold rounded-2xl border border-secondary/20"
+                    >
+                      {isGettingAIPrice ? (
+                        <>
+                          <Loader2 className="h-5 w-5 mr-2.5 animate-spin" />
+                          AI is analyzing...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="h-5 w-5 mr-2.5" />
+                          Get AI Price Suggestion
+                        </>
+                      )}
+                    </Button>
+                  )}
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      handleSubmitInput();
+                    }}
+                    className="flex gap-3"
+                  >
+                    <Input
+                      value={inputValue}
+                      onChange={(e) => setInputValue(e.target.value)}
+                      placeholder={getPlaceholder()}
+                      type={getCurrentInputType()}
+                      className="flex-1 h-12 sm:h-14 text-sm sm:text-base bg-background/50 border-border/50 rounded-2xl px-5 focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition-all font-medium placeholder:text-muted-foreground/60"
+                      disabled={submitting || isGettingAIPrice}
+                      autoFocus
+                    />
+                    <Button
+                      type="submit"
+                      size="icon"
+                      className="h-12 w-12 sm:h-14 sm:w-14 rounded-2xl bg-gradient-to-br from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40 hover:scale-105 transition-all"
+                      disabled={!inputValue.trim() || submitting || isGettingAIPrice}
+                    >
+                      {submitting ? (
+                        <Loader2 className="h-5 w-5 animate-spin" />
+                      ) : (
+                        <Send className="h-5 w-5" />
+                      )}
+                    </Button>
+                  </form>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 

@@ -132,19 +132,34 @@ const UserProfile = () => {
   const fetchUserStories = async (uid: string) => {
     const { data, error } = await supabase
       .from("stories")
-      .select(`
-        *,
-        profiles!stories_user_id_fkey (
-          display_name,
-          avatar_url
-        )
-      `)
+      .select("*")
       .eq("user_id", uid)
       .gt("expires_at", new Date().toISOString())
       .order("created_at", { ascending: false });
 
-    if (!error && data) {
-      setUserStories(data);
+    if (error) {
+      console.error('Error fetching stories:', error);
+      return;
+    }
+
+    if (data) {
+      // Filter out soft-deleted stories if the column exists
+      const activeStories = data.filter((story: any) => !story.deleted_at);
+
+      // Fetch profile data separately
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("display_name, avatar_url")
+        .eq("id", uid)
+        .single();
+
+      // Add profile to each story
+      const storiesWithProfile = activeStories.map((story: any) => ({
+        ...story,
+        profiles: profile
+      }));
+
+      setUserStories(storiesWithProfile);
     }
   };
 
@@ -337,10 +352,34 @@ const UserProfile = () => {
       <main className="max-w-7xl mx-auto px-4 py-3">
         <Card className="p-4 mb-3 animate-fade-in border-border">
           <div className="flex items-start gap-4">
-            <Avatar className="h-16 w-16 border-2 border-primary flex-shrink-0">
-              <AvatarImage src={profileData.avatar} />
-              <AvatarFallback>{profileData.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-            </Avatar>
+            {/* Avatar with Story Ring */}
+            {userStories.length > 0 ? (
+              <button
+                onClick={() => setStoryViewerOpen(true)}
+                className="flex-shrink-0 group relative"
+              >
+                {/* Animated glow effect */}
+                <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-primary via-yellow-500 to-primary blur-xl opacity-40 group-hover:opacity-60 animate-pulse" />
+
+                {/* Main story ring with thicker border and stronger gradient */}
+                <div className="relative p-1 rounded-full bg-gradient-to-tr from-primary via-yellow-400 to-primary shadow-lg shadow-primary/50 group-hover:shadow-xl group-hover:shadow-primary/70 transition-all duration-300">
+                  <Avatar className="h-16 w-16 border-[4px] border-background ring-2 ring-white/50 group-hover:ring-white/80 group-hover:scale-105 transition-all duration-300">
+                    <AvatarImage src={profileData.avatar} />
+                    <AvatarFallback>{profileData.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                  </Avatar>
+                </div>
+
+                {/* "NEW" badge */}
+                <div className="absolute -top-1 -right-1 bg-gradient-to-r from-primary to-yellow-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full shadow-lg animate-bounce">
+                  NEW
+                </div>
+              </button>
+            ) : (
+              <Avatar className="h-16 w-16 border-2 border-primary flex-shrink-0">
+                <AvatarImage src={profileData.avatar} />
+                <AvatarFallback>{profileData.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+              </Avatar>
+            )}
             
             <div className="flex-1 min-w-0">
               <h2 className="text-lg font-bold text-foreground truncate">{profileData.name}</h2>
@@ -394,28 +433,6 @@ const UserProfile = () => {
           </div>
         </Card>
 
-        {/* Story Section */}
-        {userStories.length > 0 && (
-          <div className="mb-3 animate-fade-in" style={{ animationDelay: "0.05s" }}>
-            <div className="flex items-center gap-3 overflow-x-auto pb-2">
-              <div className="flex-shrink-0">
-                <button
-                  onClick={() => setStoryViewerOpen(true)}
-                  className="flex flex-col items-center gap-1"
-                >
-                  <div className="p-0.5 rounded-full bg-gradient-to-tr from-primary via-yellow-500 to-primary">
-                    <Avatar className="h-16 w-16 border-2 border-background">
-                      <AvatarImage src={profileData.avatar} />
-                      <AvatarFallback>{profileData.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-                    </Avatar>
-                  </div>
-                  <span className="text-xs text-foreground font-medium">View Story</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Reviews Section */}
         <div className="animate-fade-in mb-3" style={{ animationDelay: "0.05s" }}>
           <div className="flex items-center justify-between mb-3">
@@ -426,10 +443,10 @@ const UserProfile = () => {
           {currentUserId && currentUserId !== userId && !showReviewForm && (
             <Button
               onClick={() => setShowReviewForm(true)}
-              className="w-full mb-3 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold py-6 text-base shadow-lg"
+              className="w-full mb-4 bg-gradient-to-r from-primary via-primary to-primary/90 hover:from-primary/90 hover:via-primary hover:to-primary text-primary-foreground font-bold py-8 text-lg shadow-xl shadow-primary/30 hover:shadow-2xl hover:shadow-primary/40 transition-all rounded-2xl"
               size="lg"
             >
-              <Star className="h-5 w-5 mr-2 fill-current" />
+              <Star className="h-7 w-7 mr-3 fill-current" />
               {userReview ? "Edit Your Review" : "Leave a Review"}
             </Button>
           )}
@@ -560,10 +577,10 @@ const UserProfile = () => {
           ) : userListings.length > 0 ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
               {userListings.map((item) => (
-                <Card 
-                  key={item.id} 
+                <Card
+                  key={item.id}
                   className="group overflow-hidden border-border hover:shadow-[var(--shadow-glow)] transition-all cursor-pointer"
-                  onClick={() => navigate(`/item/${item.id}`)}
+                  onClick={() => navigate('/item-detail', { state: { item } })}
                 >
                   <div className="relative aspect-square overflow-hidden bg-muted">
                     <img

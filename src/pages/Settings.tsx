@@ -50,9 +50,16 @@ const Settings = () => {
       }
     });
 
-    // Check if dark mode is enabled
-    const isDark = document.documentElement.classList.contains('dark');
+    // Check if dark mode is enabled from localStorage or default to false (light mode)
+    const savedTheme = localStorage.getItem('theme');
+    const isDark = savedTheme === 'dark';
     setDarkMode(isDark);
+
+    if (isDark) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
   }, [navigate]);
 
   const fetchProfile = async (userId: string) => {
@@ -85,13 +92,15 @@ const Settings = () => {
   const toggleDarkMode = () => {
     const newDarkMode = !darkMode;
     setDarkMode(newDarkMode);
-    
+
     if (newDarkMode) {
       document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
     } else {
       document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
     }
-    
+
     toast({
       title: "Theme updated",
       description: `Switched to ${newDarkMode ? 'dark' : 'light'} mode`,

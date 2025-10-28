@@ -19,13 +19,14 @@ import EditListing from "./pages/EditListing";
 import Settings from "./pages/Settings";
 import FollowersList from "./pages/FollowersList";
 import FollowingList from "./pages/FollowingList";
-import AIAssistant from "./pages/AIAssistant";
 import Debug from "./pages/Debug";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminMessages from "./pages/AdminMessages";
 import AdminListings from "./pages/AdminListings";
 import NotFound from "./pages/NotFound";
+import UnoGame from "./pages/UnoGame";
 import FirstVisitReverse from "./components/FirstVisitReverse";
+import ChatboxAssistant from "./components/ChatboxAssistant";
 
 const queryClient = new QueryClient();
 
@@ -55,8 +56,8 @@ const App = () => (
           <Route path="/followers/:userId" element={<FollowersList />} />
           <Route path="/following" element={<FollowingList />} />
           <Route path="/following/:userId" element={<FollowingList />} />
-          <Route path="/ai-assistant" element={<AIAssistant />} />
           <Route path="/debug" element={<Debug />} />
+          <Route path="/uno" element={<UnoGame />} />
           {/* Admin Routes */}
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/admin/messages" element={<AdminMessages />} />
@@ -64,6 +65,7 @@ const App = () => (
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
+        <ChatboxAssistant />
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

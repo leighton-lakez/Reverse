@@ -123,9 +123,9 @@ const Messages = () => {
 
       <main className="max-w-7xl mx-auto px-4 py-3">
         {conversations.length === 0 ? (
-          <div className="text-center py-12">
-            <MessageCircle className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <p className="text-muted-foreground">No messages yet</p>
+          <div className="text-center py-3">
+            <MessageCircle className="h-8 w-8 mx-auto text-muted-foreground mb-1.5" />
+            <p className="text-xs text-muted-foreground">No messages yet</p>
           </div>
         ) : (
           <div className="space-y-2">
