@@ -13,6 +13,7 @@ import ItemDetail from "./pages/ItemDetail";
 import Checkout from "./pages/Checkout";
 import Chat from "./pages/Chat";
 import Auth from "./pages/Auth";
+import ResetPassword from "./pages/ResetPassword";
 import ProfileSetup from "./pages/ProfileSetup";
 import EditListing from "./pages/EditListing";
 import Settings from "./pages/Settings";
@@ -46,6 +47,7 @@ const App = () => (
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/chat" element={<Chat />} />
           <Route path="/auth" element={<Auth />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/profile-setup" element={<ProfileSetup />} />
           <Route path="/edit-listing/:id" element={<EditListing />} />
           <Route path="/settings" element={<Settings />} />
