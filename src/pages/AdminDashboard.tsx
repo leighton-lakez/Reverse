@@ -27,6 +27,8 @@ type RecentActivity = {
   action: string;
   timestamp: Date;
   user?: string;
+  user_id?: string;
+  title?: string;
 };
 
 const AdminDashboard = () => {
@@ -149,6 +151,8 @@ const AdminDashboard = () => {
         action: 'New listing created',
         timestamp: new Date(item.created_at),
         user: profilesMap.get(item.user_id) || 'Unknown',
+        user_id: item.user_id,
+        title: item.title,
       }));
 
       setRecentActivity(activities);
@@ -318,14 +322,34 @@ const AdminDashboard = () => {
               recentActivity.map((activity) => (
                 <div
                   key={activity.id}
-                  className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
+                  onClick={() => {
+                    if (activity.type === 'listing') {
+                      navigate(`/item-detail?id=${activity.id}`);
+                    }
+                  }}
+                  className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors cursor-pointer group"
                 >
                   <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                     <Package className="h-4 w-4 text-primary" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{activity.action}</p>
-                    <p className="text-xs text-muted-foreground">by {activity.user}</p>
+                    <p className="text-sm font-medium truncate group-hover:text-primary transition-colors">
+                      {activity.title || activity.action}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      by{' '}
+                      <span
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (activity.user_id) {
+                            navigate(`/user/${activity.user_id}`);
+                          }
+                        }}
+                        className="hover:text-primary hover:underline"
+                      >
+                        {activity.user}
+                      </span>
+                    </p>
                   </div>
                   <span className="text-xs text-muted-foreground whitespace-nowrap">
                     {activity.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
