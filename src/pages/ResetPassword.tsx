@@ -14,27 +14,38 @@ export default function ResetPassword() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  // Check for recovery token immediately on mount
+  // Check for recovery token or errors immediately on mount
   const hashParams = new URLSearchParams(window.location.hash.substring(1));
   const type = hashParams.get('type');
-  const [isValidRecovery, setIsValidRecovery] = useState(type === 'recovery');
+  const error = hashParams.get('error');
+  const errorDescription = hashParams.get('error_description');
+
+  const [isValidRecovery, setIsValidRecovery] = useState(type === 'recovery' && !error);
+  const [linkError, setLinkError] = useState<string | null>(
+    error ? decodeURIComponent(errorDescription || 'Invalid or expired link') : null
+  );
 
   useEffect(() => {
-    console.log('ResetPassword mounted, URL:', window.location.href);
-    console.log('Hash params:', window.location.hash);
-    console.log('Type:', type);
-    console.log('isValidRecovery:', isValidRecovery);
+    // Check if there's an error in the URL
+    if (error) {
+      toast({
+        title: "Reset Link Error",
+        description: decodeURIComponent(errorDescription || 'Email link is invalid or has expired'),
+        variant: "destructive",
+      });
+      return;
+    }
 
     // Also listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log('Auth state change event:', event);
       if (event === 'PASSWORD_RECOVERY') {
         setIsValidRecovery(true);
+        setLinkError(null);
       }
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [error, errorDescription]);
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -91,17 +102,25 @@ export default function ResetPassword() {
     }
   };
 
-  if (!isValidRecovery) {
+  if (!isValidRecovery || linkError) {
     return (
       <div className="min-h-screen bg-background gradient-mesh flex items-center justify-center px-4">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold mb-2">Invalid Reset Link</h2>
-          <p className="text-muted-foreground mb-4">
-            This password reset link is invalid or has expired.
+        <div className="text-center max-w-md">
+          <h2 className="text-2xl font-bold mb-2">Reset Link Expired</h2>
+          <p className="text-muted-foreground mb-2">
+            {linkError || 'This password reset link is invalid or has expired.'}
           </p>
-          <Button onClick={() => navigate("/auth")}>
-            Return to Sign In
-          </Button>
+          <p className="text-sm text-muted-foreground mb-6">
+            Password reset links expire after a short time for security. Please request a new one.
+          </p>
+          <div className="flex flex-col gap-3">
+            <Button onClick={() => navigate("/auth")} className="gradient-primary">
+              Request New Reset Link
+            </Button>
+            <Button variant="outline" onClick={() => navigate("/")}>
+              Return to Home
+            </Button>
+          </div>
         </div>
       </div>
     );
