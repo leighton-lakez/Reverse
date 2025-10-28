@@ -43,6 +43,16 @@ const Index = () => {
   const startPosRef = useRef({ x: 0, y: 0 });
 
   useEffect(() => {
+    // Check if this is a password recovery redirect
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    const type = hashParams.get('type');
+
+    if (type === 'recovery') {
+      // Redirect to reset password page with the hash
+      navigate('/reset-password' + window.location.hash, { replace: true });
+      return;
+    }
+
     // Check auth status
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       setUser(session?.user ?? null);
