@@ -16,7 +16,16 @@ export default function ResetPassword() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check if this is a password recovery session
+    // Check if we have a recovery token in the URL
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    const accessToken = hashParams.get('access_token');
+    const type = hashParams.get('type');
+
+    if (type === 'recovery' && accessToken) {
+      setIsValidRecovery(true);
+    }
+
+    // Also listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'PASSWORD_RECOVERY') {
         setIsValidRecovery(true);
