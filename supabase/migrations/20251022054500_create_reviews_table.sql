@@ -1,8 +1,8 @@
 -- Create reviews table for user reviews
 CREATE TABLE IF NOT EXISTS public.reviews (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    reviewer_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-    reviewed_user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    reviewer_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+    reviewed_user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
     rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
     comment TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,

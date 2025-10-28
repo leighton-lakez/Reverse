@@ -13,12 +13,16 @@ import ItemDetail from "./pages/ItemDetail";
 import Checkout from "./pages/Checkout";
 import Chat from "./pages/Chat";
 import Auth from "./pages/Auth";
+import ResetPassword from "./pages/ResetPassword";
 import ProfileSetup from "./pages/ProfileSetup";
 import EditListing from "./pages/EditListing";
 import Settings from "./pages/Settings";
 import FollowersList from "./pages/FollowersList";
 import FollowingList from "./pages/FollowingList";
 import Debug from "./pages/Debug";
+import AdminDashboard from "./pages/AdminDashboard";
+import AdminMessages from "./pages/AdminMessages";
+import AdminListings from "./pages/AdminListings";
 import NotFound from "./pages/NotFound";
 import UnoGame from "./pages/UnoGame";
 import FirstVisitReverse from "./components/FirstVisitReverse";
@@ -44,6 +48,7 @@ const App = () => (
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/chat" element={<Chat />} />
           <Route path="/auth" element={<Auth />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/profile-setup" element={<ProfileSetup />} />
           <Route path="/edit-listing/:id" element={<EditListing />} />
           <Route path="/settings" element={<Settings />} />
@@ -53,6 +58,10 @@ const App = () => (
           <Route path="/following/:userId" element={<FollowingList />} />
           <Route path="/debug" element={<Debug />} />
           <Route path="/uno" element={<UnoGame />} />
+          {/* Admin Routes */}
+          <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/admin/messages" element={<AdminMessages />} />
+          <Route path="/admin/listings" element={<AdminListings />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
