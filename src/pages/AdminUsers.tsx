@@ -57,34 +57,28 @@ export default function AdminUsers() {
     try {
       setLoading(true);
 
-      // Fetch users from auth.users
-      const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
-
-      if (authError) throw authError;
-
-      // Fetch profiles
+      // Fetch profiles (which contain all user data we need)
       const { data: profiles, error: profilesError } = await supabase
         .from("profiles")
-        .select("*");
+        .select("*")
+        .order("created_at", { ascending: false });
 
       if (profilesError) throw profilesError;
 
-      // Combine auth users with profiles
-      const combinedUsers = authUsers.users.map((authUser) => {
-        const profile = profiles?.find((p) => p.id === authUser.id);
-        return {
-          id: authUser.id,
-          email: authUser.email || "",
-          display_name: profile?.display_name || null,
-          avatar_url: profile?.avatar_url || null,
-          location: profile?.location || null,
-          is_admin: profile?.is_admin || false,
-          is_banned: profile?.is_banned || false,
-          created_at: authUser.created_at,
-        };
-      });
+      // Get user emails from a custom view or function
+      // For now, we'll display profiles without email from auth.users
+      const usersData = profiles?.map((profile) => ({
+        id: profile.id,
+        email: profile.email || "No email", // profiles table should have email
+        display_name: profile.display_name || null,
+        avatar_url: profile.avatar_url || null,
+        location: profile.location || null,
+        is_admin: profile.is_admin || false,
+        is_banned: profile.is_banned || false,
+        created_at: profile.created_at,
+      })) || [];
 
-      setUsers(combinedUsers);
+      setUsers(usersData);
     } catch (error: any) {
       console.error("Error fetching users:", error);
       toast({
@@ -117,17 +111,12 @@ export default function AdminUsers() {
           updateData = { is_admin: false };
           break;
         case "delete":
-          // Delete user profile and auth account
-          const { error: deleteError } = await supabase.auth.admin.deleteUser(
-            selectedUser.id
-          );
-          if (deleteError) throw deleteError;
-
+          // Can't delete users without service role - just ban them instead
           toast({
-            title: "User Deleted",
-            description: `${selectedUser.email} has been permanently deleted.`,
+            title: "Cannot Delete",
+            description: "User deletion requires server-side access. Use ban instead.",
+            variant: "destructive",
           });
-          fetchUsers();
           setActionDialog({ open: false, action: null });
           setSelectedUser(null);
           return;
