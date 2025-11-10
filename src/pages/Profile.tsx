@@ -180,6 +180,11 @@ const Profile = () => {
     }
   };
 
+  const editDraft = (draft: any) => {
+    // Navigate to Sell page with draft data
+    navigate("/sell", { state: { draftData: draft } });
+  };
+
   const deleteDraft = async (draftId: string) => {
     try {
       const { error } = await supabase
@@ -1208,6 +1213,14 @@ const Profile = () => {
 
                       {/* Action Buttons */}
                       <div className="absolute top-2 right-2 flex gap-1">
+                        <Button
+                          size="icon"
+                          variant="secondary"
+                          className="h-7 w-7 rounded-full shadow-lg"
+                          onClick={() => editDraft(draft)}
+                        >
+                          <Edit2 className="h-3.5 w-3.5" />
+                        </Button>
                         <Button
                           size="icon"
                           variant="secondary"
