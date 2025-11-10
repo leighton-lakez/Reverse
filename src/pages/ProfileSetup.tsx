@@ -79,7 +79,7 @@ export default function ProfileSetup() {
 
       toast({
         title: "Profile complete!",
-        description: "Welcome to REVERSE.",
+        description: "Welcome to REVRS.",
       });
 
       navigate("/");

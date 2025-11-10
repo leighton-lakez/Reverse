@@ -283,7 +283,7 @@ const Index = () => {
             <div className="flex items-center gap-2 sm:gap-3">
               <ReverseIcon className="w-8 h-8 sm:w-10 sm:h-10" />
               <h1 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tighter text-gradient">
-                REVERSE
+                REVRS
               </h1>
             </div>
             {user ? (
@@ -302,7 +302,7 @@ const Index = () => {
 
                   {/* Card */}
                   <div
-                    className="absolute inset-0 bg-gradient-to-br from-red-500 via-red-600 to-red-700 rounded-lg border-2 border-red-900/80 shadow-[0_4px_12px_rgba(0,0,0,0.6),inset_0_1px_0_rgba(255,255,255,0.3)] transition-all duration-500 group-hover:rotate-12"
+                    className="absolute inset-0 bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700 rounded-lg border-2 border-blue-900/80 shadow-[0_4px_12px_rgba(0,0,0,0.6),inset_0_1px_0_rgba(255,255,255,0.3)] transition-all duration-500 group-hover:rotate-12"
                     style={{
                       transformStyle: 'preserve-3d',
                       transform: 'rotateX(5deg) rotateY(-5deg)'
@@ -317,7 +317,7 @@ const Index = () => {
                     </div>
 
                     {/* Glow */}
-                    <div className="absolute inset-0 rounded-lg shadow-[0_0_15px_rgba(239,68,68,0.5)] group-hover:shadow-[0_0_20px_rgba(239,68,68,0.7)] transition-all duration-500" />
+                    <div className="absolute inset-0 rounded-lg shadow-[0_0_15px_rgba(59,130,246,0.5)] group-hover:shadow-[0_0_20px_rgba(59,130,246,0.7)] transition-all duration-500" />
                   </div>
                 </div>
 

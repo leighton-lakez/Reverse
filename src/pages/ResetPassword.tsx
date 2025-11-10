@@ -133,7 +133,7 @@ export default function ResetPassword() {
           <div className="flex items-center justify-center gap-3 sm:gap-4 mb-3 sm:mb-4">
             <ReverseIcon className="w-12 h-12 sm:w-16 sm:h-16" />
             <h1 className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tighter text-gradient">
-              REVERSE
+              REVRS
             </h1>
           </div>
           <p className="text-base sm:text-lg text-muted-foreground px-2">
