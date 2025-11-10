@@ -24,7 +24,8 @@ interface Item {
 const categories = ["All", "Handbags", "Shoes", "Clothing", "Accessories", "Jewelry", "Watches"];
 
 const Index = () => {
-  const [items, setItems] = useState<Item[]>([]);
+  const [items, setItems] = useState<Item[]>([]); // Filtered items for browse/swipe view
+  const [allItems, setAllItems] = useState<Item[]>([]); // Unfiltered items for map view
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
@@ -49,7 +50,8 @@ const Index = () => {
     return saved ? JSON.parse(saved) : { y: 50, side: 'left' }; // y is percentage from top, side is 'left' or 'right'
   });
   const [isMapButtonDragging, setIsMapButtonDragging] = useState(false);
-  const mapButtonStartRef = useRef({ x: 0, y: 0, initialY: 50 });
+  const [dragPosition, setDragPosition] = useState<{ x: number; y: number } | null>(null);
+  const mapButtonStartRef = useRef({ x: 0, y: 0, initialY: 50, initialSide: 'left' as 'left' | 'right' });
 
   const navigate = useNavigate();
   const cardRef = useRef<HTMLDivElement>(null);
@@ -165,13 +167,16 @@ const Index = () => {
     const { data, error } = await query;
 
     if (!error && data) {
-      // Filter out viewed items unless force refresh or skip filter
+      // Always store all items (unfiltered) for map view
+      setAllItems(data);
+
+      // Filter out viewed items for browse/swipe view unless force refresh or skip filter
       let filteredData = data;
       if (!skipFilter && !forceRefresh && viewedItemIds.size > 0) {
         filteredData = data.filter(item => !viewedItemIds.has(item.id));
       }
 
-      // Randomize the order of items
+      // Randomize the order of filtered items for browse view
       const shuffled = filteredData.sort(() => Math.random() - 0.5);
       setItems(shuffled);
       setCurrentIndex(0); // Reset to first item when category changes
@@ -416,99 +421,103 @@ const Index = () => {
 
   return (
     <div className="h-screen bg-background flex flex-col overflow-hidden fixed inset-0" style={{ position: 'fixed', height: '100vh', maxHeight: '100vh', width: '100vw', overscrollBehavior: 'none', touchAction: 'pan-x' }}>
-      {/* Header */}
-      <header className="flex-shrink-0 z-50 glass">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2 sm:py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 sm:gap-3">
-              <ReverseIcon className="w-8 h-8 sm:w-10 sm:h-10" />
-              <h1 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tighter text-gradient">
-                REVRS
-              </h1>
-            </div>
-            {user ? (
-              <button
-                onClick={() => navigate("/uno")}
-                title="Play UNO!"
-                className="group flex items-center gap-2 sm:gap-3 hover:scale-105 transition-all duration-500"
-              >
-                {/* UNO Reverse Card Icon - Compact */}
-                <div
-                  className="relative w-8 h-8 sm:w-10 sm:h-10"
-                  style={{ perspective: '800px' }}
+      {/* Header - Hidden when map view is active */}
+      {!showMapView && (
+        <header className="flex-shrink-0 z-50 glass">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2 sm:py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <ReverseIcon className="w-8 h-8 sm:w-10 sm:h-10" />
+                <h1 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tighter text-gradient">
+                  REVRS
+                </h1>
+              </div>
+              {user ? (
+                <button
+                  onClick={() => navigate("/uno")}
+                  title="Play UNO!"
+                  className="group flex items-center gap-2 sm:gap-3 hover:scale-105 transition-all duration-500"
                 >
-                  {/* Shadow */}
-                  <div className="absolute inset-0 bg-black/60 rounded-lg blur-md transform translate-y-1" />
-
-                  {/* Card */}
+                  {/* UNO Reverse Card Icon - Compact */}
                   <div
-                    className="absolute inset-0 bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700 rounded-lg border-2 border-blue-900/80 shadow-[0_4px_12px_rgba(0,0,0,0.6),inset_0_1px_0_rgba(255,255,255,0.3)] transition-all duration-500 group-hover:rotate-12"
-                    style={{
-                      transformStyle: 'preserve-3d',
-                      transform: 'rotateX(5deg) rotateY(-5deg)'
-                    }}
+                    className="relative w-8 h-8 sm:w-10 sm:h-10"
+                    style={{ perspective: '800px' }}
                   >
-                    {/* Glossy highlight */}
-                    <div className="absolute inset-0 bg-gradient-to-b from-white/30 to-transparent rounded-t-md" />
+                    {/* Shadow */}
+                    <div className="absolute inset-0 bg-black/60 rounded-lg blur-md transform translate-y-1" />
 
-                    {/* Reverse symbol */}
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="text-white font-black text-xl sm:text-2xl drop-shadow-lg leading-none">⟲</div>
+                    {/* Card */}
+                    <div
+                      className="absolute inset-0 bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700 rounded-lg border-2 border-blue-900/80 shadow-[0_4px_12px_rgba(0,0,0,0.6),inset_0_1px_0_rgba(255,255,255,0.3)] transition-all duration-500 group-hover:rotate-12"
+                      style={{
+                        transformStyle: 'preserve-3d',
+                        transform: 'rotateX(5deg) rotateY(-5deg)'
+                      }}
+                    >
+                      {/* Glossy highlight */}
+                      <div className="absolute inset-0 bg-gradient-to-b from-white/30 to-transparent rounded-t-md" />
+
+                      {/* Reverse symbol */}
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="text-white font-black text-xl sm:text-2xl drop-shadow-lg leading-none">⟲</div>
+                      </div>
+
+                      {/* Glow */}
+                      <div className="absolute inset-0 rounded-lg shadow-[0_0_15px_rgba(59,130,246,0.5)] group-hover:shadow-[0_0_20px_rgba(59,130,246,0.7)] transition-all duration-500" />
                     </div>
-
-                    {/* Glow */}
-                    <div className="absolute inset-0 rounded-lg shadow-[0_0_15px_rgba(59,130,246,0.5)] group-hover:shadow-[0_0_20px_rgba(59,130,246,0.7)] transition-all duration-500" />
                   </div>
-                </div>
 
-                {/* PLAY UNO Text */}
-                <h2 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tighter text-gradient">
-                  PLAY UNO
-                </h2>
-              </button>
-            ) : (
-              <Button
-                variant="default"
-                onClick={() => navigate("/auth")}
-                className="h-9 sm:h-10 text-xs sm:text-sm gradient-primary"
-              >
-                Sign In
-              </Button>
-            )}
+                  {/* PLAY UNO Text */}
+                  <h2 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tighter text-gradient">
+                    PLAY UNO
+                  </h2>
+                </button>
+              ) : (
+                <Button
+                  variant="default"
+                  onClick={() => navigate("/auth")}
+                  className="h-9 sm:h-10 text-xs sm:text-sm gradient-primary"
+                >
+                  Sign In
+                </Button>
+              )}
+            </div>
           </div>
-        </div>
-      </header>
+        </header>
+      )}
 
-      {/* Category Filter */}
-      <div className="flex-shrink-0 bg-background/95 backdrop-blur-lg border-b border-border">
-        <div className="max-w-7xl mx-auto px-2 sm:px-4 py-2">
-          <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
-            <Button
-              onClick={() => navigate("/filters")}
-              className="flex-shrink-0 gap-2 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary text-primary-foreground font-semibold shadow-md hover:shadow-lg transition-all px-6"
-              size="sm"
-            >
-              <Filter className="h-4 w-4" />
-              <span>All Filters</span>
-            </Button>
-            {categories.map((category) => (
+      {/* Category Filter - Hidden when map view is active */}
+      {!showMapView && (
+        <div className="flex-shrink-0 bg-background/95 backdrop-blur-lg border-b border-border">
+          <div className="max-w-7xl mx-auto px-2 sm:px-4 py-2">
+            <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
               <Button
-                key={category}
-                variant={selectedCategory === category ? "default" : "outline"}
+                onClick={() => navigate("/filters")}
+                className="flex-shrink-0 gap-2 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary text-primary-foreground font-semibold shadow-md hover:shadow-lg transition-all px-6"
                 size="sm"
-                onClick={() => setSelectedCategory(category)}
-                className={`flex-shrink-0 transition-all ${
-                  selectedCategory === category
-                    ? "bg-primary text-primary-foreground hover:bg-primary/90"
-                    : "hover:bg-primary/10"
-                }`}
               >
-                {category}
+                <Filter className="h-4 w-4" />
+                <span>All Filters</span>
               </Button>
-            ))}
+              {categories.map((category) => (
+                <Button
+                  key={category}
+                  variant={selectedCategory === category ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setSelectedCategory(category)}
+                  className={`flex-shrink-0 transition-all ${
+                    selectedCategory === category
+                      ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                      : "hover:bg-primary/10"
+                  }`}
+                >
+                  {category}
+                </Button>
+              ))}
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Map Toggle Button - Draggable */}
       <button
@@ -553,10 +562,10 @@ const Index = () => {
         {showMapView ? (
           <div className="w-full h-full">
             <MapView
-              items={items}
+              items={allItems}
               onItemClick={(item) => {
                 // Navigate to the specific item in the card view
-                const itemIndex = items.findIndex(i => i.id === item.id);
+                const itemIndex = allItems.findIndex(i => i.id === item.id);
                 if (itemIndex !== -1) {
                   setCurrentIndex(itemIndex);
                   setShowMapView(false);
