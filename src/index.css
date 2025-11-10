@@ -327,4 +327,72 @@
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
+
+  /* Zillow-style Map Customizations */
+  .custom-price-marker {
+    background: transparent !important;
+    border: none !important;
+  }
+
+  .custom-cluster-icon {
+    background: transparent !important;
+    border: none !important;
+  }
+
+  /* Leaflet popup customizations for Zillow-style */
+  .leaflet-popup-content-wrapper {
+    padding: 0 !important;
+    border-radius: 12px !important;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15) !important;
+    overflow: hidden;
+  }
+
+  .leaflet-popup-content {
+    margin: 0 !important;
+    width: auto !important;
+  }
+
+  .leaflet-popup-tip-container {
+    display: none;
+  }
+
+  /* Remove the close button X from popups */
+  .leaflet-popup-close-button {
+    color: #666 !important;
+    font-size: 20px !important;
+    padding: 8px !important;
+    right: 8px !important;
+    top: 8px !important;
+    z-index: 10;
+  }
+
+  .leaflet-popup-close-button:hover {
+    color: #000 !important;
+  }
+
+  /* Smooth marker transitions */
+  .leaflet-marker-icon {
+    transition: all 0.2s ease !important;
+  }
+
+  /* Cluster animations */
+  .marker-cluster {
+    transition: transform 0.2s ease;
+  }
+
+  .marker-cluster:hover {
+    transform: scale(1.1);
+  }
+
+  /* Map container */
+  .leaflet-container {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+
+  /* Better attribution styling */
+  .leaflet-control-attribution {
+    font-size: 10px !important;
+    background: rgba(255, 255, 255, 0.8) !important;
+    padding: 2px 5px !important;
+  }
 }

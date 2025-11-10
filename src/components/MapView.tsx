@@ -1,7 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import MarkerClusterGroup from "react-leaflet-cluster";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import "leaflet.markercluster/dist/MarkerCluster.css";
+import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 import { Card } from "./ui/card";
 import { MapPin, DollarSign, Search, SlidersHorizontal } from "lucide-react";
 import { Input } from "./ui/input";
@@ -274,6 +277,8 @@ const MapView = ({ items, onItemClick }: MapViewProps) => {
   const [locationSearch, setLocationSearch] = useState("");
   const [priceRange, setPriceRange] = useState([0, 10000]);
   const [maxPrice, setMaxPrice] = useState(10000);
+  const [hoveredItemId, setHoveredItemId] = useState<string | null>(null);
+  const markerRefs = useRef<Map<string, L.Marker>>(new Map());
 
   useEffect(() => {
     const geocodeItems = async () => {
@@ -361,6 +366,16 @@ const MapView = ({ items, onItemClick }: MapViewProps) => {
     setFilteredItems(filtered);
   }, [itemsWithCoords, locationSearch, priceRange]);
 
+  // Update marker icon when hover state changes
+  useEffect(() => {
+    filteredItems.forEach(item => {
+      const marker = markerRefs.current.get(item.id);
+      if (marker) {
+        marker.setIcon(createPriceMarker(item.price, hoveredItemId === item.id));
+      }
+    });
+  }, [hoveredItemId, filteredItems]);
+
   // Calculate center of map based on filtered items
   const center: [number, number] = filteredItems.length > 0
     ? [
@@ -369,13 +384,35 @@ const MapView = ({ items, onItemClick }: MapViewProps) => {
       ]
     : [39.8283, -98.5795]; // Center of US
 
-  // Custom marker icon
-  const customIcon = new L.Icon({
-    iconUrl: "https://cdn-icons-png.flaticon.com/512/684/684908.png",
-    iconSize: [32, 32],
-    iconAnchor: [16, 32],
-    popupAnchor: [0, -32],
-  });
+  // Create Zillow-style price marker
+  const createPriceMarker = (price: number, isHovered = false) => {
+    const priceText = price >= 1000 ? `$${(price / 1000).toFixed(1)}k` : `$${price}`;
+
+    return L.divIcon({
+      className: 'custom-price-marker',
+      html: `
+        <div style="
+          background: ${isHovered ? '#0066ff' : '#ffffff'};
+          color: ${isHovered ? '#ffffff' : '#000000'};
+          padding: 6px 12px;
+          border-radius: 20px;
+          font-weight: 700;
+          font-size: 14px;
+          border: 2px solid ${isHovered ? '#0066ff' : '#e0e0e0'};
+          box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+          white-space: nowrap;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          transform: ${isHovered ? 'scale(1.1)' : 'scale(1)'};
+        ">
+          ${priceText}
+        </div>
+      `,
+      iconSize: [60, 32],
+      iconAnchor: [30, 16],
+      popupAnchor: [0, -16],
+    });
+  };
 
   return (
     <div className="h-full w-full relative">
@@ -454,52 +491,105 @@ const MapView = ({ items, onItemClick }: MapViewProps) => {
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
 
-        {filteredItems.map((item) => (
-          <Marker
-            key={item.id}
-            position={[item.latitude!, item.longitude!]}
-            icon={customIcon}
-          >
-            <Popup>
-              <Card className="border-0 shadow-none p-0 min-w-[250px]">
-                <div className="space-y-2">
+        <MarkerClusterGroup
+          chunkedLoading
+          maxClusterRadius={60}
+          spiderfyOnMaxZoom={true}
+          showCoverageOnHover={false}
+          zoomToBoundsOnClick={true}
+          iconCreateFunction={(cluster) => {
+            const count = cluster.getChildCount();
+            return L.divIcon({
+              html: `<div style="
+                background: #0066ff;
+                color: white;
+                border-radius: 50%;
+                width: 40px;
+                height: 40px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-weight: 700;
+                font-size: 16px;
+                box-shadow: 0 2px 8px rgba(0,102,255,0.4);
+                border: 3px solid white;
+              ">${count}</div>`,
+              className: 'custom-cluster-icon',
+              iconSize: L.point(40, 40, true),
+            });
+          }}
+        >
+          {filteredItems.map((item) => (
+            <Marker
+              key={item.id}
+              position={[item.latitude!, item.longitude!]}
+              icon={createPriceMarker(item.price, hoveredItemId === item.id)}
+              ref={(ref) => {
+                if (ref) {
+                  markerRefs.current.set(item.id, ref);
+                }
+              }}
+              eventHandlers={{
+                mouseover: () => {
+                  setHoveredItemId(item.id);
+                },
+                mouseout: () => {
+                  setHoveredItemId(null);
+                },
+              }}
+            >
+              <Popup maxWidth={300} className="zillow-popup">
+                <div className="p-0 min-w-[280px] -m-3">
                   {/* Image */}
                   {item.images && item.images.length > 0 && (
-                    <img
-                      src={item.images[0]}
-                      alt={item.title}
-                      className="w-full h-32 object-cover rounded-lg"
-                    />
+                    <div className="relative h-48 w-full overflow-hidden rounded-t-lg">
+                      <img
+                        src={item.images[0]}
+                        alt={item.title}
+                        className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                      />
+                    </div>
                   )}
 
-                  {/* Info */}
-                  <div className="space-y-1">
-                    <h3 className="font-bold text-sm line-clamp-1">{item.title}</h3>
-                    <p className="text-xs text-muted-foreground">{item.brand}</p>
-
-                    <div className="flex items-center gap-1 text-primary">
-                      <DollarSign className="h-3 w-3" />
-                      <span className="font-bold text-sm">${item.price}</span>
+                  {/* Content */}
+                  <div className="p-4 space-y-3 bg-white">
+                    {/* Price - Large and prominent */}
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-2xl font-bold text-[#0066ff]">${item.price.toLocaleString()}</span>
                     </div>
 
-                    <div className="flex items-center gap-1 text-muted-foreground">
-                      <MapPin className="h-3 w-3" />
-                      <span className="text-xs">{item.location}</span>
+                    {/* Title and Brand */}
+                    <div className="space-y-1">
+                      <h3 className="font-semibold text-base line-clamp-2 text-gray-900">{item.title}</h3>
+                      <p className="text-sm text-gray-600">{item.brand}</p>
                     </div>
+
+                    {/* Location */}
+                    <div className="flex items-center gap-1.5 text-gray-600">
+                      <MapPin className="h-4 w-4 flex-shrink-0" />
+                      <span className="text-sm">{item.location}</span>
+                    </div>
+
+                    {/* Condition Badge */}
+                    <div className="inline-block">
+                      <span className="text-xs font-medium bg-gray-100 text-gray-700 px-3 py-1 rounded-full">
+                        {item.condition}
+                      </span>
+                    </div>
+
+                    {/* View Button */}
+                    <button
+                      onClick={() => onItemClick(item)}
+                      className="w-full bg-[#0066ff] text-white py-3 px-4 rounded-lg text-sm font-semibold hover:bg-[#0052cc] transition-colors shadow-sm"
+                    >
+                      View Details
+                    </button>
                   </div>
-
-                  {/* View Button */}
-                  <button
-                    onClick={() => onItemClick(item)}
-                    className="w-full bg-primary text-primary-foreground py-2 px-3 rounded-lg text-xs font-semibold hover:bg-primary/90 transition-colors"
-                  >
-                    View Listing
-                  </button>
                 </div>
-              </Card>
-            </Popup>
-          </Marker>
-        ))}
+              </Popup>
+            </Marker>
+          ))}
+        </MarkerClusterGroup>
       </MapContainer>
     </div>
   );
