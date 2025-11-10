@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft, RotateCcw, Users, Copy, Share2, Send } from "lucide-react";
+import { ArrowLeft, RotateCcw, Users, Copy, Share2, Send, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ReverseIcon } from "@/components/ReverseIcon";
@@ -50,6 +50,8 @@ const UnoGame = () => {
   const [gameRoom, setGameRoom] = useState<any>(null);
   const [opponentProfile, setOpponentProfile] = useState<any>(null);
   const [waitingForOpponent, setWaitingForOpponent] = useState(false);
+  const [botDifficulty, setBotDifficulty] = useState<"easy" | "medium" | "hard">("medium");
+  const [showDifficultySelector, setShowDifficultySelector] = useState(false);
 
   const colors: CardColor[] = ["red", "blue", "green", "yellow"];
   const values: CardValue[] = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "skip", "reverse", "draw2"];
@@ -660,18 +662,86 @@ const UnoGame = () => {
     }
   };
 
+  const selectBotCard = (playableCards: UnoCard[]): UnoCard => {
+    if (botDifficulty === "easy") {
+      // Easy: Random selection
+      return playableCards[Math.floor(Math.random() * playableCards.length)];
+    } else if (botDifficulty === "medium") {
+      // Medium: Prefer action cards, then first available
+      const actionCards = playableCards.filter(c =>
+        c.value === "skip" || c.value === "reverse" || c.value === "draw2" || c.value === "wild4"
+      );
+      return actionCards.length > 0 ? actionCards[0] : playableCards[0];
+    } else {
+      // Hard: Strategic play
+      // 1. Prioritize Wild Draw 4 if bot has many cards
+      if (botHand.length > 5) {
+        const wild4 = playableCards.find(c => c.value === "wild4");
+        if (wild4) return wild4;
+      }
+
+      // 2. Prioritize Draw 2
+      const draw2 = playableCards.find(c => c.value === "draw2");
+      if (draw2) return draw2;
+
+      // 3. Prioritize Skip
+      const skip = playableCards.find(c => c.value === "skip");
+      if (skip) return skip;
+
+      // 4. Play matching color over matching number
+      const topCard = discardPile[discardPile.length - 1];
+      const colorMatch = playableCards.filter(c => c.color === currentColor && c.color !== "wild");
+      if (colorMatch.length > 0) {
+        // Among color matches, prefer higher numbers
+        return colorMatch.sort((a, b) => {
+          const aVal = parseInt(a.value) || 0;
+          const bVal = parseInt(b.value) || 0;
+          return bVal - aVal;
+        })[0];
+      }
+
+      // 5. Save wild cards for later, play regular cards first
+      const nonWild = playableCards.filter(c => c.color !== "wild");
+      if (nonWild.length > 0) return nonWild[0];
+
+      // 6. Finally, play wild cards
+      return playableCards[0];
+    }
+  };
+
+  const chooseBotWildColor = (): CardColor => {
+    if (botDifficulty === "easy") {
+      // Easy: Random color
+      return colors[Math.floor(Math.random() * colors.length)];
+    } else {
+      // Medium & Hard: Choose most common color in hand
+      const colorCounts = { red: 0, blue: 0, green: 0, yellow: 0 };
+      botHand.forEach(card => {
+        if (card.color !== "wild") {
+          colorCounts[card.color]++;
+        }
+      });
+
+      const maxColor = Object.entries(colorCounts).reduce((a, b) =>
+        a[1] > b[1] ? a : b
+      )[0] as CardColor;
+
+      return maxColor;
+    }
+  };
+
   const botPlay = () => {
     const playableCards = botHand.filter(canPlayCard);
 
     if (playableCards.length > 0) {
-      const card = playableCards[0];
+      const card = selectBotCard(playableCards);
       const newBotHand = botHand.filter((c) => c.id !== card.id);
       setBotHand(newBotHand);
       setDiscardPile([...discardPile, card]);
 
       if (card.color === "wild") {
-        const randomColor = colors[Math.floor(Math.random() * colors.length)];
-        setCurrentColor(randomColor);
+        const chosenColor = chooseBotWildColor();
+        setCurrentColor(chosenColor);
       } else {
         setCurrentColor(card.color);
       }
@@ -793,6 +863,17 @@ const UnoGame = () => {
               <h1 className="text-2xl font-black tracking-tighter text-gradient">UNO REVERSE</h1>
             </div>
             <div className="flex items-center gap-2">
+              {!isMultiplayer && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setShowDifficultySelector(true)}
+                  className="hover:bg-muted h-12 w-12"
+                  title="Bot Difficulty"
+                >
+                  <Settings className="h-7 w-7" />
+                </Button>
+              )}
               <Button
                 variant="ghost"
                 size="icon"
@@ -838,6 +919,15 @@ const UnoGame = () => {
                   : `Bot: ${botHand.length} cards`}
               </p>
             </div>
+            {!isMultiplayer && (
+              <div className={`px-3 py-1.5 rounded-full text-xs font-bold backdrop-blur-sm border ${
+                botDifficulty === "easy" ? "bg-green-500/20 border-green-500/50 text-green-200" :
+                botDifficulty === "medium" ? "bg-yellow-500/20 border-yellow-500/50 text-yellow-200" :
+                "bg-red-500/20 border-red-500/50 text-red-200"
+              }`}>
+                {botDifficulty === "easy" ? "🟢 Easy" : botDifficulty === "medium" ? "🟡 Medium" : "🔴 Hard"}
+              </div>
+            )}
           </div>
           <div className="flex justify-center gap-1 flex-wrap" style={{ perspective: '1000px' }}>
             {(isMultiplayer ? opponentHand : botHand).map((card, index) => {
@@ -1105,6 +1195,86 @@ const UnoGame = () => {
           </div>
         </div>
       </main>
+
+      {/* Difficulty Selector Modal */}
+      <Dialog open={showDifficultySelector} onOpenChange={setShowDifficultySelector}>
+        <DialogContent className="bg-gradient-to-b from-card to-card/95 border-primary/20 sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text flex items-center gap-2">
+              <Settings className="h-6 w-6 text-primary" />
+              Bot Difficulty
+            </DialogTitle>
+            <DialogDescription className="text-muted-foreground">
+              Choose how challenging you want the bot to be
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3 pt-4">
+            <button
+              onClick={() => {
+                setBotDifficulty("easy");
+                setShowDifficultySelector(false);
+                toast({ title: "🟢 Easy Mode", description: "Bot will play randomly" });
+              }}
+              className={`w-full p-4 rounded-xl border-2 transition-all text-left ${
+                botDifficulty === "easy"
+                  ? "border-green-500 bg-green-500/10"
+                  : "border-border hover:border-green-500/50"
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <div className="text-3xl">🟢</div>
+                <div className="flex-1">
+                  <p className="font-bold text-lg">Easy</p>
+                  <p className="text-sm text-muted-foreground">Bot plays random cards - perfect for beginners!</p>
+                </div>
+              </div>
+            </button>
+
+            <button
+              onClick={() => {
+                setBotDifficulty("medium");
+                setShowDifficultySelector(false);
+                toast({ title: "🟡 Medium Mode", description: "Bot prefers action cards" });
+              }}
+              className={`w-full p-4 rounded-xl border-2 transition-all text-left ${
+                botDifficulty === "medium"
+                  ? "border-yellow-500 bg-yellow-500/10"
+                  : "border-border hover:border-yellow-500/50"
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <div className="text-3xl">🟡</div>
+                <div className="flex-1">
+                  <p className="font-bold text-lg">Medium</p>
+                  <p className="text-sm text-muted-foreground">Bot prefers action cards - balanced gameplay</p>
+                </div>
+              </div>
+            </button>
+
+            <button
+              onClick={() => {
+                setBotDifficulty("hard");
+                setShowDifficultySelector(false);
+                toast({ title: "🔴 Hard Mode", description: "Bot uses advanced strategy!" });
+              }}
+              className={`w-full p-4 rounded-xl border-2 transition-all text-left ${
+                botDifficulty === "hard"
+                  ? "border-red-500 bg-red-500/10"
+                  : "border-border hover:border-red-500/50"
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <div className="text-3xl">🔴</div>
+                <div className="flex-1">
+                  <p className="font-bold text-lg">Hard</p>
+                  <p className="text-sm text-muted-foreground">Bot uses strategic thinking - prepare for a challenge!</p>
+                </div>
+              </div>
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Invite Friends Modal */}
       <Dialog open={inviteModalOpen} onOpenChange={setInviteModalOpen}>
