@@ -46,7 +46,9 @@ const SIZES = {
 
 const Filters = () => {
   const navigate = useNavigate();
+  const routerLocation = useLocation();
   const [searchParams] = useSearchParams();
+  const fromMapView = routerLocation.state?.fromMapView || false;
 
   // Initialize from URL params
   const [priceRange, setPriceRange] = useState<[number, number]>([
@@ -130,7 +132,10 @@ const Filters = () => {
     if (selectedSizes.length) params.set("sizes", selectedSizes.join(","));
     if (location) params.set("location", location);
 
-    navigate(`/?${params.toString()}`);
+    // Navigate back and preserve map view state if user came from map view
+    navigate(`/?${params.toString()}`, {
+      state: { showMapView: fromMapView }
+    });
   };
 
   const activeFiltersCount =

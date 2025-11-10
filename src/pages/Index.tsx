@@ -3,7 +3,7 @@ import BottomNav from "@/components/BottomNav";
 import { ReverseIcon } from "@/components/ReverseIcon";
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import MapView from "@/components/MapView";
@@ -24,6 +24,7 @@ interface Item {
 const categories = ["All", "Handbags", "Shoes", "Clothing", "Accessories", "Jewelry", "Watches"];
 
 const Index = () => {
+  const location = useLocation();
   const [items, setItems] = useState<Item[]>([]); // Filtered items for browse/swipe view
   const [allItems, setAllItems] = useState<Item[]>([]); // Unfiltered items for map view
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -37,7 +38,7 @@ const Index = () => {
   const [welcomeCardAnimating, setWelcomeCardAnimating] = useState(false);
   const [showContent, setShowContent] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState("All");
-  const [showMapView, setShowMapView] = useState(false);
+  const [showMapView, setShowMapView] = useState(location.state?.showMapView || false);
   const [viewedItemIds, setViewedItemIds] = useState<Set<string>>(() => {
     // Load viewed items from sessionStorage
     const saved = sessionStorage.getItem('viewedItems');

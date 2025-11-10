@@ -444,30 +444,138 @@ const MapView = ({ items, onItemClick }: MapViewProps) => {
 
   return (
     <div className="h-full w-full flex flex-row relative bg-background">
-      {/* Mobile Toggle Buttons - Only visible on mobile */}
-      <div className="md:hidden absolute top-4 left-1/2 -translate-x-1/2 z-20 flex gap-2 bg-background/95 backdrop-blur-lg rounded-full p-1 shadow-lg border border-border">
-        <Button
-          variant={!showMapOnMobile ? "default" : "ghost"}
-          size="sm"
-          onClick={() => setShowMapOnMobile(false)}
-          className="rounded-full"
-        >
-          List ({filteredItems.length})
-        </Button>
-        <Button
-          variant={showMapOnMobile ? "default" : "ghost"}
-          size="sm"
-          onClick={() => setShowMapOnMobile(true)}
-          className="rounded-full"
-        >
-          Map
-        </Button>
+      {/* Listing Cards Sidebar - Always visible on left side */}
+      <div className="w-full sm:w-[240px] md:w-[280px] lg:w-[320px] h-full flex-shrink-0 overflow-y-auto bg-background border-r border-border">
+        {/* Filter Controls */}
+        <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-lg border-b border-border p-3 md:p-4 space-y-3">
+          {/* Prominent All Filters Button */}
+          <Button
+            onClick={() => navigate("/filters", { state: { fromMapView: true } })}
+            className="w-full h-12 sm:h-14 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary text-primary-foreground font-bold text-base sm:text-lg shadow-lg hover:shadow-xl transition-all"
+          >
+            <SlidersHorizontal className="h-5 w-5 sm:h-6 sm:w-6 mr-2 sm:mr-3" />
+            All Filters
+          </Button>
+
+          {/* Clear Filters Button */}
+          <Button
+            onClick={() => {
+              setLocationSearch("");
+              setPriceRange([0, maxPrice]);
+            }}
+            variant="outline"
+            className="w-full h-10 sm:h-12 border-2 border-primary/50 hover:bg-primary/10 font-semibold gap-2 transition-all"
+          >
+            <RotateCcw className="h-4 w-4 sm:h-5 sm:w-5" />
+            Clear Filters
+          </Button>
+
+          {/* Quick Location Search */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder="Quick search location..."
+              value={locationSearch}
+              onChange={(e) => setLocationSearch(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+
+          {/* Quick Price Filter */}
+          <div className="space-y-2 pt-2 border-t border-border">
+            <div className="flex items-center justify-between">
+              <label className="text-xs sm:text-sm font-medium">Quick Price Range</label>
+              <span className="text-xs sm:text-sm text-muted-foreground">
+                ${priceRange[0]} - ${priceRange[1]}
+              </span>
+            </div>
+            <Slider
+              min={0}
+              max={maxPrice}
+              step={50}
+              value={priceRange}
+              onValueChange={setPriceRange}
+              className="w-full"
+            />
+          </div>
+
+          {/* Listing Count */}
+          <div className="text-center text-xs sm:text-sm text-muted-foreground pt-2 border-t border-border">
+            Showing <span className="font-bold text-primary">{filteredItems.length}</span> listings
+          </div>
+        </div>
+
+        {/* Listing Cards */}
+        <div className="p-2 sm:p-3 md:p-2 space-y-2 sm:space-y-3 md:space-y-2">
+          {filteredItems.map((item) => (
+            <Card
+              key={item.id}
+              className={`p-3 sm:p-4 md:p-3 cursor-pointer transition-all hover:shadow-lg border-2 ${
+                selectedItemId === item.id
+                  ? 'border-[#0066ff] shadow-lg'
+                  : hoveredItemId === item.id
+                  ? 'border-[#0066ff]/50'
+                  : 'border-border'
+              }`}
+              onClick={() => handleListingClick(item)}
+              onMouseEnter={() => setHoveredItemId(item.id)}
+              onMouseLeave={() => setHoveredItemId(null)}
+            >
+              <div className="flex gap-3 sm:gap-4 md:gap-3">
+                {/* Image */}
+                {item.images && item.images.length > 0 && (
+                  <div className="w-16 h-16 sm:w-24 sm:h-24 md:w-20 md:h-20 flex-shrink-0 rounded-lg overflow-hidden bg-muted">
+                    <img
+                      src={item.images[0]}
+                      alt={item.title}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                )}
+
+                {/* Info */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-start justify-between gap-2 mb-1">
+                    <h3 className="font-semibold text-xs sm:text-sm md:text-xs line-clamp-2">{item.title}</h3>
+                  </div>
+                  <p className="text-base sm:text-lg md:text-base font-bold text-[#0066ff] mb-1">
+                    ${item.price.toLocaleString()}
+                  </p>
+                  <p className="text-xs sm:text-sm md:text-xs text-muted-foreground mb-1">{item.brand}</p>
+                  <div className="flex items-center gap-1 text-muted-foreground">
+                    <MapPin className="h-3 w-3 sm:h-4 sm:w-4 md:h-3 md:w-3 flex-shrink-0" />
+                    <span className="text-xs sm:text-sm md:text-xs truncate">{item.location}</span>
+                  </div>
+                  <span className="inline-block mt-1 text-xs sm:text-sm md:text-xs bg-muted px-2 py-0.5 sm:py-1 md:py-0.5 rounded-full">
+                    {item.condition}
+                  </span>
+                </div>
+              </div>
+            </Card>
+          ))}
+
+          {filteredItems.length === 0 && (
+            <div className="text-center py-12 text-muted-foreground">
+              <p>No items found</p>
+              <Button
+                variant="link"
+                size="sm"
+                onClick={() => {
+                  setLocationSearch("");
+                  setPriceRange([0, maxPrice]);
+                }}
+                className="mt-2"
+              >
+                Clear filters
+              </Button>
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Map Container - Takes remaining space */}
-      <div className={`flex-1 h-full relative ${
-        showMapOnMobile ? 'block' : 'hidden md:block'
-      }`}>
+      {/* Map Container - Takes remaining space on the right */}
+      <div className="flex-1 h-full relative">
         <MapContainer
           center={defaultCenter}
           zoom={4}
@@ -544,138 +652,6 @@ const MapView = ({ items, onItemClick }: MapViewProps) => {
             ))}
           </MarkerClusterGroup>
         </MapContainer>
-      </div>
-
-      {/* Listing Cards Sidebar - Scrollable (Right Side) */}
-      <div className={`w-full md:w-[280px] lg:w-[320px] h-full flex-shrink-0 overflow-y-auto bg-background md:border-l border-border ${
-        showMapOnMobile ? 'hidden md:block' : 'block'
-      }`}>
-        {/* Filter Controls */}
-        <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-lg border-b border-border p-3 md:p-4 pt-20 md:pt-4 space-y-3">
-          {/* Prominent All Filters Button */}
-          <Button
-            onClick={() => navigate("/filters", { state: { fromMapView: true } })}
-            className="w-full h-14 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary text-primary-foreground font-bold text-lg shadow-lg hover:shadow-xl transition-all"
-          >
-            <SlidersHorizontal className="h-6 w-6 mr-3" />
-            All Filters
-          </Button>
-
-          {/* Clear Filters Button */}
-          <Button
-            onClick={() => {
-              setLocationSearch("");
-              setPriceRange([0, maxPrice]);
-            }}
-            variant="outline"
-            className="w-full h-12 border-2 border-primary/50 hover:bg-primary/10 font-semibold gap-2 transition-all"
-          >
-            <RotateCcw className="h-5 w-5" />
-            Clear Filters
-          </Button>
-
-          {/* Quick Location Search */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="text"
-              placeholder="Quick search location..."
-              value={locationSearch}
-              onChange={(e) => setLocationSearch(e.target.value)}
-              className="pl-9"
-            />
-          </div>
-
-          {/* Quick Price Filter */}
-          <div className="space-y-2 pt-2 border-t border-border">
-            <div className="flex items-center justify-between">
-              <label className="text-sm font-medium">Quick Price Range</label>
-              <span className="text-sm text-muted-foreground">
-                ${priceRange[0]} - ${priceRange[1]}
-              </span>
-            </div>
-            <Slider
-              min={0}
-              max={maxPrice}
-              step={50}
-              value={priceRange}
-              onValueChange={setPriceRange}
-              className="w-full"
-            />
-          </div>
-
-          {/* Listing Count */}
-          <div className="text-center text-sm text-muted-foreground pt-2 border-t border-border">
-            Showing <span className="font-bold text-primary">{filteredItems.length}</span> listings
-          </div>
-        </div>
-
-        {/* Listing Cards */}
-        <div className="p-3 md:p-2 space-y-3 md:space-y-2">
-          {filteredItems.map((item) => (
-            <Card
-              key={item.id}
-              className={`p-4 md:p-3 cursor-pointer transition-all hover:shadow-lg border-2 ${
-                selectedItemId === item.id
-                  ? 'border-[#0066ff] shadow-lg'
-                  : hoveredItemId === item.id
-                  ? 'border-[#0066ff]/50'
-                  : 'border-border'
-              }`}
-              onClick={() => handleListingClick(item)}
-              onMouseEnter={() => setHoveredItemId(item.id)}
-              onMouseLeave={() => setHoveredItemId(null)}
-            >
-              <div className="flex gap-4 md:gap-3">
-                {/* Image */}
-                {item.images && item.images.length > 0 && (
-                  <div className="w-24 h-24 md:w-20 md:h-20 flex-shrink-0 rounded-lg overflow-hidden bg-muted">
-                    <img
-                      src={item.images[0]}
-                      alt={item.title}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                )}
-
-                {/* Info */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start justify-between gap-2 mb-1">
-                    <h3 className="font-semibold text-sm md:text-xs line-clamp-2">{item.title}</h3>
-                  </div>
-                  <p className="text-lg md:text-base font-bold text-[#0066ff] mb-1">
-                    ${item.price.toLocaleString()}
-                  </p>
-                  <p className="text-sm md:text-xs text-muted-foreground mb-1">{item.brand}</p>
-                  <div className="flex items-center gap-1 text-muted-foreground">
-                    <MapPin className="h-4 w-4 md:h-3 md:w-3 flex-shrink-0" />
-                    <span className="text-sm md:text-xs truncate">{item.location}</span>
-                  </div>
-                  <span className="inline-block mt-1 text-sm md:text-xs bg-muted px-2 py-1 md:py-0.5 rounded-full">
-                    {item.condition}
-                  </span>
-                </div>
-              </div>
-            </Card>
-          ))}
-
-          {filteredItems.length === 0 && (
-            <div className="text-center py-12 text-muted-foreground">
-              <p>No items found</p>
-              <Button
-                variant="link"
-                size="sm"
-                onClick={() => {
-                  setLocationSearch("");
-                  setPriceRange([0, maxPrice]);
-                }}
-                className="mt-2"
-              >
-                Clear filters
-              </Button>
-            </div>
-          )}
-        </div>
       </div>
     </div>
   );

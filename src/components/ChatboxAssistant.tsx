@@ -22,7 +22,10 @@ const ChatboxAssistant = () => {
     const initialY = window.innerHeight - 680; // 600px height + 80px from bottom nav
     return { x: 16, y: Math.max(20, initialY) };
   });
+  const [size, setSize] = useState({ width: 384, height: 600 }); // Default: w-96 (384px) and 600px height
   const [isDragging, setIsDragging] = useState(false);
+  const [isResizing, setIsResizing] = useState(false);
+  const [resizeDirection, setResizeDirection] = useState<string>("");
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatboxRef = useRef<HTMLDivElement>(null);
@@ -267,6 +270,15 @@ const ChatboxAssistant = () => {
     }
   };
 
+  // Handle resize
+  const handleResizeStart = (e: React.MouseEvent, direction: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsResizing(true);
+    setResizeDirection(direction);
+    setDragOffset({ x: e.clientX, y: e.clientY });
+  };
+
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       if (isDragging && chatboxRef.current) {
@@ -282,13 +294,56 @@ const ChatboxAssistant = () => {
           y: Math.max(0, Math.min(newY, maxY))
         });
       }
+
+      if (isResizing && chatboxRef.current) {
+        const deltaX = e.clientX - dragOffset.x;
+        const deltaY = e.clientY - dragOffset.y;
+
+        let newWidth = size.width;
+        let newHeight = size.height;
+        let newX = position.x;
+        let newY = position.y;
+
+        // Minimum sizes
+        const minWidth = 320;
+        const minHeight = 400;
+        const maxWidth = window.innerWidth - 20;
+        const maxHeight = window.innerHeight - 20;
+
+        if (resizeDirection.includes('e')) {
+          newWidth = Math.max(minWidth, Math.min(maxWidth, size.width + deltaX));
+        }
+        if (resizeDirection.includes('w')) {
+          const potentialWidth = size.width - deltaX;
+          if (potentialWidth >= minWidth) {
+            newWidth = potentialWidth;
+            newX = position.x + deltaX;
+          }
+        }
+        if (resizeDirection.includes('s')) {
+          newHeight = Math.max(minHeight, Math.min(maxHeight, size.height + deltaY));
+        }
+        if (resizeDirection.includes('n')) {
+          const potentialHeight = size.height - deltaY;
+          if (potentialHeight >= minHeight) {
+            newHeight = potentialHeight;
+            newY = position.y + deltaY;
+          }
+        }
+
+        setSize({ width: newWidth, height: newHeight });
+        setPosition({ x: newX, y: newY });
+        setDragOffset({ x: e.clientX, y: e.clientY });
+      }
     };
 
     const handleMouseUp = () => {
       setIsDragging(false);
+      setIsResizing(false);
+      setResizeDirection("");
     };
 
-    if (isDragging) {
+    if (isDragging || isResizing) {
       document.addEventListener('mousemove', handleMouseMove);
       document.addEventListener('mouseup', handleMouseUp);
       return () => {
@@ -296,7 +351,7 @@ const ChatboxAssistant = () => {
         document.removeEventListener('mouseup', handleMouseUp);
       };
     }
-  }, [isDragging, dragOffset]);
+  }, [isDragging, isResizing, dragOffset, position, size, resizeDirection]);
 
   return (
     <>
@@ -316,14 +371,16 @@ const ChatboxAssistant = () => {
       {isOpen && (
         <div
           ref={chatboxRef}
-          className="fixed z-50 w-[calc(100vw-2rem)] sm:w-96 max-h-[600px] animate-fade-in"
+          className="fixed z-50 animate-fade-in"
           style={{
             left: `${position.x}px`,
             top: `${position.y}px`,
-            cursor: isDragging ? 'grabbing' : 'default'
+            width: `${size.width}px`,
+            height: `${size.height}px`,
+            cursor: isDragging ? 'grabbing' : isResizing ? 'grabbing' : 'default'
           }}
         >
-          <Card className="h-full flex flex-col bg-card/95 backdrop-blur-xl border-border/50 shadow-2xl overflow-hidden">
+          <Card className="h-full flex flex-col bg-card/95 backdrop-blur-xl border-border/50 shadow-2xl overflow-hidden relative">
             {/* Header - Draggable */}
             <div
               className="flex items-center justify-between p-4 border-b border-border/50 bg-gradient-to-r from-primary/10 to-secondary/10 cursor-grab active:cursor-grabbing select-none"
@@ -359,7 +416,7 @@ const ChatboxAssistant = () => {
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4 max-h-[400px]">
+            <div className="flex-1 overflow-y-auto p-4 space-y-4">
               {messages.map((message) => (
                 <div
                   key={message.id}
@@ -407,6 +464,42 @@ const ChatboxAssistant = () => {
                 </Button>
               </div>
             </form>
+
+            {/* Resize Handles */}
+            {/* Corner handles */}
+            <div
+              className="absolute top-0 left-0 w-4 h-4 cursor-nw-resize hover:bg-primary/20 transition-colors"
+              onMouseDown={(e) => handleResizeStart(e, 'nw')}
+            />
+            <div
+              className="absolute top-0 right-0 w-4 h-4 cursor-ne-resize hover:bg-primary/20 transition-colors"
+              onMouseDown={(e) => handleResizeStart(e, 'ne')}
+            />
+            <div
+              className="absolute bottom-0 left-0 w-4 h-4 cursor-sw-resize hover:bg-primary/20 transition-colors"
+              onMouseDown={(e) => handleResizeStart(e, 'sw')}
+            />
+            <div
+              className="absolute bottom-0 right-0 w-4 h-4 cursor-se-resize hover:bg-primary/20 transition-colors"
+              onMouseDown={(e) => handleResizeStart(e, 'se')}
+            />
+            {/* Edge handles */}
+            <div
+              className="absolute top-0 left-4 right-4 h-2 cursor-n-resize hover:bg-primary/20 transition-colors"
+              onMouseDown={(e) => handleResizeStart(e, 'n')}
+            />
+            <div
+              className="absolute bottom-0 left-4 right-4 h-2 cursor-s-resize hover:bg-primary/20 transition-colors"
+              onMouseDown={(e) => handleResizeStart(e, 's')}
+            />
+            <div
+              className="absolute left-0 top-4 bottom-4 w-2 cursor-w-resize hover:bg-primary/20 transition-colors"
+              onMouseDown={(e) => handleResizeStart(e, 'w')}
+            />
+            <div
+              className="absolute right-0 top-4 bottom-4 w-2 cursor-e-resize hover:bg-primary/20 transition-colors"
+              onMouseDown={(e) => handleResizeStart(e, 'e')}
+            />
           </Card>
         </div>
       )}
