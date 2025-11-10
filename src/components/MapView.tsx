@@ -496,11 +496,44 @@ const MapView = ({ items, onItemClick }: MapViewProps) => {
   return (
     <div className="h-full w-full flex flex-col relative bg-background">
       {/* Header - Visible on mobile */}
-      <div className="md:hidden flex-shrink-0 bg-background border-b border-border p-4">
-        <h1 className="text-xl font-bold">Map View</h1>
-        <p className="text-sm text-muted-foreground">
-          {filteredItems.length} listing{filteredItems.length !== 1 ? 's' : ''}
-        </p>
+      <div className="md:hidden flex-shrink-0 bg-background border-b border-border p-4 flex items-center justify-between">
+        <div>
+          <h1 className="text-xl font-bold">Map View</h1>
+          <p className="text-sm text-muted-foreground">
+            {filteredItems.length} listing{filteredItems.length !== 1 ? 's' : ''}
+          </p>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            const sidebarWidth = sidebarRef.current?.offsetWidth || 0;
+            if (sidebarOffset === 0) {
+              // Hide sidebar
+              setSidebarOffset(-sidebarWidth + 60);
+            } else {
+              // Show sidebar
+              setSidebarOffset(0);
+            }
+          }}
+          className="h-9 px-3 gap-2"
+        >
+          {sidebarOffset === 0 ? (
+            <>
+              <span className="text-xs">Hide List</span>
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+            </>
+          ) : (
+            <>
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+              <span className="text-xs">Show List</span>
+            </>
+          )}
+        </Button>
       </div>
 
       {/* Main Content - Map and Sidebar */}

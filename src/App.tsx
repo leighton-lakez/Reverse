@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import Filters from "./pages/Filters";
+import Favorites from "./pages/Favorites";
 import Sell from "./pages/Sell";
 import Notifications from "./pages/Notifications";
 import Messages from "./pages/Messages";
@@ -43,6 +44,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/filters" element={<Filters />} />
+          <Route path="/favorites" element={<Favorites />} />
           <Route path="/sell" element={<Sell />} />
           <Route path="/notifications" element={<Notifications />} />
           <Route path="/messages" element={<Messages />} />

@@ -58,6 +58,59 @@ const Index = () => {
   const cardRef = useRef<HTMLDivElement>(null);
   const startPosRef = useRef({ x: 0, y: 0 });
 
+  // Define functions before useEffects
+  const fetchItems = async (forceRefresh = false, skipFilter = false) => {
+    setLoading(true);
+    let query = supabase
+      .from("items")
+      .select("*")
+      .eq("status", "available");
+
+    // If user is logged in, don't show their own items
+    if (user) {
+      query = query.neq("user_id", user.id);
+    }
+
+    // Filter by category if not "All"
+    if (selectedCategory !== "All") {
+      query = query.eq("category", selectedCategory.toLowerCase());
+    }
+
+    const { data, error } = await query;
+
+    if (!error && data) {
+      // Always store all items (unfiltered) for map view
+      setAllItems(data);
+
+      // Filter out viewed items for browse/swipe view unless force refresh or skip filter
+      let filteredData = data;
+      if (!skipFilter && !forceRefresh && viewedItemIds.size > 0) {
+        filteredData = data.filter(item => !viewedItemIds.has(item.id));
+      }
+
+      // Randomize the order of filtered items for browse view
+      const shuffled = filteredData.sort(() => Math.random() - 0.5);
+      setItems(shuffled);
+      setCurrentIndex(0); // Reset to first item when category changes
+      setSkippedItems([]); // Clear skipped items
+    }
+    setLoading(false);
+  };
+
+  const fetchFavorites = async () => {
+    if (!user) return;
+
+    const { data, error } = await supabase
+      .from("favorites")
+      .select("item_id")
+      .eq("user_id", user.id);
+
+    if (!error && data) {
+      const favoriteIds = new Set(data.map(fav => fav.item_id));
+      setFavoritedItemIds(favoriteIds);
+    }
+  };
+
   useEffect(() => {
     // Check if this is a password recovery redirect
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
@@ -150,58 +203,6 @@ const Index = () => {
       };
     }
   }, [isMapButtonDragging, mapButtonPosition]);
-
-  const fetchItems = async (forceRefresh = false, skipFilter = false) => {
-    setLoading(true);
-    let query = supabase
-      .from("items")
-      .select("*")
-      .eq("status", "available");
-
-    // If user is logged in, don't show their own items
-    if (user) {
-      query = query.neq("user_id", user.id);
-    }
-
-    // Filter by category if not "All"
-    if (selectedCategory !== "All") {
-      query = query.eq("category", selectedCategory.toLowerCase());
-    }
-
-    const { data, error } = await query;
-
-    if (!error && data) {
-      // Always store all items (unfiltered) for map view
-      setAllItems(data);
-
-      // Filter out viewed items for browse/swipe view unless force refresh or skip filter
-      let filteredData = data;
-      if (!skipFilter && !forceRefresh && viewedItemIds.size > 0) {
-        filteredData = data.filter(item => !viewedItemIds.has(item.id));
-      }
-
-      // Randomize the order of filtered items for browse view
-      const shuffled = filteredData.sort(() => Math.random() - 0.5);
-      setItems(shuffled);
-      setCurrentIndex(0); // Reset to first item when category changes
-      setSkippedItems([]); // Clear skipped items
-    }
-    setLoading(false);
-  };
-
-  const fetchFavorites = async () => {
-    if (!user) return;
-
-    const { data, error } = await supabase
-      .from("favorites")
-      .select("item_id")
-      .eq("user_id", user.id);
-
-    if (!error && data) {
-      const favoriteIds = new Set(data.map(fav => fav.item_id));
-      setFavoritedItemIds(favoriteIds);
-    }
-  };
 
   const toggleFavorite = async (itemId: string) => {
     if (!user) {

@@ -967,7 +967,7 @@ Please provide a price suggestion considering any visible damage or wear in the 
                     <Button
                       onClick={getAIPriceSuggestion}
                       disabled={isGettingAIPrice || itemData.images.length === 0}
-                      className="w-full h-12 sm:h-14 bg-gradient-to-r from-secondary via-secondary to-secondary/90 hover:from-secondary/90 hover:via-secondary hover:to-secondary shadow-xl shadow-secondary/30 hover:shadow-2xl hover:shadow-secondary/40 transition-all font-bold rounded-2xl border border-secondary/20"
+                      className="w-full h-12 sm:h-14 bg-gradient-to-r from-secondary via-secondary to-secondary/90 hover:from-secondary/90 hover:via-secondary hover:to-secondary shadow-xl shadow-secondary/30 hover:shadow-2xl hover:shadow-secondary/40 transition-all duration-300 font-bold rounded-2xl border border-secondary/20 hover:scale-[1.02] hover:border-secondary/40 group animate-fade-in disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                     >
                       {isGettingAIPrice ? (
                         <>
@@ -976,7 +976,7 @@ Please provide a price suggestion considering any visible damage or wear in the 
                         </>
                       ) : (
                         <>
-                          <Sparkles className="h-5 w-5 mr-2.5" />
+                          <Sparkles className="h-5 w-5 mr-2.5 group-hover:animate-pulse" />
                           Get AI Price Suggestion
                         </>
                       )}
@@ -987,27 +987,27 @@ Please provide a price suggestion considering any visible damage or wear in the 
                       e.preventDefault();
                       handleSubmitInput();
                     }}
-                    className="flex gap-3"
+                    className="flex gap-3 animate-fade-in"
                   >
                     <Input
                       value={inputValue}
                       onChange={(e) => setInputValue(e.target.value)}
                       placeholder={getPlaceholder()}
                       type={getCurrentInputType()}
-                      className="flex-1 h-12 sm:h-14 text-sm sm:text-base bg-background/50 border-border/50 rounded-2xl px-5 focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition-all font-medium placeholder:text-muted-foreground/60"
+                      className="flex-1 h-12 sm:h-14 text-sm sm:text-base bg-background/50 border-border/50 rounded-2xl px-5 focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition-all duration-300 font-medium placeholder:text-muted-foreground/60 focus:scale-[1.01] focus:shadow-lg focus:shadow-primary/10"
                       disabled={submitting || isGettingAIPrice}
                       autoFocus
                     />
                     <Button
                       type="submit"
                       size="icon"
-                      className="h-12 w-12 sm:h-14 sm:w-14 rounded-2xl bg-gradient-to-br from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40 hover:scale-105 transition-all"
+                      className="h-12 w-12 sm:h-14 sm:w-14 rounded-2xl bg-gradient-to-br from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40 hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 group"
                       disabled={!inputValue.trim() || submitting || isGettingAIPrice}
                     >
                       {submitting ? (
                         <Loader2 className="h-5 w-5 animate-spin" />
                       ) : (
-                        <Send className="h-5 w-5" />
+                        <Send className="h-5 w-5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform duration-300" />
                       )}
                     </Button>
                   </form>
