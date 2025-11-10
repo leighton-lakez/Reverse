@@ -293,6 +293,7 @@ const MapView = ({ items, onItemClick }: MapViewProps) => {
   const markerRefs = useRef<Map<string, L.Marker>>(new Map());
   const [mapCenter, setMapCenter] = useState<[number, number]>([39.8283, -98.5795]);
   const [mapZoom, setMapZoom] = useState(4);
+  const [showMapOnMobile, setShowMapOnMobile] = useState(false);
 
   useEffect(() => {
     const geocodeItems = async () => {
@@ -434,15 +435,39 @@ const MapView = ({ items, onItemClick }: MapViewProps) => {
       setMapCenter([item.latitude, item.longitude]);
       setMapZoom(13);
       setSelectedItemId(item.id);
+      // On mobile, switch to map view when clicking a listing
+      setShowMapOnMobile(true);
     }
   };
 
   return (
     <div className="h-full w-full flex flex-row relative bg-background">
+      {/* Mobile Toggle Buttons - Only visible on mobile */}
+      <div className="md:hidden absolute top-4 left-1/2 -translate-x-1/2 z-20 flex gap-2 bg-background/95 backdrop-blur-lg rounded-full p-1 shadow-lg border border-border">
+        <Button
+          variant={!showMapOnMobile ? "default" : "ghost"}
+          size="sm"
+          onClick={() => setShowMapOnMobile(false)}
+          className="rounded-full"
+        >
+          List ({filteredItems.length})
+        </Button>
+        <Button
+          variant={showMapOnMobile ? "default" : "ghost"}
+          size="sm"
+          onClick={() => setShowMapOnMobile(true)}
+          className="rounded-full"
+        >
+          Map
+        </Button>
+      </div>
+
       {/* Listing Cards Sidebar - Scrollable */}
-      <div className="w-[380px] sm:w-[400px] lg:w-[450px] h-full flex-shrink-0 overflow-y-auto bg-background border-r border-border">
+      <div className={`w-full md:w-[400px] lg:w-[450px] h-full flex-shrink-0 overflow-y-auto bg-background md:border-r border-border ${
+        showMapOnMobile ? 'hidden md:block' : 'block'
+      }`}>
         {/* Filter Controls */}
-        <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-lg border-b border-border p-4 space-y-3">
+        <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-lg border-b border-border p-4 pt-16 md:pt-4 space-y-3">
           {/* Location Search */}
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -570,7 +595,9 @@ const MapView = ({ items, onItemClick }: MapViewProps) => {
       </div>
 
       {/* Map Container - Takes remaining space */}
-      <div className="flex-1 h-full relative">
+      <div className={`flex-1 h-full relative ${
+        showMapOnMobile ? 'block' : 'hidden md:block'
+      }`}>
         <MapContainer
           center={defaultCenter}
           zoom={4}
