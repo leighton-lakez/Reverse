@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { MessageCircle, X, Send, Home, ShoppingBag, Mail, User, Settings, Eye, Plus } from "lucide-react";
+import { MessageCircle, X, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -20,16 +20,121 @@ const ChatboxAssistant = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
+  // Comprehensive knowledge base about REVRS
+  const knowledgeBase = {
+    // Profile features
+    reviews: {
+      keywords: ["review", "rating", "feedback", "received", "given", "stars", "rate", "reviews"],
+      response: "Reviews can be found on your Profile page! There are two sections:\n\n1. **Listings** - Shows your Active, Sold, and Draft items\n2. **Reviews Section** (below listings) - Has two tabs:\n   • Received - Reviews others left for you\n   • Given - Reviews you left for others\n\nWant me to take you to your profile?",
+      action: "/profile"
+    },
+
+    listings: {
+      keywords: ["listing", "active", "sold", "drafts", "my items", "my stuff", "what i'm selling"],
+      response: "Your listings are on your Profile page with 3 tabs:\n\n• **Active** - Items currently for sale\n• **Sold** - Items you've sold\n• **Drafts** - Unfinished listings you saved\n\nYou can edit, preview, mark as sold, or delete items from there. Want me to take you there?",
+      action: "/profile"
+    },
+
+    sell: {
+      keywords: ["sell", "list", "upload", "post", "create listing", "add item"],
+      response: "To sell something:\n\n1. Go to the **Sell** page (bottom nav)\n2. Add photos, title, brand, category\n3. Set price and condition\n4. Add description and location\n5. Publish or save as draft\n\nYou can also save drafts and finish them later! Ready to list something?",
+      action: "/sell"
+    },
+
+    browse: {
+      keywords: ["browse", "swipe", "shop", "find items", "look for", "search items", "home"],
+      response: "The Browse page is where you discover items! Features:\n\n• **Swipe** through items (like/skip)\n• **Category filters** at the top\n• **MAP VIEW** button to see items on a map\n• Items you like are saved to your favorites\n\nTake me there now?",
+      action: "/"
+    },
+
+    mapView: {
+      keywords: ["map", "map view", "location", "nearby", "zillow", "where"],
+      response: "The Map View shows items by location! Features:\n\n• **Split screen** - Listings on left, map on right\n• **Click a listing** to see its location on map\n• **Hover** on cards or markers to highlight them\n• **Price markers** show item prices on map\n• **Filters** for location search and price range\n\nOn mobile, toggle between List and Map views. Want to check it out?",
+      action: "/"
+    },
+
+    messages: {
+      keywords: ["message", "chat", "dm", "inbox", "conversation", "talk to seller"],
+      response: "Messages are in the **Chat** section (bottom nav)!\n\nYou can:\n• Message sellers about items\n• Negotiate prices\n• Arrange meetups\n• See all your conversations\n\nWant me to open your messages?",
+      action: "/chat"
+    },
+
+    profile: {
+      keywords: ["profile", "my account", "edit profile", "bio", "avatar", "my page"],
+      response: "Your Profile page has everything about you:\n\n• **Edit Profile** - Update name, bio, avatar, location\n• **Payment Methods** - Add Venmo, Cash App, Zelle, PayPal, etc.\n• **Stories** - Create and manage 24hr stories\n• **Stats** - Followers, following, listings count\n• **Tabs** - Active/Sold/Drafts listings\n• **Reviews** - Separate section below\n\nTake you there?",
+      action: "/profile"
+    },
+
+    payment: {
+      keywords: ["payment", "pay", "venmo", "cashapp", "zelle", "paypal", "apple pay", "how to pay"],
+      response: "Payment methods are set up in your Profile!\n\n1. Go to Profile → **Edit Profile**\n2. Scroll to **Payment Methods** section\n3. Add your:\n   • Venmo (@username)\n   • Cash App ($cashtag)\n   • Zelle (email/phone)\n   • PayPal (email)\n   • Apple Pay\n   • Other methods\n\nBuyers will see these on your profile. Want to add yours?",
+      action: "/profile"
+    },
+
+    stories: {
+      keywords: ["story", "stories", "24 hour", "post story", "create story", "my stories"],
+      response: "Stories work like Instagram! Found on your Profile:\n\n• **Create** button - Post photos visible for 24hrs\n• **View Stories** - Tap your avatar or others'\n• **Manage Stories** - Delete or view past stories\n• Stories auto-delete after 24 hours\n\nPerfect for showcasing new items! Check them out?",
+      action: "/profile"
+    },
+
+    followers: {
+      keywords: ["follower", "following", "follow", "friends", "connections"],
+      response: "Your followers/following are on your Profile!\n\n• Tap **Followers** to see who follows you\n• Tap **Following** to see who you follow\n• Follow users to see their items first\n• Build your marketplace network!\n\nWant to view your connections?",
+      action: "/profile"
+    },
+
+    settings: {
+      keywords: ["settings", "dark mode", "theme", "preferences", "account settings"],
+      response: "Settings let you customize REVRS:\n\n• **Dark/Light Mode** toggle\n• **Account settings**\n• **Notification preferences**\n• **Privacy settings**\n• **About & Help**\n\nMake the app yours! Open settings?",
+      action: "/settings"
+    },
+
+    notifications: {
+      keywords: ["notification", "alerts", "updates", "bell"],
+      response: "Notifications show you:\n\n• New messages from buyers/sellers\n• Likes on your items\n• New followers\n• Price drops on items you liked\n• System updates\n\nCheck them in the Notifications page (bottom nav). Take a look?",
+      action: "/notifications"
+    },
+
+    uno: {
+      keywords: ["uno", "game", "play", "play uno", "reverse card"],
+      response: "UNO game is in the top right! 🎮\n\n• Play UNO Reverse against others\n• Fun mini-game while browsing\n• Click the blue UNO card icon\n\nWant to play a game?",
+      action: "/uno"
+    },
+
+    editListing: {
+      keywords: ["edit listing", "change price", "update item", "modify listing"],
+      response: "To edit a listing:\n\n1. Go to your **Profile**\n2. Find the item in **Active** tab\n3. Click the **three dots** (⋮) menu\n4. Select **Edit Listing**\n5. Make your changes and save\n\nYou can change price, photos, description, etc. Need help with a specific listing?",
+      action: "/profile"
+    },
+
+    markSold: {
+      keywords: ["mark sold", "sold out", "item sold", "mark as sold"],
+      response: "To mark an item as sold:\n\n1. Go to your **Profile**\n2. Find item in **Active** tab\n3. Click **three dots** (⋮) menu\n4. Select **Mark as Sold**\n\nThe item moves to your **Sold** tab. Want to do this now?",
+      action: "/profile"
+    },
+
+    drafts: {
+      keywords: ["draft", "save draft", "unfinished", "incomplete listing"],
+      response: "Drafts let you save incomplete listings:\n\n• Click **Save as Draft** when creating a listing\n• Find drafts in Profile → **Drafts tab**\n• **Continue editing** or **Publish** when ready\n• Or **Delete** drafts you don't need\n\nGreat for listing multiple items! Check your drafts?",
+      action: "/profile"
+    },
+
+    viewItem: {
+      keywords: ["view item", "item detail", "see listing", "product page"],
+      response: "To view an item in detail:\n\n• **Swipe/Browse**: Tap the item card\n• **Map View**: Click a listing or marker\n• **Profile**: Tap any of your listings\n\nYou'll see:\n- All photos & videos\n- Full description\n- Seller info & payment methods\n- Message seller button\n- Location on map\n\nBrowse items now?",
+      action: "/"
+    }
+  };
+
   useEffect(() => {
     if (isOpen && messages.length === 0) {
       addBotMessage(
-        "Hi! I'm your navigation assistant. I can help you find your way around the app. What would you like to do?",
+        "Hi! 👋 I'm your REVRS assistant. I know everything about this app!\n\nAsk me anything like:\n• Where can I find my reviews?\n• How do I add payment methods?\n• Where are my drafts?\n• How does the map work?",
         [
-          "Browse items",
-          "Sell something",
-          "View my profile",
-          "Check messages",
-          "View notifications",
+          "Where are my reviews?",
+          "How do I sell something?",
+          "Show me the map view",
+          "Where are my drafts?",
         ]
       );
     }
@@ -62,127 +167,47 @@ const ChatboxAssistant = () => {
     setMessages((prev) => [...prev, newMessage]);
   };
 
-  const handleNavigationQuery = (query: string) => {
+  const findBestMatch = (query: string): { response: string; action?: string; suggestions?: string[] } | null => {
     const lowerQuery = query.toLowerCase();
 
-    // Browse/Home/Swipe
-    if (
-      lowerQuery.includes("browse") ||
-      lowerQuery.includes("home") ||
-      lowerQuery.includes("swipe") ||
-      lowerQuery.includes("items") ||
-      lowerQuery.includes("shop") ||
-      lowerQuery.includes("look")
-    ) {
-      addBotMessage("Taking you to the browse page where you can swipe through items!");
-      setTimeout(() => {
-        navigate("/");
-        setIsOpen(false);
-      }, 1000);
-      return;
+    // Check each knowledge base entry
+    for (const [key, data] of Object.entries(knowledgeBase)) {
+      for (const keyword of data.keywords) {
+        if (lowerQuery.includes(keyword)) {
+          return {
+            response: data.response,
+            action: data.action,
+            suggestions: ["Go there now", "Tell me more", "Something else"]
+          };
+        }
+      }
     }
 
-    // Sell/List
-    if (
-      lowerQuery.includes("sell") ||
-      lowerQuery.includes("list") ||
-      lowerQuery.includes("upload") ||
-      lowerQuery.includes("post")
-    ) {
-      addBotMessage("Taking you to the sell page where you can list your items!");
-      setTimeout(() => {
-        navigate("/sell");
-        setIsOpen(false);
-      }, 1000);
-      return;
-    }
+    return null;
+  };
 
-    // Profile
-    if (
-      lowerQuery.includes("profile") ||
-      lowerQuery.includes("my account") ||
-      lowerQuery.includes("my items") ||
-      lowerQuery.includes("my listings")
-    ) {
-      addBotMessage("Taking you to your profile!");
-      setTimeout(() => {
-        navigate("/profile");
-        setIsOpen(false);
-      }, 1000);
-      return;
-    }
+  const handleNavigationQuery = (query: string) => {
+    const match = findBestMatch(query);
 
-    // Messages/Chat
-    if (
-      lowerQuery.includes("message") ||
-      lowerQuery.includes("chat") ||
-      lowerQuery.includes("inbox") ||
-      lowerQuery.includes("conversation")
-    ) {
-      addBotMessage("Taking you to your messages!");
-      setTimeout(() => {
-        navigate("/chat");
-        setIsOpen(false);
-      }, 1000);
-      return;
-    }
+    if (match) {
+      addBotMessage(match.response, match.suggestions);
 
-    // Notifications
-    if (
-      lowerQuery.includes("notification") ||
-      lowerQuery.includes("alerts") ||
-      lowerQuery.includes("updates")
-    ) {
-      addBotMessage("Taking you to your notifications!");
-      setTimeout(() => {
-        navigate("/notifications");
-        setIsOpen(false);
-      }, 1000);
-      return;
+      // Store the action for later use
+      if (match.action) {
+        (window as any).__pendingNavigation = match.action;
+      }
+    } else {
+      // If no match, provide helpful default
+      addBotMessage(
+        "I'm not quite sure about that. Here's what I can help you with:\n\n• Finding your reviews, listings, or drafts\n• Selling items and using the map\n• Payment methods and profile settings\n• Messages, notifications, and stories\n• Any feature on REVRS!\n\nTry asking something specific!",
+        [
+          "Where are my reviews?",
+          "How do I add payment methods?",
+          "Show me the map",
+          "How do I sell something?",
+        ]
+      );
     }
-
-    // Settings
-    if (
-      lowerQuery.includes("setting") ||
-      lowerQuery.includes("preferences") ||
-      lowerQuery.includes("dark mode") ||
-      lowerQuery.includes("light mode") ||
-      lowerQuery.includes("theme")
-    ) {
-      addBotMessage("Taking you to settings!");
-      setTimeout(() => {
-        navigate("/settings");
-        setIsOpen(false);
-      }, 1000);
-      return;
-    }
-
-    // Stories
-    if (
-      lowerQuery.includes("stor") ||
-      lowerQuery.includes("create story") ||
-      lowerQuery.includes("post story")
-    ) {
-      addBotMessage("You can create stories from your profile page. Taking you there now!");
-      setTimeout(() => {
-        navigate("/profile");
-        setIsOpen(false);
-      }, 1000);
-      return;
-    }
-
-    // Default response
-    addBotMessage(
-      "I'm not sure what you're looking for. Here are some things I can help you with:",
-      [
-        "Browse items",
-        "Sell something",
-        "View my profile",
-        "Check messages",
-        "View notifications",
-        "Go to settings",
-      ]
-    );
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -195,8 +220,30 @@ const ChatboxAssistant = () => {
   };
 
   const handleSuggestionClick = (suggestion: string) => {
-    addUserMessage(suggestion);
-    handleNavigationQuery(suggestion);
+    if (suggestion === "Go there now" && (window as any).__pendingNavigation) {
+      const path = (window as any).__pendingNavigation;
+      addUserMessage(suggestion);
+      addBotMessage("Taking you there now! ✨");
+      setTimeout(() => {
+        navigate(path);
+        setIsOpen(false);
+        delete (window as any).__pendingNavigation;
+      }, 800);
+    } else if (suggestion === "Tell me more") {
+      addUserMessage(suggestion);
+      addBotMessage(
+        "I'd love to help more! Ask me about:\n\n• Specific features you want to learn\n• How to do something step-by-step\n• Where to find things in the app\n• Tips and tricks for using REVRS\n\nWhat would you like to know?",
+        ["Where are my reviews?", "How do I sell?", "Payment methods", "Map view"]
+      );
+    } else if (suggestion === "Something else") {
+      addUserMessage(suggestion);
+      addBotMessage(
+        "Sure! What else can I help you with? Just ask naturally like:\n\n\"Where can I find...\"\n\"How do I...\"\n\"What is...\"\n\"Show me...\"\n\nI'm here to help! 😊"
+      );
+    } else {
+      addUserMessage(suggestion);
+      handleNavigationQuery(suggestion);
+    }
   };
 
   return (
@@ -215,7 +262,7 @@ const ChatboxAssistant = () => {
 
       {/* Chatbox */}
       {isOpen && (
-        <div className="fixed bottom-20 sm:bottom-24 left-4 sm:left-6 z-50 w-[calc(100vw-2rem)] sm:w-96 h-[500px] animate-fade-in">
+        <div className="fixed bottom-20 sm:bottom-24 left-4 sm:left-6 z-50 w-[calc(100vw-2rem)] sm:w-96 max-h-[600px] animate-fade-in">
           <Card className="h-full flex flex-col bg-card/95 backdrop-blur-xl border-border/50 shadow-2xl overflow-hidden">
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-border/50 bg-gradient-to-r from-primary/10 to-secondary/10">
@@ -227,8 +274,8 @@ const ChatboxAssistant = () => {
                   <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 bg-green-500 rounded-full border-2 border-card" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-foreground text-sm">Navigation Assistant</h3>
-                  <p className="text-xs text-muted-foreground">Always here to help</p>
+                  <h3 className="font-bold text-foreground text-sm">REVRS Assistant</h3>
+                  <p className="text-xs text-muted-foreground">I know everything!</p>
                 </div>
               </div>
               <Button
@@ -242,67 +289,53 @@ const ChatboxAssistant = () => {
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            <div className="flex-1 overflow-y-auto p-4 space-y-4 max-h-[400px]">
               {messages.map((message) => (
                 <div
                   key={message.id}
                   className={`flex ${message.type === "user" ? "justify-end" : "justify-start"}`}
                 >
                   <div
-                    className={`max-w-[85%] rounded-2xl px-4 py-2.5 ${
+                    className={`max-w-[85%] rounded-2xl px-4 py-2 ${
                       message.type === "user"
-                        ? "bg-gradient-to-br from-primary to-secondary text-white"
-                        : "bg-muted/50 text-foreground"
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted text-foreground"
                     }`}
                   >
-                    <p className="text-sm leading-relaxed">{message.content}</p>
+                    <p className="text-sm whitespace-pre-line">{message.content}</p>
+                    {message.suggestions && message.suggestions.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mt-3">
+                        {message.suggestions.map((suggestion, index) => (
+                          <Badge
+                            key={index}
+                            variant="secondary"
+                            className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors text-xs"
+                            onClick={() => handleSuggestionClick(suggestion)}
+                          >
+                            {suggestion}
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
-
-              {/* Quick Actions/Suggestions */}
-              {messages.length > 0 && messages[messages.length - 1].suggestions && (
-                <div className="space-y-2 pt-2">
-                  <p className="text-xs text-muted-foreground font-medium">Quick actions:</p>
-                  <div className="flex flex-wrap gap-2">
-                    {messages[messages.length - 1].suggestions!.map((suggestion, index) => (
-                      <Badge
-                        key={index}
-                        variant="outline"
-                        className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors border-primary/30 hover:border-primary"
-                        onClick={() => handleSuggestionClick(suggestion)}
-                      >
-                        {suggestion}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              )}
-
               <div ref={messagesEndRef} />
             </div>
 
             {/* Input */}
-            <form onSubmit={handleSubmit} className="p-4 border-t border-border/50 bg-muted/20">
+            <form onSubmit={handleSubmit} className="p-4 border-t border-border/50 bg-muted/30">
               <div className="flex gap-2">
                 <Input
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
-                  placeholder="Where would you like to go?"
-                  className="flex-1 bg-background border-border/50 focus-visible:ring-primary"
+                  placeholder="Ask me anything..."
+                  className="flex-1 bg-background border-border"
                 />
-                <Button
-                  type="submit"
-                  size="icon"
-                  className="bg-gradient-to-br from-primary to-secondary hover:opacity-90 transition-opacity flex-shrink-0"
-                  disabled={!inputValue.trim()}
-                >
+                <Button type="submit" size="icon" className="h-10 w-10">
                   <Send className="h-4 w-4" />
                 </Button>
               </div>
-              <p className="text-xs text-muted-foreground mt-2 text-center">
-                Ask me to go anywhere in the app
-              </p>
             </form>
           </Card>
         </div>
