@@ -98,8 +98,7 @@ const Index = () => {
     let query = supabase
       .from("items")
       .select("*")
-      .eq("status", "available")
-      .order("created_at", { ascending: false });
+      .eq("status", "available");
 
     // If user is logged in, don't show their own items
     if (user) {
@@ -114,7 +113,9 @@ const Index = () => {
     const { data, error } = await query;
 
     if (!error && data) {
-      setItems(data);
+      // Randomize the order of items
+      const shuffled = data.sort(() => Math.random() - 0.5);
+      setItems(shuffled);
       setCurrentIndex(0); // Reset to first item when category changes
       setSkippedItems([]); // Clear skipped items
     }
