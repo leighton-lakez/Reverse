@@ -489,7 +489,11 @@ Please provide a price suggestion considering any visible damage or wear in the 
 
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from("item-images")
-          .upload(fileName, file);
+          .upload(fileName, file, {
+            contentType: file.type,
+            cacheControl: '3600',
+            upsert: false
+          });
 
         if (uploadError) {
           console.error('Draft image upload error:', uploadError);
@@ -643,7 +647,11 @@ Please provide a price suggestion considering any visible damage or wear in the 
 
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from("item-images")
-          .upload(fileName, file);
+          .upload(fileName, file, {
+            contentType: file.type,
+            cacheControl: '3600',
+            upsert: false
+          });
 
         if (uploadError) {
           console.error('Image upload error:', uploadError);
