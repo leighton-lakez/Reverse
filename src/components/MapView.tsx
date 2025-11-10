@@ -517,6 +517,15 @@ const MapView = ({ items, onItemClick }: MapViewProps) => {
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
         >
+        {/* Swipe Indicator - Shows on mobile */}
+        <div className="md:hidden absolute right-0 top-1/2 -translate-y-1/2 w-1 h-20 bg-primary/30 rounded-l-full z-20 pointer-events-none">
+          <div className="absolute right-1 top-1/2 -translate-y-1/2 flex flex-col gap-1">
+            <div className="w-1 h-1 rounded-full bg-primary/50"></div>
+            <div className="w-1 h-1 rounded-full bg-primary/50"></div>
+            <div className="w-1 h-1 rounded-full bg-primary/50"></div>
+          </div>
+        </div>
+
         {/* Filter Controls */}
         <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-lg border-b border-border p-2 sm:p-3 md:p-4 space-y-2 sm:space-y-3">
           {/* Prominent All Filters Button */}

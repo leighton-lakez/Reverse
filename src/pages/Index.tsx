@@ -43,6 +43,7 @@ const Index = () => {
     // Start fresh on every page load/refresh - don't persist viewed items
     return new Set();
   });
+  const [favoritedItemIds, setFavoritedItemIds] = useState<Set<string>>(new Set());
 
   // Map button dragging state
   const [mapButtonPosition, setMapButtonPosition] = useState(() => {
@@ -95,6 +96,9 @@ const Index = () => {
 
   useEffect(() => {
     fetchItems();
+    if (user) {
+      fetchFavorites();
+    }
   }, [user, selectedCategory]);
 
   // Preserve map view state when returning from filters
