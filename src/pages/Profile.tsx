@@ -456,12 +456,15 @@ const Profile = () => {
   };
 
   const fetchMyStories = async (userId: string) => {
+    const now = new Date().toISOString();
+    console.log('Fetching stories at:', now);
+
     // Fetch active stories (not expired)
     const { data: storiesData, error: storiesError } = await supabase
       .from("stories")
       .select("*")
       .eq("user_id", userId)
-      .gt("expires_at", new Date().toISOString())
+      .gt("expires_at", now)
       .order("created_at", { ascending: false });
 
     if (storiesError) {
@@ -469,8 +472,11 @@ const Profile = () => {
       return;
     }
 
+    console.log('Raw active stories data:', storiesData);
+
     // Filter active stories (exclude deleted ones if deleted_at column exists)
     const activeStories = (storiesData || []).filter(story => !story.deleted_at);
+    console.log('Filtered active stories (after removing deleted):', activeStories);
 
     // Fetch past stories (expired)
     const { data: pastStoriesData } = await supabase
@@ -556,22 +562,31 @@ const Profile = () => {
         .from("stories")
         .update({
           expires_at: newExpiresAt.toISOString(),
-          created_at: new Date().toISOString() // Update created_at to show it's fresh
+          created_at: new Date().toISOString(), // Update created_at to show it's fresh
+          deleted_at: null // Clear deleted_at if it exists
         })
         .eq("id", storyId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Revive story error:', error);
+        throw error;
+      }
+
+      console.log('Story revived successfully, story ID:', storyId);
 
       toast({
         title: "Story revived!",
         description: "Your story is now active for another 24 hours",
       });
 
-      // Refresh stories
+      // Refresh stories after a small delay to ensure DB has updated
       if (user?.id) {
-        await fetchMyStories(user.id);
+        setTimeout(() => {
+          fetchMyStories(user.id);
+        }, 500);
       }
     } catch (error: any) {
+      console.error('Revive story full error:', error);
       toast({
         title: "Error",
         description: getUserFriendlyError(error),
