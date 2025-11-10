@@ -98,9 +98,9 @@ export default function LocationMap({ location }: LocationMapProps) {
           center={coordinates}
           radius={5000} // 5km radius
           pathOptions={{
-            fillColor: 'hsl(43, 43%, 58%)',
+            fillColor: 'hsl(221, 83%, 53%)',
             fillOpacity: 0.2,
-            color: 'hsl(43, 43%, 58%)',
+            color: 'hsl(221, 83%, 53%)',
             weight: 2,
             opacity: 0.6
           }}

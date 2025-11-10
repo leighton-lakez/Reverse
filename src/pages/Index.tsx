@@ -412,7 +412,7 @@ const Index = () => {
                 }`}
                 onClick={handleStartBrowsing}
                 style={{
-                  background: 'linear-gradient(135deg, #D4AF37 0%, #8B0000 100%)',
+                  background: 'linear-gradient(135deg, hsl(221, 83%, 53%) 0%, hsl(210, 80%, 65%) 100%)',
                   transformOrigin: 'center center'
                 }}
               >

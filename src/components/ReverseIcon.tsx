@@ -45,8 +45,9 @@ export const ReverseIcon = ({ className = "w-8 h-8" }: { className?: string }) =
       {/* Gradient definition */}
       <defs>
         <linearGradient id="reverseGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="hsl(43, 43%, 58%)" />
-          <stop offset="100%" stopColor="hsl(350, 59%, 36%)" />
+          <stop offset="0%" stopColor="hsl(221, 83%, 53%)" />
+          <stop offset="50%" stopColor="hsl(215, 83%, 60%)" />
+          <stop offset="100%" stopColor="hsl(210, 80%, 65%)" />
         </linearGradient>
       </defs>
     </svg>
