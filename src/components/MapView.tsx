@@ -449,9 +449,19 @@ const MapView = ({ items, onItemClick }: MapViewProps) => {
   };
 
   return (
-    <div className="h-full w-full flex flex-row relative bg-background">
-      {/* Listing Cards Sidebar - Always visible on left side */}
-      <div className="w-full sm:w-[240px] md:w-[280px] lg:w-[320px] h-full flex-shrink-0 overflow-y-auto bg-background border-r border-border">
+    <div className="h-full w-full flex flex-col relative bg-background">
+      {/* Header - Visible on mobile */}
+      <div className="md:hidden flex-shrink-0 bg-background border-b border-border p-4">
+        <h1 className="text-xl font-bold">Map View</h1>
+        <p className="text-sm text-muted-foreground">
+          {filteredItems.length} listing{filteredItems.length !== 1 ? 's' : ''}
+        </p>
+      </div>
+
+      {/* Main Content - Map and Sidebar */}
+      <div className="flex-1 flex flex-row overflow-hidden">
+        {/* Listing Cards Sidebar - Always visible on left side */}
+        <div className="w-[45%] sm:w-[240px] md:w-[280px] lg:w-[320px] h-full flex-shrink-0 overflow-y-auto bg-background border-r border-border">
         {/* Filter Controls */}
         <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-lg border-b border-border p-3 md:p-4 space-y-3">
           {/* Prominent All Filters Button */}
@@ -468,6 +478,10 @@ const MapView = ({ items, onItemClick }: MapViewProps) => {
             onClick={() => {
               setLocationSearch("");
               setPriceRange([0, maxPrice]);
+              // Reset map view to default
+              setMapZoom(4);
+              setSelectedItemId(null);
+              setHoveredItemId(null);
             }}
             variant="outline"
             className="w-full h-10 sm:h-12 border-2 border-primary/50 hover:bg-primary/10 font-semibold gap-2 transition-all"
@@ -570,6 +584,9 @@ const MapView = ({ items, onItemClick }: MapViewProps) => {
                 onClick={() => {
                   setLocationSearch("");
                   setPriceRange([0, maxPrice]);
+                  setMapZoom(4);
+                  setSelectedItemId(null);
+                  setHoveredItemId(null);
                 }}
                 className="mt-2"
               >
@@ -658,6 +675,7 @@ const MapView = ({ items, onItemClick }: MapViewProps) => {
             ))}
           </MarkerClusterGroup>
         </MapContainer>
+      </div>
       </div>
     </div>
   );

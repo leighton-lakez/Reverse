@@ -40,9 +40,8 @@ const Index = () => {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [showMapView, setShowMapView] = useState(location.state?.showMapView || false);
   const [viewedItemIds, setViewedItemIds] = useState<Set<string>>(() => {
-    // Load viewed items from sessionStorage
-    const saved = sessionStorage.getItem('viewedItems');
-    return saved ? new Set(JSON.parse(saved)) : new Set();
+    // Start fresh on every page load/refresh - don't persist viewed items
+    return new Set();
   });
 
   // Map button dragging state
@@ -98,6 +97,13 @@ const Index = () => {
     fetchItems();
   }, [user, selectedCategory]);
 
+  // Preserve map view state when returning from filters
+  useEffect(() => {
+    if (location.state?.showMapView) {
+      setShowMapView(true);
+    }
+  }, [location.state?.showMapView]);
+
   useEffect(() => {
     // Check if user has started browsing before
     const hasStartedBrowsing = localStorage.getItem("hasStartedBrowsing");
@@ -109,7 +115,7 @@ const Index = () => {
     }
   }, []);
 
-  // Mark current item as viewed
+  // Mark current item as viewed (within current session only)
   useEffect(() => {
     if (items.length > 0 && currentIndex < items.length) {
       const currentItem = items[currentIndex];
@@ -117,16 +123,9 @@ const Index = () => {
         const newViewedIds = new Set(viewedItemIds);
         newViewedIds.add(currentItem.id);
         setViewedItemIds(newViewedIds);
-        // Save to sessionStorage
-        sessionStorage.setItem('viewedItems', JSON.stringify(Array.from(newViewedIds)));
       }
     }
   }, [currentIndex, items]);
-
-  // Save viewed items to sessionStorage whenever it changes
-  useEffect(() => {
-    sessionStorage.setItem('viewedItems', JSON.stringify(Array.from(viewedItemIds)));
-  }, [viewedItemIds]);
 
   // Add global mouse event listeners for map button dragging
   useEffect(() => {
@@ -647,8 +646,7 @@ const Index = () => {
               You've seen all available items. Check back later for more.
             </p>
             <Button onClick={async () => {
-              // Clear viewed items from session storage and state
-              sessionStorage.removeItem('viewedItems');
+              // Clear viewed items and reset
               setViewedItemIds(new Set());
               setCurrentIndex(0);
 
@@ -774,8 +772,7 @@ const Index = () => {
                 variant="outline"
                 className="h-14 w-14 sm:h-16 sm:w-16 rounded-full border-2 border-primary hover:bg-primary hover:text-primary-foreground transition-all shadow-lg"
                 onClick={async () => {
-                  // Clear viewed items from session storage and state
-                  sessionStorage.removeItem('viewedItems');
+                  // Clear viewed items and reset
                   setViewedItemIds(new Set());
 
                   // Fetch all items, skipping the viewed filter completely
