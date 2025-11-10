@@ -93,13 +93,13 @@ const Chat = () => {
             },
             (payload) => {
               const newMsg = payload.new as any;
-              // Check if message is part of this conversation
-              if ((newMsg.sender_id === sellerId && newMsg.receiver_id === session.user.id) ||
-                  (newMsg.sender_id === session.user.id && newMsg.receiver_id === sellerId)) {
+              // Only add messages from OTHER users (not messages we just sent)
+              // Our own messages are already added optimistically
+              if (newMsg.sender_id === sellerId && newMsg.receiver_id === session.user.id) {
                 setMessages(prev => [...prev, {
                   id: Date.now() + Math.random(),
                   text: newMsg.content,
-                  sender: newMsg.sender_id === session.user.id ? "me" : "them",
+                  sender: "them",
                   timestamp: new Date(newMsg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
                   imageUrl: newMsg.image_url
                 }]);

@@ -463,14 +463,15 @@ const MapView = ({ items, onItemClick }: MapViewProps) => {
         {/* Listing Cards Sidebar - Always visible on left side */}
         <div className="w-[45%] sm:w-[240px] md:w-[280px] lg:w-[320px] h-full flex-shrink-0 overflow-y-auto bg-background border-r border-border">
         {/* Filter Controls */}
-        <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-lg border-b border-border p-3 md:p-4 space-y-3">
+        <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-lg border-b border-border p-2 sm:p-3 md:p-4 space-y-2 sm:space-y-3">
           {/* Prominent All Filters Button */}
           <Button
             onClick={() => navigate("/filters", { state: { fromMapView: true } })}
-            className="w-full h-12 sm:h-14 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary text-primary-foreground font-bold text-base sm:text-lg shadow-lg hover:shadow-xl transition-all"
+            className="w-full h-9 sm:h-12 md:h-14 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary text-primary-foreground font-bold text-xs sm:text-base md:text-lg shadow-lg hover:shadow-xl transition-all"
           >
-            <SlidersHorizontal className="h-5 w-5 sm:h-6 sm:w-6 mr-2 sm:mr-3" />
-            All Filters
+            <SlidersHorizontal className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 mr-1 sm:mr-2 md:mr-3" />
+            <span className="hidden sm:inline">All Filters</span>
+            <span className="sm:hidden">Filters</span>
           </Button>
 
           {/* Clear Filters Button */}
@@ -484,44 +485,15 @@ const MapView = ({ items, onItemClick }: MapViewProps) => {
               setHoveredItemId(null);
             }}
             variant="outline"
-            className="w-full h-10 sm:h-12 border-2 border-primary/50 hover:bg-primary/10 font-semibold gap-2 transition-all"
+            className="w-full h-8 sm:h-10 md:h-12 border-2 border-primary/50 hover:bg-primary/10 font-semibold gap-1 sm:gap-2 transition-all text-xs sm:text-sm"
           >
-            <RotateCcw className="h-4 w-4 sm:h-5 sm:w-5" />
-            Clear Filters
+            <RotateCcw className="h-3 w-3 sm:h-4 sm:w-4 md:h-5 md:w-5" />
+            <span className="hidden sm:inline">Clear Filters</span>
+            <span className="sm:hidden">Clear</span>
           </Button>
 
-          {/* Quick Location Search */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="text"
-              placeholder="Quick search location..."
-              value={locationSearch}
-              onChange={(e) => setLocationSearch(e.target.value)}
-              className="pl-9"
-            />
-          </div>
-
-          {/* Quick Price Filter */}
-          <div className="space-y-2 pt-2 border-t border-border">
-            <div className="flex items-center justify-between">
-              <label className="text-xs sm:text-sm font-medium">Quick Price Range</label>
-              <span className="text-xs sm:text-sm text-muted-foreground">
-                ${priceRange[0]} - ${priceRange[1]}
-              </span>
-            </div>
-            <Slider
-              min={0}
-              max={maxPrice}
-              step={50}
-              value={priceRange}
-              onValueChange={setPriceRange}
-              className="w-full"
-            />
-          </div>
-
           {/* Listing Count */}
-          <div className="text-center text-xs sm:text-sm text-muted-foreground pt-2 border-t border-border">
+          <div className="text-center text-xs sm:text-sm text-muted-foreground pt-1 sm:pt-2 border-t border-border">
             Showing <span className="font-bold text-primary">{filteredItems.length}</span> listings
           </div>
         </div>
