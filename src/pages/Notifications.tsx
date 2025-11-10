@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
-import { ArrowLeft, MessageCircle, Package, Users } from "lucide-react";
+import { ArrowLeft, MessageCircle, Package, Users, Search, UserPlus, UserCheck } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import BottomNav from "@/components/BottomNav";
 import StoryViewer from "@/components/StoryViewer";
 import { supabase } from "@/integrations/supabase/client";
@@ -136,6 +137,10 @@ const StoriesSection = ({ currentUserId }: { currentUserId: string }) => {
 // Friends Section Component
 const FriendsSection = ({ currentUserId }: { currentUserId: string }) => {
   const [friends, setFriends] = useState<any[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [followingIds, setFollowingIds] = useState<Set<string>>(new Set());
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -143,6 +148,15 @@ const FriendsSection = ({ currentUserId }: { currentUserId: string }) => {
       fetchFriends();
     }
   }, [currentUserId]);
+
+  useEffect(() => {
+    if (searchQuery.trim()) {
+      searchUsers();
+    } else {
+      setSearchResults([]);
+      setIsSearching(false);
+    }
+  }, [searchQuery]);
 
   const fetchFriends = async () => {
     // Get all users that current user follows (not just mutual follows)
@@ -153,63 +167,211 @@ const FriendsSection = ({ currentUserId }: { currentUserId: string }) => {
 
     if (!following || following.length === 0) {
       setFriends([]);
+      setFollowingIds(new Set());
       return;
     }
 
-    const followingIds = following.map(f => f.following_id);
+    const followingIdsList = following.map(f => f.following_id);
+    setFollowingIds(new Set(followingIdsList));
 
     // Fetch profiles of all people you follow
     const { data: profiles } = await supabase
       .from("profiles")
       .select("id, display_name, avatar_url")
-      .in("id", followingIds);
+      .in("id", followingIdsList);
 
     setFriends(profiles || []);
   };
 
-  if (friends.length === 0) {
-    return (
-      <div className="bg-card/50 backdrop-blur-sm rounded-2xl p-12 text-center border border-border/50">
-        <div className="inline-flex p-4 rounded-full bg-muted/50 mb-4">
-          <Users className="h-12 w-12 text-muted-foreground opacity-50" />
-        </div>
-        <p className="text-base font-semibold text-foreground mb-2">Not Following Anyone</p>
-        <p className="text-sm text-muted-foreground max-w-sm mx-auto">
-          Follow other users to see their stories and updates here
-        </p>
-      </div>
-    );
-  }
+  const searchUsers = async () => {
+    setIsSearching(true);
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("id, display_name, avatar_url")
+      .ilike("display_name", `%${searchQuery}%`)
+      .neq("id", currentUserId)
+      .limit(10);
+
+    setSearchResults(profiles || []);
+    setIsSearching(false);
+  };
+
+  const toggleFollow = async (userId: string) => {
+    const isFollowing = followingIds.has(userId);
+
+    if (isFollowing) {
+      // Unfollow
+      const { error } = await supabase
+        .from("follows")
+        .delete()
+        .eq("follower_id", currentUserId)
+        .eq("following_id", userId);
+
+      if (!error) {
+        const newFollowingIds = new Set(followingIds);
+        newFollowingIds.delete(userId);
+        setFollowingIds(newFollowingIds);
+        fetchFriends();
+        toast({
+          title: "Unfollowed",
+          description: "You have unfollowed this user",
+        });
+      }
+    } else {
+      // Follow
+      const { error } = await supabase
+        .from("follows")
+        .insert({
+          follower_id: currentUserId,
+          following_id: userId
+        });
+
+      if (!error) {
+        const newFollowingIds = new Set(followingIds);
+        newFollowingIds.add(userId);
+        setFollowingIds(newFollowingIds);
+        fetchFriends();
+        toast({
+          title: "Following",
+          description: "You are now following this user",
+        });
+      }
+    }
+  };
 
   return (
-    <div className="space-y-3">
-      {friends.map((friend) => (
-        <div
-          key={friend.id}
-          onClick={() => navigate(`/user/${friend.id}`)}
-          className="group relative overflow-hidden bg-card/80 backdrop-blur-sm rounded-2xl p-4 border border-border/50 hover:border-primary/30 transition-all cursor-pointer hover:shadow-lg hover:scale-[1.02]"
-        >
-          <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-primary/10 to-transparent rounded-bl-full opacity-0 group-hover:opacity-100 transition-opacity" />
-          <div className="relative flex items-center gap-4">
-            <Avatar className="h-14 w-14 border-2 border-background ring-2 ring-primary/20 group-hover:ring-primary/40 transition-all">
-              <AvatarImage src={friend.avatar_url} />
-              <AvatarFallback className="text-lg font-bold">{friend.display_name?.split(' ').map((n: string) => n[0]).join('')}</AvatarFallback>
-            </Avatar>
-            <div className="flex-1 min-w-0">
-              <p className="text-base font-bold text-foreground mb-1">{friend.display_name}</p>
-              <div className="flex items-center gap-2">
-                <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
-                <p className="text-sm text-muted-foreground">Following</p>
-              </div>
-            </div>
-            <div className="flex-shrink-0 text-primary opacity-0 group-hover:opacity-100 transition-opacity">
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </div>
+    <div className="space-y-4">
+      {/* Search Input */}
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+        <Input
+          placeholder="Search users..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="pl-10 bg-card/80 backdrop-blur-sm border-border/50 focus:border-primary/50"
+        />
+      </div>
+
+      {/* Search Results */}
+      {searchQuery.trim() && (
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <h3 className="text-sm font-semibold text-muted-foreground">Search Results</h3>
+            {isSearching && (
+              <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+            )}
           </div>
+          {searchResults.length > 0 ? (
+            searchResults.map((user) => (
+              <div
+                key={user.id}
+                className="group relative overflow-hidden bg-card/80 backdrop-blur-sm rounded-2xl p-4 border border-border/50 hover:border-primary/30 transition-all hover:shadow-lg"
+              >
+                <div className="relative flex items-center gap-4">
+                  <Avatar
+                    className="h-14 w-14 border-2 border-background ring-2 ring-primary/20 group-hover:ring-primary/40 transition-all cursor-pointer"
+                    onClick={() => navigate(`/user/${user.id}`)}
+                  >
+                    <AvatarImage src={user.avatar_url} />
+                    <AvatarFallback className="text-lg font-bold">{user.display_name?.split(' ').map((n: string) => n[0]).join('')}</AvatarFallback>
+                  </Avatar>
+                  <div
+                    className="flex-1 min-w-0 cursor-pointer"
+                    onClick={() => navigate(`/user/${user.id}`)}
+                  >
+                    <p className="text-base font-bold text-foreground mb-1">{user.display_name}</p>
+                    <div className="flex items-center gap-2">
+                      {followingIds.has(user.id) ? (
+                        <>
+                          <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
+                          <p className="text-sm text-muted-foreground">Following</p>
+                        </>
+                      ) : (
+                        <p className="text-sm text-muted-foreground">Not following</p>
+                      )}
+                    </div>
+                  </div>
+                  <Button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleFollow(user.id);
+                    }}
+                    variant={followingIds.has(user.id) ? "outline" : "default"}
+                    size="sm"
+                    className={followingIds.has(user.id) ? "border-primary/50" : "bg-primary hover:bg-primary/90"}
+                  >
+                    {followingIds.has(user.id) ? (
+                      <>
+                        <UserCheck className="h-4 w-4 mr-1" />
+                        Following
+                      </>
+                    ) : (
+                      <>
+                        <UserPlus className="h-4 w-4 mr-1" />
+                        Follow
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            ))
+          ) : !isSearching ? (
+            <div className="bg-card/50 backdrop-blur-sm rounded-2xl p-8 text-center border border-border/50">
+              <p className="text-sm text-muted-foreground">No users found</p>
+            </div>
+          ) : null}
         </div>
-      ))}
+      )}
+
+      {/* Following List */}
+      {!searchQuery.trim() && (
+        <>
+          {friends.length > 0 ? (
+            <>
+              <h3 className="text-sm font-semibold text-muted-foreground pt-2">Following ({friends.length})</h3>
+              <div className="space-y-3">
+                {friends.map((friend) => (
+                  <div
+                    key={friend.id}
+                    onClick={() => navigate(`/user/${friend.id}`)}
+                    className="group relative overflow-hidden bg-card/80 backdrop-blur-sm rounded-2xl p-4 border border-border/50 hover:border-primary/30 transition-all cursor-pointer hover:shadow-lg hover:scale-[1.02]"
+                  >
+                    <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-primary/10 to-transparent rounded-bl-full opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <div className="relative flex items-center gap-4">
+                      <Avatar className="h-14 w-14 border-2 border-background ring-2 ring-primary/20 group-hover:ring-primary/40 transition-all">
+                        <AvatarImage src={friend.avatar_url} />
+                        <AvatarFallback className="text-lg font-bold">{friend.display_name?.split(' ').map((n: string) => n[0]).join('')}</AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-base font-bold text-foreground mb-1">{friend.display_name}</p>
+                        <div className="flex items-center gap-2">
+                          <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
+                          <p className="text-sm text-muted-foreground">Following</p>
+                        </div>
+                      </div>
+                      <div className="flex-shrink-0 text-primary opacity-0 group-hover:opacity-100 transition-opacity">
+                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          ) : (
+            <div className="bg-card/50 backdrop-blur-sm rounded-2xl p-12 text-center border border-border/50">
+              <div className="inline-flex p-4 rounded-full bg-muted/50 mb-4">
+                <Users className="h-12 w-12 text-muted-foreground opacity-50" />
+              </div>
+              <p className="text-base font-semibold text-foreground mb-2">Not Following Anyone</p>
+              <p className="text-sm text-muted-foreground max-w-sm mx-auto">
+                Use the search above to find and follow users
+              </p>
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 };

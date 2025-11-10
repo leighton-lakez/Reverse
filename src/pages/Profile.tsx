@@ -787,12 +787,12 @@ const Profile = () => {
           <div className="relative">
             <div className="flex items-start gap-6 mb-6">
               <div className="flex-shrink-0">
-                {/* Avatar with modern story ring */}
+                {/* Avatar with modern story ring - Enhanced */}
                 <div
-                  className={`cursor-pointer transition-all duration-300 ${
+                  className={`cursor-pointer transition-all duration-500 hover:scale-110 ${
                     myStories.length > 0
-                      ? 'p-1 rounded-full bg-gradient-to-tr from-primary via-yellow-400 to-primary story-pulse shadow-xl shadow-primary/30'
-                      : 'p-1 rounded-full bg-gradient-to-tr from-muted-foreground/20 to-muted-foreground/10'
+                      ? 'p-1 rounded-full bg-gradient-to-tr from-primary via-yellow-400 to-primary story-pulse shadow-2xl shadow-primary/40 animate-pulse'
+                      : 'p-1 rounded-full bg-gradient-to-tr from-muted-foreground/20 to-muted-foreground/10 hover:from-primary/20 hover:to-primary/10'
                   }`}
                   onClick={() => {
                     if (myStories.length > 0) {
@@ -800,9 +800,9 @@ const Profile = () => {
                     }
                   }}
                 >
-                  <Avatar className="h-24 w-24 border-4 border-background ring-4 ring-primary/20">
-                    <AvatarImage src={profileData.avatar} />
-                    <AvatarFallback className="text-2xl font-bold">{profileData.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                  <Avatar className="h-28 w-28 border-4 border-background ring-4 ring-primary/30 shadow-lg transition-all">
+                    <AvatarImage src={profileData.avatar} className="object-cover" />
+                    <AvatarFallback className="text-3xl font-bold bg-gradient-to-br from-primary to-primary/70">{profileData.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
                   </Avatar>
                 </div>
                 {myStories.length > 0 && (
@@ -836,9 +836,9 @@ const Profile = () => {
                 
                 <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
                   <DialogTrigger asChild>
-                    <Button variant="outline" className="gap-2 border-primary/30 hover:bg-primary/10 hover:border-primary/50">
+                    <Button variant="outline" className="gap-2 border-primary/30 hover:bg-primary hover:text-primary-foreground hover:border-primary hover:shadow-lg hover:shadow-primary/30 transition-all duration-300 hover:scale-105 active:scale-95">
                       <Edit2 className="h-4 w-4" />
-                      <span>Edit Profile</span>
+                      <span className="font-semibold">Edit Profile</span>
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="bg-card border-border">
@@ -1012,14 +1012,14 @@ const Profile = () => {
             </div>
 
             {profileData.bio && (
-              <p className="text-base text-foreground/80 leading-relaxed line-clamp-3 mb-4">{profileData.bio}</p>
+              <p className="text-base text-foreground/90 leading-relaxed line-clamp-3 mb-4 bg-muted/30 p-3 rounded-xl border border-border/30">{profileData.bio}</p>
             )}
 
-            {/* Story Buttons */}
-            <div className="grid grid-cols-2 gap-2">
+            {/* Story Buttons - Enhanced */}
+            <div className="grid grid-cols-2 gap-3">
               <Button
                 onClick={() => setCreateStoryOpen(true)}
-                className="bg-gradient-to-r from-primary via-primary to-secondary hover:from-primary/90 hover:via-primary/90 hover:to-secondary/90 shadow-md hover:shadow-xl transition-all"
+                className="bg-gradient-to-r from-primary via-blue-500 to-purple-500 hover:from-primary/90 hover:via-blue-500/90 hover:to-purple-500/90 shadow-lg hover:shadow-xl hover:shadow-primary/30 transition-all duration-300 hover:scale-105 active:scale-95 font-semibold"
               >
                 <Plus className="h-5 w-5 mr-2" />
                 <span className="font-semibold">Create</span>
@@ -1034,25 +1034,28 @@ const Profile = () => {
               </Button>
             </div>
 
-            {/* Stats Grid */}
+            {/* Stats Grid - Enhanced with animations */}
             <div className="grid grid-cols-3 gap-4 mt-6">
-              <div className="group text-center p-4 rounded-2xl bg-gradient-to-br from-muted/50 to-muted/30 border border-border/50 hover:border-primary/30 transition-all cursor-default">
-                <div className="text-3xl font-black text-foreground mb-1">{myListings.length}</div>
-                <div className="text-sm font-medium text-muted-foreground">Listings</div>
+              <div className="group text-center p-5 rounded-2xl bg-gradient-to-br from-blue-500/10 via-blue-500/5 to-transparent border-2 border-blue-500/20 hover:border-blue-500/50 transition-all duration-300 cursor-default hover:scale-105 hover:shadow-xl hover:shadow-blue-500/20">
+                <Package className="h-6 w-6 mx-auto mb-2 text-blue-500 group-hover:scale-110 transition-transform" />
+                <div className="text-4xl font-black bg-gradient-to-br from-blue-600 to-blue-400 bg-clip-text text-transparent mb-1 group-hover:scale-110 transition-transform">{myListings.length}</div>
+                <div className="text-sm font-semibold text-blue-600">Listings</div>
               </div>
               <div
-                className="group text-center p-4 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 hover:border-primary/40 transition-all cursor-pointer hover:shadow-lg hover:shadow-primary/10"
+                className="group text-center p-5 rounded-2xl bg-gradient-to-br from-primary/15 via-primary/8 to-transparent border-2 border-primary/30 hover:border-primary/60 transition-all duration-300 cursor-pointer hover:scale-105 hover:shadow-xl hover:shadow-primary/30 active:scale-95"
                 onClick={() => navigate("/followers")}
               >
-                <div className="text-3xl font-black text-foreground mb-1">{followersCount}</div>
-                <div className="text-sm font-medium text-primary">Followers</div>
+                <Star className="h-6 w-6 mx-auto mb-2 text-primary fill-primary group-hover:scale-110 group-hover:rotate-12 transition-all" />
+                <div className="text-4xl font-black bg-gradient-to-br from-primary to-primary/70 bg-clip-text text-transparent mb-1 group-hover:scale-110 transition-transform">{followersCount}</div>
+                <div className="text-sm font-semibold text-primary">Followers</div>
               </div>
               <div
-                className="group text-center p-4 rounded-2xl bg-gradient-to-br from-secondary/10 to-secondary/5 border border-secondary/20 hover:border-secondary/40 transition-all cursor-pointer hover:shadow-lg hover:shadow-secondary/10"
+                className="group text-center p-5 rounded-2xl bg-gradient-to-br from-purple-500/15 via-purple-500/8 to-transparent border-2 border-purple-500/30 hover:border-purple-500/60 transition-all duration-300 cursor-pointer hover:scale-105 hover:shadow-xl hover:shadow-purple-500/30 active:scale-95"
                 onClick={() => navigate("/following")}
               >
-                <div className="text-3xl font-black text-foreground mb-1">{followingCount}</div>
-                <div className="text-sm font-medium text-secondary">Following</div>
+                <MessageCircle className="h-6 w-6 mx-auto mb-2 text-purple-500 group-hover:scale-110 group-hover:-rotate-12 transition-all" />
+                <div className="text-4xl font-black bg-gradient-to-br from-purple-600 to-purple-400 bg-clip-text text-transparent mb-1 group-hover:scale-110 transition-transform">{followingCount}</div>
+                <div className="text-sm font-semibold text-purple-600">Following</div>
               </div>
             </div>
           </div>
