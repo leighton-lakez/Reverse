@@ -516,7 +516,21 @@ const Index = () => {
             <p className="text-muted-foreground mb-6">
               You've seen all available items. Check back later for more.
             </p>
-            <Button onClick={() => { setCurrentIndex(0); fetchItems(); }}>
+            <Button onClick={async () => {
+              // Clear viewed items from session storage and state
+              sessionStorage.removeItem('viewedItems');
+              setViewedItemIds(new Set());
+              setCurrentIndex(0);
+
+              // Fetch all items, skipping the viewed filter completely
+              await fetchItems(false, true);
+
+              toast({
+                title: "Refreshed!",
+                description: "Showing all items again",
+              });
+            }}>
+              <RotateCcw className="h-4 w-4 mr-2" />
               Refresh
             </Button>
           </div>
