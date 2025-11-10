@@ -373,55 +373,30 @@ const Index = () => {
       {/* Category Filter */}
       <div className="flex-shrink-0 bg-background/95 backdrop-blur-lg border-b border-border">
         <div className="max-w-7xl mx-auto px-2 sm:px-4 py-2">
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide flex-1">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => navigate("/filters")}
-                className="flex-shrink-0 hover:bg-primary/10 gap-2 border-2 border-primary/50"
-              >
-                <Filter className="h-4 w-4" />
-                <span>Filters</span>
-              </Button>
-              {categories.map((category) => (
-                <Button
-                  key={category}
-                  variant={selectedCategory === category ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setSelectedCategory(category)}
-                  className={`flex-shrink-0 transition-all ${
-                    selectedCategory === category
-                      ? "bg-primary text-primary-foreground hover:bg-primary/90"
-                      : "hover:bg-primary/10"
-                  }`}
-                >
-                  {category}
-                </Button>
-              ))}
-            </div>
+          <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
             <Button
-              variant="outline"
+              onClick={() => navigate("/filters")}
+              className="flex-shrink-0 gap-2 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary text-primary-foreground font-semibold shadow-md hover:shadow-lg transition-all px-6"
               size="sm"
-              onClick={async () => {
-                // Clear viewed items from session storage and state
-                sessionStorage.removeItem('viewedItems');
-                setViewedItemIds(new Set());
-
-                // Fetch all items, skipping the viewed filter completely
-                await fetchItems(false, true);
-
-                toast({
-                  title: "Refreshed!",
-                  description: "Showing all items again",
-                });
-              }}
-              className="flex-shrink-0 gap-2"
-              title="Reset and show all items"
             >
-              <RotateCcw className="h-4 w-4" />
-              <span className="hidden sm:inline">Refresh</span>
+              <Filter className="h-4 w-4" />
+              <span>All Filters</span>
             </Button>
+            {categories.map((category) => (
+              <Button
+                key={category}
+                variant={selectedCategory === category ? "default" : "outline"}
+                size="sm"
+                onClick={() => setSelectedCategory(category)}
+                className={`flex-shrink-0 transition-all ${
+                  selectedCategory === category
+                    ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                    : "hover:bg-primary/10"
+                }`}
+              >
+                {category}
+              </Button>
+            ))}
           </div>
         </div>
       </div>
@@ -642,30 +617,23 @@ const Index = () => {
               <Button
                 size="icon"
                 variant="outline"
-                className="h-14 w-14 sm:h-16 sm:w-16 rounded-full border-2 border-red-500 hover:bg-red-500 hover:text-white transition-all shadow-lg"
-                onClick={() => handleSwipe("left")}
-              >
-                <X className="h-6 w-6 sm:h-8 sm:w-8" />
-              </Button>
+                className="h-14 w-14 sm:h-16 sm:w-16 rounded-full border-2 border-primary hover:bg-primary hover:text-primary-foreground transition-all shadow-lg"
+                onClick={async () => {
+                  // Clear viewed items from session storage and state
+                  sessionStorage.removeItem('viewedItems');
+                  setViewedItemIds(new Set());
 
-              {skippedItems.length > 0 && (
-                <Button
-                  size="icon"
-                  variant="outline"
-                  className="h-10 w-10 sm:h-12 sm:w-12 rounded-full border-2 hover:bg-muted transition-all shadow-lg"
-                  onClick={handleUndo}
-                >
-                  <RotateCcw className="h-4 w-4 sm:h-5 sm:w-5" />
-                </Button>
-              )}
+                  // Fetch all items, skipping the viewed filter completely
+                  await fetchItems(false, true);
 
-              <Button
-                size="icon"
-                variant="outline"
-                className="h-14 w-14 sm:h-16 sm:w-16 rounded-full border-2 border-green-500 hover:bg-green-500 hover:text-white transition-all shadow-lg"
-                onClick={() => handleSwipe("right")}
+                  toast({
+                    title: "Refreshed!",
+                    description: "Showing all items again",
+                  });
+                }}
+                title="Refresh and show all items"
               >
-                <Heart className="h-6 w-6 sm:h-8 sm:w-8" />
+                <RotateCcw className="h-6 w-6 sm:h-8 sm:w-8" />
               </Button>
             </div>
 

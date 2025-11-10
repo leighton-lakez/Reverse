@@ -10,6 +10,7 @@ import { MapPin, DollarSign, Search, SlidersHorizontal } from "lucide-react";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import { Slider } from "./ui/slider";
+import { useNavigate } from "react-router-dom";
 
 // Fix for default marker icons in react-leaflet
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -282,6 +283,7 @@ const MapUpdater = ({ center, zoom }: { center: [number, number], zoom: number }
 };
 
 const MapView = ({ items, onItemClick }: MapViewProps) => {
+  const navigate = useNavigate();
   const [itemsWithCoords, setItemsWithCoords] = useState<Item[]>([]);
   const [filteredItems, setFilteredItems] = useState<Item[]>([]);
   const [showFilters, setShowFilters] = useState(false);
@@ -550,62 +552,49 @@ const MapView = ({ items, onItemClick }: MapViewProps) => {
       }`}>
         {/* Filter Controls */}
         <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-lg border-b border-border p-4 pt-16 md:pt-4 space-y-3">
-          {/* Location Search */}
+          {/* Prominent All Filters Button */}
+          <Button
+            onClick={() => navigate("/filters")}
+            className="w-full h-14 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary text-primary-foreground font-bold text-lg shadow-lg hover:shadow-xl transition-all"
+          >
+            <SlidersHorizontal className="h-6 w-6 mr-3" />
+            All Filters
+          </Button>
+
+          {/* Quick Location Search */}
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               type="text"
-              placeholder="Search location..."
+              placeholder="Quick search location..."
               value={locationSearch}
               onChange={(e) => setLocationSearch(e.target.value)}
               className="pl-9"
             />
           </div>
 
-          {/* Filter Toggle */}
-          <Button
-            onClick={() => setShowFilters(!showFilters)}
-            variant={showFilters ? "default" : "outline"}
-            size="sm"
-            className="w-full"
-          >
-            <SlidersHorizontal className="h-4 w-4 mr-2" />
-            Filters
-            <span className="ml-auto text-xs">
-              {filteredItems.length} listings
-            </span>
-          </Button>
-
-          {/* Price Filter */}
-          {showFilters && (
-            <div className="space-y-2 pt-2 border-t border-border">
-              <div className="flex items-center justify-between">
-                <label className="text-sm font-medium">Price Range</label>
-                <span className="text-sm text-muted-foreground">
-                  ${priceRange[0]} - ${priceRange[1]}
-                </span>
-              </div>
-              <Slider
-                min={0}
-                max={maxPrice}
-                step={50}
-                value={priceRange}
-                onValueChange={setPriceRange}
-                className="w-full"
-              />
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  setLocationSearch("");
-                  setPriceRange([0, maxPrice]);
-                }}
-                className="w-full h-8 text-xs"
-              >
-                Clear Filters
-              </Button>
+          {/* Quick Price Filter */}
+          <div className="space-y-2 pt-2 border-t border-border">
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-medium">Quick Price Range</label>
+              <span className="text-sm text-muted-foreground">
+                ${priceRange[0]} - ${priceRange[1]}
+              </span>
             </div>
-          )}
+            <Slider
+              min={0}
+              max={maxPrice}
+              step={50}
+              value={priceRange}
+              onValueChange={setPriceRange}
+              className="w-full"
+            />
+          </div>
+
+          {/* Listing Count */}
+          <div className="text-center text-sm text-muted-foreground pt-2 border-t border-border">
+            Showing <span className="font-bold text-primary">{filteredItems.length}</span> listings
+          </div>
         </div>
 
         {/* Listing Cards */}
