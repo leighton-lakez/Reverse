@@ -546,6 +546,40 @@ const Profile = () => {
     }
   };
 
+  const handleReviveStory = async (storyId: string) => {
+    try {
+      // Update the story's expires_at to 24 hours from now
+      const newExpiresAt = new Date();
+      newExpiresAt.setHours(newExpiresAt.getHours() + 24);
+
+      const { error } = await supabase
+        .from("stories")
+        .update({
+          expires_at: newExpiresAt.toISOString(),
+          created_at: new Date().toISOString() // Update created_at to show it's fresh
+        })
+        .eq("id", storyId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Story revived!",
+        description: "Your story is now active for another 24 hours",
+      });
+
+      // Refresh stories
+      if (user?.id) {
+        await fetchMyStories(user.id);
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: getUserFriendlyError(error),
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -1419,7 +1453,7 @@ const Profile = () => {
           <DialogHeader>
             <DialogTitle>Manage Stories</DialogTitle>
             <DialogDescription>
-              View and delete your active stories. Past stories show only expired ones (deleted stories are permanently removed).
+              View and delete your active stories. Revive expired stories to make them active for another 24 hours.
             </DialogDescription>
           </DialogHeader>
 
@@ -1512,10 +1546,15 @@ const Profile = () => {
                           Expired: {new Date(story.expires_at).toLocaleDateString()}
                         </p>
                       </div>
-                      <Badge variant="outline" className="flex-shrink-0">
-                        <Clock className="h-3 w-3 mr-1" />
-                        24h
-                      </Badge>
+                      <Button
+                        variant="default"
+                        size="sm"
+                        onClick={() => handleReviveStory(story.id)}
+                        className="flex-shrink-0"
+                      >
+                        <RotateCcw className="h-4 w-4 mr-2" />
+                        Revive
+                      </Button>
                     </div>
                   </Card>
                 ))
