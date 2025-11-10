@@ -376,7 +376,7 @@ const Notifications = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate("/")}>
               <ReverseIcon className="w-10 h-10" />
-              <h1 className="text-2xl font-black tracking-tighter text-gradient">REVERSE</h1>
+              <h1 className="text-2xl font-black tracking-tighter text-gradient">REVRS</h1>
             </div>
             <div className="flex items-center gap-2">
               <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20">

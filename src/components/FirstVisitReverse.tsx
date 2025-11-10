@@ -61,7 +61,7 @@ const FirstVisitReverse = () => {
         {/* Welcome text with gradient */}
         <div className="text-center space-y-3 animate-in slide-in-from-bottom duration-1000">
           <h1 className="text-4xl sm:text-5xl font-black tracking-tighter text-gradient">
-            REVERSE
+            REVRS
           </h1>
           <p className="text-lg sm:text-xl text-primary font-semibold tracking-wide">
             Luxury Fashion Marketplace

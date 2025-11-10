@@ -152,7 +152,7 @@ const AIAssistant = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate("/")}>
               <ReverseIcon className="w-7 h-7" />
-              <h1 className="text-lg font-black tracking-tighter text-gradient">REVERSE</h1>
+              <h1 className="text-lg font-black tracking-tighter text-gradient">REVRS</h1>
             </div>
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20">
               <Sparkles className="h-4 w-4 text-primary animate-pulse" />

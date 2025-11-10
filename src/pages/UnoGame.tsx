@@ -859,7 +859,7 @@ const UnoGame = () => {
             </Button>
             <div className="flex items-center gap-3">
               <ReverseIcon className="w-8 h-8" />
-              <h1 className="text-2xl font-black tracking-tighter text-gradient">UNO REVERSE</h1>
+              <h1 className="text-2xl font-black tracking-tighter text-gradient">UNO REVRS</h1>
             </div>
             <div className="flex items-center gap-2">
               <Button

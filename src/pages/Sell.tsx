@@ -789,7 +789,7 @@ Please provide a price suggestion considering any visible damage or wear in the 
                 <div className="absolute inset-0 bg-primary/20 rounded-lg blur-md group-hover:blur-lg transition-all" />
                 <ReverseIcon className="w-9 h-9 relative z-10 group-hover:scale-105 transition-transform" />
               </div>
-              <h1 className="text-2xl font-black tracking-tighter text-gradient">REVERSE</h1>
+              <h1 className="text-2xl font-black tracking-tighter text-gradient">REVRS</h1>
             </div>
             <div className="flex items-center gap-2 px-4 py-2 rounded-full glass border border-primary/20">
               <div className="h-2 w-2 bg-green-500 rounded-full animate-pulse" />

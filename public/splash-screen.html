@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>REVRS - Splash Screen</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      width: 1170px;
+      height: 2532px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #D4AF37 0%, #8B0000 100%);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      overflow: hidden;
+    }
+
+    .container {
+      text-align: center;
+      animation: fadeIn 1s ease-in;
+    }
+
+    .logo-wrapper {
+      margin-bottom: 60px;
+      animation: scaleIn 0.8s ease-out;
+    }
+
+    .logo {
+      width: 300px;
+      height: 300px;
+      margin: 0 auto;
+      position: relative;
+    }
+
+    .logo svg {
+      width: 100%;
+      height: 100%;
+      filter: drop-shadow(0 20px 60px rgba(0, 0, 0, 0.4));
+    }
+
+    .brand-name {
+      font-size: 120px;
+      font-weight: 900;
+      letter-spacing: -0.05em;
+      background: linear-gradient(180deg, #FFFFFF 0%, rgba(255, 255, 255, 0.8) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+      animation: slideUp 0.8s ease-out 0.3s both;
+    }
+
+    .tagline {
+      font-size: 42px;
+      color: rgba(255, 255, 255, 0.9);
+      font-weight: 600;
+      margin-top: 30px;
+      letter-spacing: 0.05em;
+      animation: slideUp 0.8s ease-out 0.5s both;
+    }
+
+    .glow {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(255, 215, 0, 0.3) 0%, transparent 70%);
+      animation: pulse 3s ease-in-out infinite;
+      pointer-events: none;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+
+    @keyframes scaleIn {
+      from {
+        transform: scale(0.5);
+        opacity: 0;
+      }
+      to {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+
+    @keyframes slideUp {
+      from {
+        transform: translateY(40px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 0.3;
+      }
+      50% {
+        transform: translate(-50%, -50%) scale(1.1);
+        opacity: 0.5;
+      }
+    }
+
+    /* Shimmer effect */
+    .shimmer {
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.3) 50%,
+        transparent 100%
+      );
+      animation: shimmer 3s infinite;
+    }
+
+    @keyframes shimmer {
+      0% {
+        left: -100%;
+      }
+      100% {
+        left: 200%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="glow"></div>
+  <div class="container">
+    <div class="logo-wrapper">
+      <div class="logo">
+        <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Circular background -->
+          <circle cx="50" cy="50" r="45" fill="white" opacity="0.15" />
+
+          <!-- Top curved arrow -->
+          <path
+            d="M 30 40 Q 50 25, 70 40"
+            stroke="white"
+            stroke-width="7"
+            fill="none"
+            stroke-linecap="round"
+          />
+          <!-- Top arrow head -->
+          <path
+            d="M 70 40 L 65 35 M 70 40 L 65 45"
+            stroke="white"
+            stroke-width="7"
+            stroke-linecap="round"
+          />
+
+          <!-- Bottom curved arrow -->
+          <path
+            d="M 70 60 Q 50 75, 30 60"
+            stroke="white"
+            stroke-width="7"
+            fill="none"
+            stroke-linecap="round"
+          />
+          <!-- Bottom arrow head -->
+          <path
+            d="M 30 60 L 35 55 M 30 60 L 35 65"
+            stroke="white"
+            stroke-width="7"
+            stroke-linecap="round"
+          />
+        </svg>
+      </div>
+    </div>
+
+    <h1 class="brand-name">REVRS</h1>
+    <p class="tagline">Luxury Fashion Marketplace</p>
+  </div>
+
+  <div class="shimmer"></div>
+</body>
+</html>

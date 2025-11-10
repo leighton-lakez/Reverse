@@ -276,7 +276,7 @@ const EditListing = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate("/")}>
               <ReverseIcon className="w-8 h-8" />
-              <h1 className="text-xl font-black tracking-tighter text-gradient">REVERSE</h1>
+              <h1 className="text-xl font-black tracking-tighter text-gradient">REVRS</h1>
             </div>
             <Button
               variant="ghost"
