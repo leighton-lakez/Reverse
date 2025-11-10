@@ -8,129 +8,129 @@
 /* All colors MUST be HSL */
 
 @layer base {
-  /* Light Mode (Default) */
+  /* Light Mode (Default) - Modern Tech/SaaS Aesthetic */
   :root {
-    /* Clean white background - Light and airy */
+    /* Crisp white background - Clean and professional */
     --background: 0 0% 100%;
-    --foreground: 0 0% 10%;
+    --foreground: 220 13% 13%;
 
-    /* Cards with subtle warmth */
-    --card: 0 0% 98%;
-    --card-foreground: 0 0% 10%;
+    /* Cards with subtle cool tone */
+    --card: 0 0% 99%;
+    --card-foreground: 220 13% 13%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 10%;
+    --popover-foreground: 220 13% 13%;
 
-    /* Deep burgundy primary - Visible on light background */
-    --primary: 350 75% 45%;
+    /* Modern blue primary - Tech-forward and professional */
+    --primary: 221 83% 53%;
     --primary-foreground: 0 0% 100%;
 
-    /* Rich purple secondary - Luxury accent for light mode */
-    --secondary: 270 65% 50%;
-    --secondary-foreground: 0 0% 100%;
+    /* Cool slate secondary - Modern neutral accent */
+    --secondary: 215 20% 65%;
+    --secondary-foreground: 220 13% 13%;
 
-    /* Warm neutral tones */
-    --muted: 30 10% 95%;
-    --muted-foreground: 40 15% 40%;
+    /* Cool neutral tones */
+    --muted: 220 14% 96%;
+    --muted-foreground: 220 9% 46%;
 
-    --accent: 270 50% 95%;
-    --accent-foreground: 270 65% 50%;
+    --accent: 221 83% 95%;
+    --accent-foreground: 221 83% 53%;
 
-    --destructive: 0 72% 51%;
+    --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    /* Refined borders and inputs */
-    --border: 30 10% 88%;
-    --input: 30 10% 95%;
-    --ring: 350 75% 45%;
+    /* Clean borders and inputs */
+    --border: 220 13% 91%;
+    --input: 220 13% 96%;
+    --ring: 221 83% 53%;
 
-    /* Softer rounded corners for luxury feel */
-    --radius: 0.75rem;
+    /* Modern rounded corners */
+    --radius: 0.5rem;
 
-    /* Success color */
-    --success: 142 76% 36%;
+    /* Success color - Fresh green */
+    --success: 142 71% 45%;
     --success-foreground: 0 0% 100%;
 
-    /* Luxury gradients - Burgundy to purple */
-    --gradient-primary: linear-gradient(135deg, hsl(350 75% 45%), hsl(270 65% 50%));
-    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%), hsl(0 0% 98%));
-    --gradient-mesh: radial-gradient(at 40% 20%, hsl(350 75% 45% / 0.08) 0px, transparent 50%),
-                      radial-gradient(at 80% 0%, hsl(270 65% 50% / 0.08) 0px, transparent 50%),
-                      radial-gradient(at 0% 50%, hsl(350 75% 45% / 0.06) 0px, transparent 50%);
+    /* Modern gradients - Blue tech aesthetic */
+    --gradient-primary: linear-gradient(135deg, hsl(221 83% 53%), hsl(221 83% 63%));
+    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%), hsl(220 14% 98%));
+    --gradient-mesh: radial-gradient(at 40% 20%, hsl(221 83% 53% / 0.06) 0px, transparent 50%),
+                      radial-gradient(at 80% 0%, hsl(215 20% 65% / 0.05) 0px, transparent 50%),
+                      radial-gradient(at 0% 50%, hsl(221 83% 53% / 0.04) 0px, transparent 50%);
 
-    /* Refined glassmorphism */
-    --glass-bg: hsl(0 0% 100% / 0.8);
-    --glass-border: hsl(270 30% 70% / 0.2);
+    /* Clean glassmorphism */
+    --glass-bg: hsl(0 0% 100% / 0.85);
+    --glass-border: hsl(220 13% 91% / 0.5);
 
-    /* Subtle shadows */
-    --shadow-sm: 0 2px 8px hsl(0 0% 0% / 0.08);
-    --shadow-md: 0 4px 16px hsl(0 0% 0% / 0.12);
-    --shadow-lg: 0 8px 32px hsl(0 0% 0% / 0.15);
-    --shadow-glow: 0 0 30px hsl(350 75% 45% / 0.2);
-    --shadow-glow-secondary: 0 0 30px hsl(270 65% 50% / 0.2);
+    /* Subtle professional shadows */
+    --shadow-sm: 0 1px 2px hsl(0 0% 0% / 0.05);
+    --shadow-md: 0 4px 6px hsl(0 0% 0% / 0.07);
+    --shadow-lg: 0 10px 15px hsl(0 0% 0% / 0.1);
+    --shadow-glow: 0 0 20px hsl(221 83% 53% / 0.15);
+    --shadow-glow-secondary: 0 0 20px hsl(215 20% 65% / 0.12);
 
     /* Smooth transitions */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-bounce: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
   }
 
-  /* Dark Mode */
+  /* Dark Mode - Modern Tech/SaaS Aesthetic */
   .dark {
-    /* Deep charcoal black background - Luxury minimal */
-    --background: 0 0% 4%;
-    --foreground: 40 25% 95%;
+    /* Rich dark background - Professional and sleek */
+    --background: 222 47% 11%;
+    --foreground: 210 40% 98%;
 
-    /* Cards with subtle warmth */
-    --card: 0 0% 7%;
-    --card-foreground: 40 25% 95%;
+    /* Cards with subtle elevation */
+    --card: 217 33% 17%;
+    --card-foreground: 210 40% 98%;
 
-    --popover: 0 0% 7%;
-    --popover-foreground: 40 25% 95%;
+    --popover: 217 33% 17%;
+    --popover-foreground: 210 40% 98%;
 
-    /* Champagne gold primary - Sophisticated luxury */
-    --primary: 43 43% 58%;
-    --primary-foreground: 0 0% 10%;
+    /* Bright blue primary - Stands out in dark mode */
+    --primary: 217 91% 60%;
+    --primary-foreground: 222 47% 11%;
 
-    /* Deep burgundy secondary - Rich accent */
-    --secondary: 350 59% 36%;
-    --secondary-foreground: 40 25% 95%;
+    /* Cool slate secondary - Sophisticated accent */
+    --secondary: 215 20% 40%;
+    --secondary-foreground: 210 40% 98%;
 
-    /* Warm neutral tones */
-    --muted: 30 10% 18%;
-    --muted-foreground: 40 15% 65%;
+    /* Cool neutral tones */
+    --muted: 217 33% 21%;
+    --muted-foreground: 215 20% 65%;
 
-    --accent: 40 64% 90%;
-    --accent-foreground: 0 0% 10%;
+    --accent: 217 91% 95%;
+    --accent-foreground: 222 47% 11%;
 
-    --destructive: 0 72% 51%;
-    --destructive-foreground: 40 25% 95%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
 
-    /* Refined borders and inputs */
-    --border: 30 10% 20%;
-    --input: 30 10% 18%;
-    --ring: 43 43% 58%;
+    /* Clean borders and inputs */
+    --border: 215 27% 24%;
+    --input: 217 33% 21%;
+    --ring: 217 91% 60%;
 
     /* Success color */
-    --success: 142 76% 36%;
-    --success-foreground: 40 25% 95%;
+    --success: 142 71% 45%;
+    --success-foreground: 210 40% 98%;
 
-    /* Luxury gradients - Gold to burgundy */
-    --gradient-primary: linear-gradient(135deg, hsl(43 43% 58%), hsl(350 59% 36%));
-    --gradient-card: linear-gradient(145deg, hsl(0 0% 8%), hsl(0 0% 5%));
-    --gradient-mesh: radial-gradient(at 40% 20%, hsl(43 43% 58% / 0.08) 0px, transparent 50%),
-                      radial-gradient(at 80% 0%, hsl(350 59% 36% / 0.08) 0px, transparent 50%),
-                      radial-gradient(at 0% 50%, hsl(43 43% 58% / 0.06) 0px, transparent 50%);
+    /* Modern gradients - Blue tech aesthetic */
+    --gradient-primary: linear-gradient(135deg, hsl(217 91% 60%), hsl(217 91% 70%));
+    --gradient-card: linear-gradient(145deg, hsl(217 33% 18%), hsl(222 47% 12%));
+    --gradient-mesh: radial-gradient(at 40% 20%, hsl(217 91% 60% / 0.1) 0px, transparent 50%),
+                      radial-gradient(at 80% 0%, hsl(215 20% 40% / 0.08) 0px, transparent 50%),
+                      radial-gradient(at 0% 50%, hsl(217 91% 60% / 0.06) 0px, transparent 50%);
 
-    /* Refined glassmorphism */
-    --glass-bg: hsl(0 0% 7% / 0.8);
-    --glass-border: hsl(40 20% 30% / 0.2);
+    /* Clean glassmorphism */
+    --glass-bg: hsl(217 33% 17% / 0.85);
+    --glass-border: hsl(215 27% 24% / 0.5);
 
-    /* Subtle shadows */
-    --shadow-sm: 0 2px 8px hsl(0 0% 0% / 0.3);
-    --shadow-md: 0 4px 16px hsl(0 0% 0% / 0.4);
-    --shadow-lg: 0 8px 32px hsl(0 0% 0% / 0.5);
-    --shadow-glow: 0 0 30px hsl(43 43% 58% / 0.2);
-    --shadow-glow-secondary: 0 0 30px hsl(350 59% 36% / 0.2);
+    /* Subtle professional shadows */
+    --shadow-sm: 0 1px 2px hsl(0 0% 0% / 0.3);
+    --shadow-md: 0 4px 6px hsl(0 0% 0% / 0.4);
+    --shadow-lg: 0 10px 15px hsl(0 0% 0% / 0.5);
+    --shadow-glow: 0 0 20px hsl(217 91% 60% / 0.25);
+    --shadow-glow-secondary: 0 0 20px hsl(215 20% 40% / 0.2);
   }
 }
 
