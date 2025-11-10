@@ -1014,21 +1014,15 @@ const Profile = () => {
 
         {/* Listings Tabs */}
         <Tabs defaultValue="active" className="animate-fade-in" style={{ animationDelay: "0.1s" }}>
-          <TabsList className="grid w-full grid-cols-5 mb-6 p-1.5 bg-muted/50 backdrop-blur-sm rounded-2xl border border-border/50">
-            <TabsTrigger value="active" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-semibold rounded-xl transition-all text-[10px] sm:text-sm">
+          <TabsList className="grid w-full grid-cols-3 mb-6 p-1.5 bg-muted/50 backdrop-blur-sm rounded-2xl border border-border/50">
+            <TabsTrigger value="active" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-semibold rounded-xl transition-all text-sm">
               Active
             </TabsTrigger>
-            <TabsTrigger value="sold" className="data-[state=active]:bg-secondary data-[state=active]:text-secondary-foreground font-semibold rounded-xl transition-all text-[10px] sm:text-sm">
+            <TabsTrigger value="sold" className="data-[state=active]:bg-secondary data-[state=active]:text-secondary-foreground font-semibold rounded-xl transition-all text-sm">
               Sold
             </TabsTrigger>
-            <TabsTrigger value="drafts" className="data-[state=active]:bg-yellow-600 data-[state=active]:text-white font-semibold rounded-xl transition-all text-[10px] sm:text-sm">
+            <TabsTrigger value="drafts" className="data-[state=active]:bg-yellow-600 data-[state=active]:text-white font-semibold rounded-xl transition-all text-sm">
               Drafts ({drafts.length})
-            </TabsTrigger>
-            <TabsTrigger value="reviews" className="data-[state=active]:bg-foreground data-[state=active]:text-background font-semibold rounded-xl transition-all text-[10px] sm:text-sm">
-              Received ({reviewCount})
-            </TabsTrigger>
-            <TabsTrigger value="given" className="data-[state=active]:bg-foreground data-[state=active]:text-background font-semibold rounded-xl transition-all text-[10px] sm:text-sm">
-              Given ({givenReviews.length})
             </TabsTrigger>
           </TabsList>
           

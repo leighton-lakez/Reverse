@@ -88,9 +88,17 @@ export default function LocationMap({ location }: LocationMapProps) {
         style={{ height: '100%', width: '100%' }}
         className="z-0"
       >
+        {/* Satellite imagery layer */}
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution='Tiles &copy; Esri'
+          url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+          maxZoom={19}
+        />
+        {/* Labels overlay */}
+        <TileLayer
+          attribution=''
+          url="https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}"
+          maxZoom={19}
         />
         <RecenterMap center={coordinates} />
         {/* Circle zone showing approximate area */}
