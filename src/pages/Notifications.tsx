@@ -145,7 +145,7 @@ const FriendsSection = ({ currentUserId }: { currentUserId: string }) => {
   }, [currentUserId]);
 
   const fetchFriends = async () => {
-    // Get users that current user follows
+    // Get all users that current user follows (not just mutual follows)
     const { data: following } = await supabase
       .from("follows")
       .select("following_id")
@@ -158,25 +158,11 @@ const FriendsSection = ({ currentUserId }: { currentUserId: string }) => {
 
     const followingIds = following.map(f => f.following_id);
 
-    // Get users that follow current user back (mutual follows = friends)
-    const { data: mutualFollows } = await supabase
-      .from("follows")
-      .select("follower_id")
-      .eq("following_id", currentUserId)
-      .in("follower_id", followingIds);
-
-    if (!mutualFollows || mutualFollows.length === 0) {
-      setFriends([]);
-      return;
-    }
-
-    const friendIds = mutualFollows.map(f => f.follower_id);
-
-    // Fetch friend profiles
+    // Fetch profiles of all people you follow
     const { data: profiles } = await supabase
       .from("profiles")
       .select("id, display_name, avatar_url")
-      .in("id", friendIds);
+      .in("id", followingIds);
 
     setFriends(profiles || []);
   };
@@ -187,9 +173,9 @@ const FriendsSection = ({ currentUserId }: { currentUserId: string }) => {
         <div className="inline-flex p-4 rounded-full bg-muted/50 mb-4">
           <Users className="h-12 w-12 text-muted-foreground opacity-50" />
         </div>
-        <p className="text-base font-semibold text-foreground mb-2">0 Friends</p>
+        <p className="text-base font-semibold text-foreground mb-2">Not Following Anyone</p>
         <p className="text-sm text-muted-foreground max-w-sm mx-auto">
-          When you and another user follow each other, you'll become friends
+          Follow other users to see their stories and updates here
         </p>
       </div>
     );
@@ -212,8 +198,8 @@ const FriendsSection = ({ currentUserId }: { currentUserId: string }) => {
             <div className="flex-1 min-w-0">
               <p className="text-base font-bold text-foreground mb-1">{friend.display_name}</p>
               <div className="flex items-center gap-2">
-                <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
-                <p className="text-sm text-muted-foreground">Friend</p>
+                <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
+                <p className="text-sm text-muted-foreground">Following</p>
               </div>
             </div>
             <div className="flex-shrink-0 text-primary opacity-0 group-hover:opacity-100 transition-opacity">
