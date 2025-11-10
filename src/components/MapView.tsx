@@ -167,6 +167,38 @@ const CITY_COORDINATES: Record<string, [number, number]> = {
 // Cache for geocoded locations to avoid redundant API calls
 const geocodeCache = new Map<string, [number, number]>();
 
+// Load cache from localStorage on init
+const loadGeocodeCacheFromStorage = () => {
+  try {
+    const stored = localStorage.getItem('geocodeCache');
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      Object.entries(parsed).forEach(([key, value]) => {
+        geocodeCache.set(key, value as [number, number]);
+      });
+      console.log('📦 Loaded', geocodeCache.size, 'cached locations from storage');
+    }
+  } catch (e) {
+    console.error('Failed to load geocode cache:', e);
+  }
+};
+
+// Save cache to localStorage
+const saveGeocodeCacheToStorage = () => {
+  try {
+    const cacheObj: Record<string, [number, number]> = {};
+    geocodeCache.forEach((value, key) => {
+      cacheObj[key] = value;
+    });
+    localStorage.setItem('geocodeCache', JSON.stringify(cacheObj));
+  } catch (e) {
+    console.error('Failed to save geocode cache:', e);
+  }
+};
+
+// Initialize cache on module load
+loadGeocodeCacheFromStorage();
+
 // Async function to geocode using API for unknown locations
 const geocodeWithAPI = async (location: string): Promise<[number, number]> => {
   try {
@@ -185,6 +217,7 @@ const geocodeWithAPI = async (location: string): Promise<[number, number]> => {
         const coords: [number, number] = [parseFloat(data[0].lat), parseFloat(data[0].lon)];
         console.log(`✅ Geocoded "${location}" via API:`, coords);
         geocodeCache.set(location.toLowerCase().trim(), coords);
+        saveGeocodeCacheToStorage(); // Save to localStorage
         return coords;
       }
     }
@@ -296,6 +329,7 @@ const MapView = ({ items, onItemClick }: MapViewProps) => {
   const [mapCenter, setMapCenter] = useState<[number, number]>([39.8283, -98.5795]);
   const [mapZoom, setMapZoom] = useState(4);
   const [showMapOnMobile, setShowMapOnMobile] = useState(true);
+  const [geocodingProgress, setGeocodingProgress] = useState<{ current: number; total: number } | null>(null);
 
   // Swipe functionality for mobile
   const [sidebarOffset, setSidebarOffset] = useState(0); // 0 = open, negative = swiped left
@@ -337,34 +371,42 @@ const MapView = ({ items, onItemClick }: MapViewProps) => {
 
       // Phase 2: Geocode unknown locations via API (with delay to respect rate limits)
       if (needsAPIItems.length > 0) {
-        console.log('⏳ Need to geocode', needsAPIItems.length, 'items via API');
+        console.log('⏳ Need to geocode', needsAPIItems.length, 'items via API (this may take a moment...)');
+        setGeocodingProgress({ current: 0, total: needsAPIItems.length });
 
-        const apiGeocodedItems: Item[] = [];
+        // Process in background without blocking the UI
+        (async () => {
+          const apiGeocodedItems: Item[] = [];
 
-        for (let i = 0; i < needsAPIItems.length; i++) {
-          const { item } = needsAPIItems[i];
+          for (let i = 0; i < needsAPIItems.length; i++) {
+            const { item } = needsAPIItems[i];
 
-          // Add delay between API calls (1 req/sec limit)
-          if (i > 0) {
-            await new Promise(resolve => setTimeout(resolve, 1100));
+            // Update progress
+            setGeocodingProgress({ current: i + 1, total: needsAPIItems.length });
+
+            // Add delay between API calls (1 req/sec limit)
+            if (i > 0) {
+              await new Promise(resolve => setTimeout(resolve, 1100));
+            }
+
+            const coords = await geocodeWithAPI(item.location);
+            const geocodedItem = {
+              ...item,
+              latitude: coords[0] + (Math.random() - 0.5) * 0.01,
+              longitude: coords[1] + (Math.random() - 0.5) * 0.01
+            };
+
+            apiGeocodedItems.push(geocodedItem);
+
+            // Update display every 5 items or when complete for smoother updates
+            if (apiGeocodedItems.length % 5 === 0 || i === needsAPIItems.length - 1) {
+              setItemsWithCoords(prev => [...prev, ...apiGeocodedItems.splice(0)]);
+            }
           }
 
-          const coords = await geocodeWithAPI(item.location);
-          const geocodedItem = {
-            ...item,
-            latitude: coords[0] + (Math.random() - 0.5) * 0.01,
-            longitude: coords[1] + (Math.random() - 0.5) * 0.01
-          };
-
-          apiGeocodedItems.push(geocodedItem);
-
-          // Update display in batches of 10 or when complete
-          if (apiGeocodedItems.length % 10 === 0 || i === needsAPIItems.length - 1) {
-            setItemsWithCoords(prev => [...prev, ...apiGeocodedItems.splice(0)]);
-          }
-        }
-
-        console.log('✅ All items geocoded');
+          console.log('✅ All items geocoded and cached');
+          setGeocodingProgress(null); // Clear progress indicator
+        })();
       }
 
       // Calculate max price from items
@@ -593,6 +635,24 @@ const MapView = ({ items, onItemClick }: MapViewProps) => {
           <div className="text-center text-xs sm:text-sm text-muted-foreground pt-1 sm:pt-2 border-t border-border">
             Showing <span className="font-bold text-primary">{filteredItems.length}</span> listings
           </div>
+
+          {/* Geocoding Progress */}
+          {geocodingProgress && (
+            <div className="pt-2 border-t border-border">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                <span className="text-xs text-muted-foreground">
+                  Loading locations {geocodingProgress.current}/{geocodingProgress.total}
+                </span>
+              </div>
+              <div className="w-full bg-muted rounded-full h-1.5">
+                <div
+                  className="bg-primary h-1.5 rounded-full transition-all duration-300"
+                  style={{ width: `${(geocodingProgress.current / geocodingProgress.total) * 100}%` }}
+                />
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Listing Cards */}

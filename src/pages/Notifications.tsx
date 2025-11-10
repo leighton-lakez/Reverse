@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
-import { ArrowLeft, MessageCircle, Package, Users, Search, UserPlus, UserCheck } from "lucide-react";
+import { ArrowLeft, MessageCircle, Package, Users, Search, UserPlus, UserCheck, Heart, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import BottomNav from "@/components/BottomNav";
 import StoryViewer from "@/components/StoryViewer";
 import { supabase } from "@/integrations/supabase/client";
@@ -131,6 +132,158 @@ const StoriesSection = ({ currentUserId }: { currentUserId: string }) => {
         />
       )}
     </>
+  );
+};
+
+// Favorites Section Component
+const FavoritesSection = ({ currentUserId }: { currentUserId: string }) => {
+  const navigate = useNavigate();
+  const [favorites, setFavorites] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (currentUserId) {
+      fetchFavorites();
+    }
+  }, [currentUserId]);
+
+  const fetchFavorites = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("favorites")
+      .select(`
+        id,
+        item_id,
+        created_at,
+        items:item_id (
+          id,
+          title,
+          brand,
+          price,
+          condition,
+          location,
+          images,
+          user_id,
+          description,
+          category
+        )
+      `)
+      .eq("user_id", currentUserId)
+      .order("created_at", { ascending: false });
+
+    if (!error && data) {
+      setFavorites(data as any);
+    }
+    setLoading(false);
+  };
+
+  const removeFavorite = async (favoriteId: string, itemTitle: string) => {
+    const { error } = await supabase
+      .from("favorites")
+      .delete()
+      .eq("id", favoriteId);
+
+    if (!error) {
+      setFavorites(favorites.filter(fav => fav.id !== favoriteId));
+      toast({
+        title: "Removed",
+        description: `${itemTitle} removed from favorites`,
+      });
+    } else {
+      toast({
+        title: "Error",
+        description: "Failed to remove favorite",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleItemClick = (item: any) => {
+    navigate("/item-detail", { state: { item } });
+  };
+
+  if (loading) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-muted-foreground">Loading favorites...</p>
+      </div>
+    );
+  }
+
+  if (favorites.length === 0) {
+    return (
+      <div className="text-center py-12">
+        <Heart className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+        <h3 className="text-xl font-bold text-foreground mb-2">No favorites yet</h3>
+        <p className="text-muted-foreground mb-6">
+          Start browsing and tap the heart icon to save items you like
+        </p>
+        <Button onClick={() => navigate("/")}>
+          Browse Items
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      {favorites.map((favorite) => {
+        const item = favorite.items;
+        if (!item) return null;
+
+        return (
+          <Card
+            key={favorite.id}
+            className="overflow-hidden cursor-pointer hover:shadow-lg transition-all"
+          >
+            <div onClick={() => handleItemClick(item)}>
+              {/* Image */}
+              <div className="relative aspect-square bg-muted">
+                {item.images && item.images.length > 0 && (
+                  <img
+                    src={item.images[0]}
+                    alt={item.title}
+                    className="w-full h-full object-cover"
+                  />
+                )}
+              </div>
+
+              {/* Info */}
+              <div className="p-4">
+                <h3 className="font-semibold text-lg line-clamp-2 mb-1">
+                  {item.title}
+                </h3>
+                <p className="text-2xl font-bold text-primary mb-2">
+                  ${item.price.toLocaleString()}
+                </p>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+                  <span>{item.brand}</span>
+                  <span>•</span>
+                  <span>{item.condition}</span>
+                </div>
+                <p className="text-sm text-muted-foreground">{item.location}</p>
+              </div>
+            </div>
+
+            {/* Remove Button */}
+            <div className="px-4 pb-4">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  removeFavorite(favorite.id, item.title);
+                }}
+                className="w-full border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Remove from Favorites
+              </Button>
+            </div>
+          </Card>
+        );
+      })}
+    </div>
   );
 };
 
@@ -572,13 +725,23 @@ const Notifications = () => {
           </div>
         </div>
 
-        {/* Stories Section */}
-        <div className="animate-fade-in" style={{ animationDelay: "0.05s" }}>
-          <StoriesSection currentUserId={currentUserId} />
-        </div>
+        {/* Tabs for different sections */}
+        <Tabs defaultValue="messages" className="animate-fade-in">
+          <TabsList className="grid w-full grid-cols-4 mb-6">
+            <TabsTrigger value="stories">Stories</TabsTrigger>
+            <TabsTrigger value="messages">Messages</TabsTrigger>
+            <TabsTrigger value="favorites">Favorites</TabsTrigger>
+            <TabsTrigger value="friends">Friends</TabsTrigger>
+          </TabsList>
 
-        {/* Message Notifications */}
-        <div className="animate-fade-in" style={{ animationDelay: "0.1s" }}>
+          {/* Stories Tab */}
+          <TabsContent value="stories">
+            <StoriesSection currentUserId={currentUserId} />
+          </TabsContent>
+
+          {/* Messages Tab */}
+          <TabsContent value="messages">
+          <div className="animate-fade-in">
           <h2 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
             Messages
             <div className="h-1 w-12 bg-gradient-to-r from-primary to-secondary rounded-full" />
@@ -655,14 +818,19 @@ const Notifications = () => {
           )}
         </div>
 
-        {/* Friends Section */}
-        <div className="animate-fade-in" style={{ animationDelay: "0.2s" }}>
-          <h2 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
-            Friends
-            <div className="h-1 w-12 bg-gradient-to-r from-primary to-secondary rounded-full" />
-          </h2>
-          <FriendsSection currentUserId={currentUserId} />
-        </div>
+          </div>
+          </TabsContent>
+
+          {/* Favorites Tab */}
+          <TabsContent value="favorites">
+            <FavoritesSection currentUserId={currentUserId} />
+          </TabsContent>
+
+          {/* Friends Tab */}
+          <TabsContent value="friends">
+            <FriendsSection currentUserId={currentUserId} />
+          </TabsContent>
+        </Tabs>
       </main>
       
       <BottomNav />

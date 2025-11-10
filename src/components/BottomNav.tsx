@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Home, PlusCircle, Heart, User } from "lucide-react";
+import { Home, PlusCircle, Bell, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -122,14 +122,21 @@ const BottomNav = () => {
 
           <Button
             variant="ghost"
-            onClick={() => navigate("/favorites")}
+            onClick={() => navigate("/notifications")}
             className={`flex flex-col items-center gap-0.5 sm:gap-1 h-auto py-1.5 sm:py-2 hover:text-primary hover:bg-primary/10 rounded-xl transition-all ${getActiveStyles(
-              "/favorites"
+              "/notifications"
             )}`}
-            style={getActiveGlow("/favorites")}
+            style={getActiveGlow("/notifications")}
           >
-            <Heart className={`h-5 w-5 sm:h-6 sm:w-6 ${location.pathname === "/favorites" ? "fill-current" : ""}`} />
-            <span className="text-[10px] sm:text-xs font-medium">Favorites</span>
+            <div className="relative">
+              <Bell className="h-5 w-5 sm:h-6 sm:w-6" />
+              {unreadCount > 0 && (
+                <div className="absolute -top-1 -right-1 bg-primary text-primary-foreground rounded-full h-4 w-4 flex items-center justify-center text-[9px] font-bold">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </div>
+              )}
+            </div>
+            <span className="text-[10px] sm:text-xs font-medium">Notifications</span>
           </Button>
 
           <Button
