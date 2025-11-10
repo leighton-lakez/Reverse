@@ -551,28 +551,27 @@ const MapView = ({ items, onItemClick }: MapViewProps) => {
         showMapOnMobile ? 'hidden md:block' : 'block'
       }`}>
         {/* Filter Controls */}
-        <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-lg border-b border-border p-4 pt-16 md:pt-4 space-y-3">
+        <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-lg border-b border-border p-3 md:p-4 pt-20 md:pt-4 space-y-3">
           {/* Prominent All Filters Button */}
           <Button
-            onClick={() => navigate("/filters")}
+            onClick={() => navigate("/filters", { state: { fromMapView: true } })}
             className="w-full h-14 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary text-primary-foreground font-bold text-lg shadow-lg hover:shadow-xl transition-all"
           >
             <SlidersHorizontal className="h-6 w-6 mr-3" />
             All Filters
           </Button>
 
-          {/* Refresh Button */}
+          {/* Clear Filters Button */}
           <Button
             onClick={() => {
               setLocationSearch("");
               setPriceRange([0, maxPrice]);
-              window.location.reload();
             }}
             variant="outline"
             className="w-full h-12 border-2 border-primary/50 hover:bg-primary/10 font-semibold gap-2 transition-all"
           >
             <RotateCcw className="h-5 w-5" />
-            Refresh Listings
+            Clear Filters
           </Button>
 
           {/* Quick Location Search */}
@@ -612,11 +611,11 @@ const MapView = ({ items, onItemClick }: MapViewProps) => {
         </div>
 
         {/* Listing Cards */}
-        <div className="p-2 space-y-2">
+        <div className="p-3 md:p-2 space-y-3 md:space-y-2">
           {filteredItems.map((item) => (
             <Card
               key={item.id}
-              className={`p-3 cursor-pointer transition-all hover:shadow-lg border-2 ${
+              className={`p-4 md:p-3 cursor-pointer transition-all hover:shadow-lg border-2 ${
                 selectedItemId === item.id
                   ? 'border-[#0066ff] shadow-lg'
                   : hoveredItemId === item.id
@@ -627,10 +626,10 @@ const MapView = ({ items, onItemClick }: MapViewProps) => {
               onMouseEnter={() => setHoveredItemId(item.id)}
               onMouseLeave={() => setHoveredItemId(null)}
             >
-              <div className="flex gap-3">
+              <div className="flex gap-4 md:gap-3">
                 {/* Image */}
                 {item.images && item.images.length > 0 && (
-                  <div className="w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden bg-muted">
+                  <div className="w-24 h-24 md:w-20 md:h-20 flex-shrink-0 rounded-lg overflow-hidden bg-muted">
                     <img
                       src={item.images[0]}
                       alt={item.title}
@@ -642,17 +641,17 @@ const MapView = ({ items, onItemClick }: MapViewProps) => {
                 {/* Info */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-2 mb-1">
-                    <h3 className="font-semibold text-xs line-clamp-2">{item.title}</h3>
+                    <h3 className="font-semibold text-sm md:text-xs line-clamp-2">{item.title}</h3>
                   </div>
-                  <p className="text-base font-bold text-[#0066ff] mb-1">
+                  <p className="text-lg md:text-base font-bold text-[#0066ff] mb-1">
                     ${item.price.toLocaleString()}
                   </p>
-                  <p className="text-xs text-muted-foreground mb-1">{item.brand}</p>
+                  <p className="text-sm md:text-xs text-muted-foreground mb-1">{item.brand}</p>
                   <div className="flex items-center gap-1 text-muted-foreground">
-                    <MapPin className="h-3 w-3 flex-shrink-0" />
-                    <span className="text-xs truncate">{item.location}</span>
+                    <MapPin className="h-4 w-4 md:h-3 md:w-3 flex-shrink-0" />
+                    <span className="text-sm md:text-xs truncate">{item.location}</span>
                   </div>
-                  <span className="inline-block mt-1 text-xs bg-muted px-2 py-0.5 rounded-full">
+                  <span className="inline-block mt-1 text-sm md:text-xs bg-muted px-2 py-1 md:py-0.5 rounded-full">
                     {item.condition}
                   </span>
                 </div>

@@ -336,35 +336,38 @@ const Index = () => {
   // Map button drag handlers
   const handleMapButtonStart = (clientX: number, clientY: number) => {
     setIsMapButtonDragging(true);
+    setDragPosition({ x: clientX, y: clientY });
     mapButtonStartRef.current = {
       x: clientX,
       y: clientY,
-      initialY: mapButtonPosition.y
+      initialY: mapButtonPosition.y,
+      initialSide: mapButtonPosition.side
     };
   };
 
   const handleMapButtonMove = (clientX: number, clientY: number) => {
     if (!isMapButtonDragging) return;
 
-    const windowHeight = window.innerHeight;
-    const deltaY = clientY - mapButtonStartRef.current.y;
-    const deltaYPercent = (deltaY / windowHeight) * 100;
+    // Update drag position to make button follow cursor
+    setDragPosition({ x: clientX, y: clientY });
 
-    // Calculate new Y position (percentage from top)
-    let newY = mapButtonStartRef.current.initialY + deltaYPercent;
+    const windowHeight = window.innerHeight;
+    const windowWidth = window.innerWidth;
+
+    // Calculate Y position as percentage
+    let newY = (clientY / windowHeight) * 100;
 
     // Clamp between 10% and 90% to keep button visible
     newY = Math.max(10, Math.min(90, newY));
 
-    // Check if dragged far enough to switch sides (30% of screen width)
-    const deltaX = clientX - mapButtonStartRef.current.x;
-    const switchThreshold = window.innerWidth * 0.3;
+    // Determine which side based on cursor position
+    let newSide: 'left' | 'right';
 
-    let newSide = mapButtonPosition.side;
-    if (mapButtonPosition.side === 'left' && deltaX > switchThreshold) {
-      newSide = 'right';
-    } else if (mapButtonPosition.side === 'right' && deltaX < -switchThreshold) {
+    // If cursor is in left half, button goes to left; right half, button goes to right
+    if (clientX < windowWidth / 2) {
       newSide = 'left';
+    } else {
+      newSide = 'right';
     }
 
     const newPosition = { y: newY, side: newSide };
@@ -374,6 +377,7 @@ const Index = () => {
   const handleMapButtonEnd = () => {
     if (!isMapButtonDragging) return;
     setIsMapButtonDragging(false);
+    setDragPosition(null);
 
     // Save position to localStorage
     localStorage.setItem('mapButtonPosition', JSON.stringify(mapButtonPosition));
@@ -541,13 +545,26 @@ const Index = () => {
           mapButtonPosition.side === 'left' ? 'rounded-r-2xl' : 'rounded-l-2xl'
         }`}
         title={showMapView ? "Show Cards" : "Show Map (Drag to reposition)"}
-        style={{
-          [mapButtonPosition.side === 'left' ? 'left' : 'right']: 0,
-          top: `${mapButtonPosition.y}%`,
-          transform: 'translateY(-50%)',
-          animation: !showMapView && !isMapButtonDragging ? 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite' : 'none',
-          transition: isMapButtonDragging ? 'none' : 'all 0.3s ease-out'
-        }}
+        style={
+          isMapButtonDragging && dragPosition
+            ? {
+                // When dragging, button follows cursor exactly
+                left: dragPosition.x < window.innerWidth / 2 ? 0 : 'auto',
+                right: dragPosition.x >= window.innerWidth / 2 ? 0 : 'auto',
+                top: `${dragPosition.y}px`,
+                transform: 'translateY(-50%)',
+                animation: 'none',
+                transition: 'none'
+              }
+            : {
+                // When not dragging, use saved position
+                [mapButtonPosition.side === 'left' ? 'left' : 'right']: 0,
+                top: `${mapButtonPosition.y}%`,
+                transform: 'translateY(-50%)',
+                animation: !showMapView ? 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite' : 'none',
+                transition: 'all 0.2s ease-out'
+              }
+        }
       >
         <Map className="h-7 w-7 mb-2" />
         <span className="text-xs font-black tracking-wider [writing-mode:vertical-lr] rotate-180">
@@ -557,7 +574,7 @@ const Index = () => {
 
       {/* Main Content */}
       <main className={`flex-1 w-full flex flex-col items-center justify-start overflow-hidden ${
-        showMapView ? 'fixed inset-0 z-40 pt-16' : 'max-w-md mx-auto px-3 sm:px-4 pt-2 pb-1 sm:py-6'
+        showMapView ? 'fixed inset-0 z-40' : 'max-w-md mx-auto px-3 sm:px-4 pt-2 pb-1 sm:py-6'
       }`}>
         {showMapView ? (
           <div className="w-full h-full">
