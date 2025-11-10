@@ -462,8 +462,82 @@ const MapView = ({ items, onItemClick }: MapViewProps) => {
         </Button>
       </div>
 
-      {/* Listing Cards Sidebar - Scrollable */}
-      <div className={`w-full md:w-[400px] lg:w-[450px] h-full flex-shrink-0 overflow-y-auto bg-background md:border-r border-border ${
+      {/* Map Container - Takes remaining space */}
+      <div className={`flex-1 h-full relative ${
+        showMapOnMobile ? 'block' : 'hidden md:block'
+      }`}>
+        <MapContainer
+          center={defaultCenter}
+          zoom={4}
+          className="h-full w-full"
+          style={{ zIndex: 0 }}
+          scrollWheelZoom={true}
+        >
+          <MapUpdater center={mapCenter} zoom={mapZoom} />
+
+          <TileLayer
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          />
+
+          <MarkerClusterGroup
+            chunkedLoading
+            maxClusterRadius={60}
+            spiderfyOnMaxZoom={true}
+            showCoverageOnHover={false}
+            zoomToBoundsOnClick={true}
+            iconCreateFunction={(cluster) => {
+              const count = cluster.getChildCount();
+              return L.divIcon({
+                html: `<div style="
+                  background: #0066ff;
+                  color: white;
+                  border-radius: 50%;
+                  width: 40px;
+                  height: 40px;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  font-weight: 700;
+                  font-size: 16px;
+                  box-shadow: 0 2px 8px rgba(0,102,255,0.4);
+                  border: 3px solid white;
+                ">${count}</div>`,
+                className: 'custom-cluster-icon',
+                iconSize: L.point(40, 40, true),
+              });
+            }}
+          >
+            {filteredItems.map((item) => (
+              <Marker
+                key={item.id}
+                position={[item.latitude!, item.longitude!]}
+                icon={createPriceMarker(item.price, hoveredItemId === item.id || selectedItemId === item.id)}
+                ref={(ref) => {
+                  if (ref) {
+                    markerRefs.current.set(item.id, ref);
+                  }
+                }}
+                eventHandlers={{
+                  click: () => {
+                    setSelectedItemId(item.id);
+                    handleListingClick(item);
+                  },
+                  mouseover: () => {
+                    setHoveredItemId(item.id);
+                  },
+                  mouseout: () => {
+                    setHoveredItemId(null);
+                  },
+                }}
+              />
+            ))}
+          </MarkerClusterGroup>
+        </MapContainer>
+      </div>
+
+      {/* Listing Cards Sidebar - Scrollable (Right Side) */}
+      <div className={`w-full md:w-[280px] lg:w-[320px] h-full flex-shrink-0 overflow-y-auto bg-background md:border-l border-border ${
         showMapOnMobile ? 'hidden md:block' : 'block'
       }`}>
         {/* Filter Controls */}
@@ -545,7 +619,7 @@ const MapView = ({ items, onItemClick }: MapViewProps) => {
               <div className="flex gap-3">
                 {/* Image */}
                 {item.images && item.images.length > 0 && (
-                  <div className="w-24 h-24 flex-shrink-0 rounded-lg overflow-hidden bg-muted">
+                  <div className="w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden bg-muted">
                     <img
                       src={item.images[0]}
                       alt={item.title}
@@ -557,9 +631,9 @@ const MapView = ({ items, onItemClick }: MapViewProps) => {
                 {/* Info */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-2 mb-1">
-                    <h3 className="font-semibold text-sm line-clamp-2">{item.title}</h3>
+                    <h3 className="font-semibold text-xs line-clamp-2">{item.title}</h3>
                   </div>
-                  <p className="text-lg font-bold text-[#0066ff] mb-1">
+                  <p className="text-base font-bold text-[#0066ff] mb-1">
                     ${item.price.toLocaleString()}
                   </p>
                   <p className="text-xs text-muted-foreground mb-1">{item.brand}</p>
@@ -592,80 +666,6 @@ const MapView = ({ items, onItemClick }: MapViewProps) => {
             </div>
           )}
         </div>
-      </div>
-
-      {/* Map Container - Takes remaining space */}
-      <div className={`flex-1 h-full relative ${
-        showMapOnMobile ? 'block' : 'hidden md:block'
-      }`}>
-        <MapContainer
-          center={defaultCenter}
-          zoom={4}
-          className="h-full w-full"
-          style={{ zIndex: 0 }}
-          scrollWheelZoom={true}
-        >
-          <MapUpdater center={mapCenter} zoom={mapZoom} />
-
-          <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
-
-          <MarkerClusterGroup
-            chunkedLoading
-            maxClusterRadius={60}
-            spiderfyOnMaxZoom={true}
-            showCoverageOnHover={false}
-            zoomToBoundsOnClick={true}
-            iconCreateFunction={(cluster) => {
-              const count = cluster.getChildCount();
-              return L.divIcon({
-                html: `<div style="
-                  background: #0066ff;
-                  color: white;
-                  border-radius: 50%;
-                  width: 40px;
-                  height: 40px;
-                  display: flex;
-                  align-items: center;
-                  justify-content: center;
-                  font-weight: 700;
-                  font-size: 16px;
-                  box-shadow: 0 2px 8px rgba(0,102,255,0.4);
-                  border: 3px solid white;
-                ">${count}</div>`,
-                className: 'custom-cluster-icon',
-                iconSize: L.point(40, 40, true),
-              });
-            }}
-          >
-            {filteredItems.map((item) => (
-              <Marker
-                key={item.id}
-                position={[item.latitude!, item.longitude!]}
-                icon={createPriceMarker(item.price, hoveredItemId === item.id || selectedItemId === item.id)}
-                ref={(ref) => {
-                  if (ref) {
-                    markerRefs.current.set(item.id, ref);
-                  }
-                }}
-                eventHandlers={{
-                  click: () => {
-                    setSelectedItemId(item.id);
-                    handleListingClick(item);
-                  },
-                  mouseover: () => {
-                    setHoveredItemId(item.id);
-                  },
-                  mouseout: () => {
-                    setHoveredItemId(null);
-                  },
-                }}
-              />
-            ))}
-          </MarkerClusterGroup>
-        </MapContainer>
       </div>
     </div>
   );
