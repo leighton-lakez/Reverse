@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import MarkerClusterGroup from "react-leaflet-cluster";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -270,6 +270,17 @@ const getCoordinatesSync = (location: string): [number, number] | null => {
   return null; // Signal that API call is needed
 };
 
+// Component to handle map centering
+const MapUpdater = ({ center, zoom }: { center: [number, number], zoom: number }) => {
+  const map = useMap();
+
+  useEffect(() => {
+    map.setView(center, zoom, { animate: true, duration: 0.5 });
+  }, [center, zoom, map]);
+
+  return null;
+};
+
 const MapView = ({ items, onItemClick }: MapViewProps) => {
   const [itemsWithCoords, setItemsWithCoords] = useState<Item[]>([]);
   const [filteredItems, setFilteredItems] = useState<Item[]>([]);
@@ -278,7 +289,10 @@ const MapView = ({ items, onItemClick }: MapViewProps) => {
   const [priceRange, setPriceRange] = useState([0, 10000]);
   const [maxPrice, setMaxPrice] = useState(10000);
   const [hoveredItemId, setHoveredItemId] = useState<string | null>(null);
+  const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const markerRefs = useRef<Map<string, L.Marker>>(new Map());
+  const [mapCenter, setMapCenter] = useState<[number, number]>([39.8283, -98.5795]);
+  const [mapZoom, setMapZoom] = useState(4);
 
   useEffect(() => {
     const geocodeItems = async () => {
@@ -371,13 +385,13 @@ const MapView = ({ items, onItemClick }: MapViewProps) => {
     filteredItems.forEach(item => {
       const marker = markerRefs.current.get(item.id);
       if (marker) {
-        marker.setIcon(createPriceMarker(item.price, hoveredItemId === item.id));
+        marker.setIcon(createPriceMarker(item.price, hoveredItemId === item.id || selectedItemId === item.id));
       }
     });
-  }, [hoveredItemId, filteredItems]);
+  }, [hoveredItemId, selectedItemId, filteredItems]);
 
-  // Calculate center of map based on filtered items
-  const center: [number, number] = filteredItems.length > 0
+  // Calculate center of map based on filtered items (default view)
+  const defaultCenter: [number, number] = filteredItems.length > 0
     ? [
         filteredItems.reduce((sum, item) => sum + (item.latitude || 0), 0) / filteredItems.length,
         filteredItems.reduce((sum, item) => sum + (item.longitude || 0), 0) / filteredItems.length
@@ -385,25 +399,25 @@ const MapView = ({ items, onItemClick }: MapViewProps) => {
     : [39.8283, -98.5795]; // Center of US
 
   // Create Zillow-style price marker
-  const createPriceMarker = (price: number, isHovered = false) => {
+  const createPriceMarker = (price: number, isHighlighted = false) => {
     const priceText = price >= 1000 ? `$${(price / 1000).toFixed(1)}k` : `$${price}`;
 
     return L.divIcon({
       className: 'custom-price-marker',
       html: `
         <div style="
-          background: ${isHovered ? '#0066ff' : '#ffffff'};
-          color: ${isHovered ? '#ffffff' : '#000000'};
+          background: ${isHighlighted ? '#0066ff' : '#ffffff'};
+          color: ${isHighlighted ? '#ffffff' : '#000000'};
           padding: 6px 12px;
           border-radius: 20px;
           font-weight: 700;
           font-size: 14px;
-          border: 2px solid ${isHovered ? '#0066ff' : '#e0e0e0'};
+          border: 2px solid ${isHighlighted ? '#0066ff' : '#e0e0e0'};
           box-shadow: 0 2px 8px rgba(0,0,0,0.15);
           white-space: nowrap;
           cursor: pointer;
           transition: all 0.2s ease;
-          transform: ${isHovered ? 'scale(1.1)' : 'scale(1)'};
+          transform: ${isHighlighted ? 'scale(1.15)' : 'scale(1)'};
         ">
           ${priceText}
         </div>
@@ -414,40 +428,52 @@ const MapView = ({ items, onItemClick }: MapViewProps) => {
     });
   };
 
+  // Handle listing card click - center map on that item
+  const handleListingClick = (item: Item) => {
+    if (item.latitude && item.longitude) {
+      setMapCenter([item.latitude, item.longitude]);
+      setMapZoom(13);
+      setSelectedItemId(item.id);
+    }
+  };
+
   return (
-    <div className="h-full w-full relative">
-      {/* Filter Controls */}
-      <div className="absolute top-4 left-4 right-4 z-[1000] flex gap-2">
-        {/* Location Search */}
-        <div className="flex-1 relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            type="text"
-            placeholder="Search location..."
-            value={locationSearch}
-            onChange={(e) => setLocationSearch(e.target.value)}
-            className="pl-9 bg-background/95 backdrop-blur-sm shadow-lg border-2"
-          />
-        </div>
+    <div className="h-full w-full flex flex-col md:flex-row relative bg-background">
+      {/* Listing Cards Sidebar - Scrollable */}
+      <div className="w-full md:w-[400px] lg:w-[450px] h-1/3 md:h-full flex-shrink-0 overflow-y-auto bg-background border-r border-border">
+        {/* Filter Controls */}
+        <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-lg border-b border-border p-4 space-y-3">
+          {/* Location Search */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder="Search location..."
+              value={locationSearch}
+              onChange={(e) => setLocationSearch(e.target.value)}
+              className="pl-9"
+            />
+          </div>
 
-        {/* Filter Toggle Button */}
-        <Button
-          onClick={() => setShowFilters(!showFilters)}
-          variant={showFilters ? "default" : "secondary"}
-          size="icon"
-          className="shadow-lg"
-        >
-          <SlidersHorizontal className="h-4 w-4" />
-        </Button>
-      </div>
+          {/* Filter Toggle */}
+          <Button
+            onClick={() => setShowFilters(!showFilters)}
+            variant={showFilters ? "default" : "outline"}
+            size="sm"
+            className="w-full"
+          >
+            <SlidersHorizontal className="h-4 w-4 mr-2" />
+            Filters
+            <span className="ml-auto text-xs">
+              {filteredItems.length} listings
+            </span>
+          </Button>
 
-      {/* Price Filter Panel */}
-      {showFilters && (
-        <Card className="absolute top-20 left-4 right-4 z-[1000] p-4 bg-background/95 backdrop-blur-sm shadow-2xl border-2">
-          <div className="space-y-4">
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <label className="text-sm font-semibold">Price Range</label>
+          {/* Price Filter */}
+          {showFilters && (
+            <div className="space-y-2 pt-2 border-t border-border">
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-medium">Price Range</label>
                 <span className="text-sm text-muted-foreground">
                   ${priceRange[0]} - ${priceRange[1]}
                 </span>
@@ -460,10 +486,6 @@ const MapView = ({ items, onItemClick }: MapViewProps) => {
                 onValueChange={setPriceRange}
                 className="w-full"
               />
-            </div>
-
-            <div className="flex items-center justify-between text-xs text-muted-foreground">
-              <span>{filteredItems.length} listing{filteredItems.length !== 1 ? 's' : ''} found</span>
               <Button
                 variant="ghost"
                 size="sm"
@@ -471,126 +493,153 @@ const MapView = ({ items, onItemClick }: MapViewProps) => {
                   setLocationSearch("");
                   setPriceRange([0, maxPrice]);
                 }}
-                className="h-7 text-xs"
+                className="w-full h-8 text-xs"
               >
                 Clear Filters
               </Button>
             </div>
-          </div>
-        </Card>
-      )}
+          )}
+        </div>
 
-      <MapContainer
-        center={center}
-        zoom={4}
-        className="h-full w-full rounded-lg"
-        style={{ zIndex: 0 }}
-      >
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
-
-        <MarkerClusterGroup
-          chunkedLoading
-          maxClusterRadius={60}
-          spiderfyOnMaxZoom={true}
-          showCoverageOnHover={false}
-          zoomToBoundsOnClick={true}
-          iconCreateFunction={(cluster) => {
-            const count = cluster.getChildCount();
-            return L.divIcon({
-              html: `<div style="
-                background: #0066ff;
-                color: white;
-                border-radius: 50%;
-                width: 40px;
-                height: 40px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-weight: 700;
-                font-size: 16px;
-                box-shadow: 0 2px 8px rgba(0,102,255,0.4);
-                border: 3px solid white;
-              ">${count}</div>`,
-              className: 'custom-cluster-icon',
-              iconSize: L.point(40, 40, true),
-            });
-          }}
-        >
+        {/* Listing Cards */}
+        <div className="p-2 space-y-2">
           {filteredItems.map((item) => (
-            <Marker
+            <Card
               key={item.id}
-              position={[item.latitude!, item.longitude!]}
-              icon={createPriceMarker(item.price, hoveredItemId === item.id)}
-              ref={(ref) => {
-                if (ref) {
-                  markerRefs.current.set(item.id, ref);
-                }
-              }}
-              eventHandlers={{
-                mouseover: () => {
-                  setHoveredItemId(item.id);
-                },
-                mouseout: () => {
-                  setHoveredItemId(null);
-                },
-              }}
+              className={`p-3 cursor-pointer transition-all hover:shadow-lg border-2 ${
+                selectedItemId === item.id
+                  ? 'border-[#0066ff] shadow-lg'
+                  : hoveredItemId === item.id
+                  ? 'border-[#0066ff]/50'
+                  : 'border-border'
+              }`}
+              onClick={() => handleListingClick(item)}
+              onMouseEnter={() => setHoveredItemId(item.id)}
+              onMouseLeave={() => setHoveredItemId(null)}
             >
-              <Popup maxWidth={300} className="zillow-popup">
-                <div className="p-0 min-w-[280px] -m-3">
-                  {/* Image */}
-                  {item.images && item.images.length > 0 && (
-                    <div className="relative h-48 w-full overflow-hidden rounded-t-lg">
-                      <img
-                        src={item.images[0]}
-                        alt={item.title}
-                        className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                      />
-                    </div>
-                  )}
-
-                  {/* Content */}
-                  <div className="p-4 space-y-3 bg-white">
-                    {/* Price - Large and prominent */}
-                    <div className="flex items-baseline gap-1">
-                      <span className="text-2xl font-bold text-[#0066ff]">${item.price.toLocaleString()}</span>
-                    </div>
-
-                    {/* Title and Brand */}
-                    <div className="space-y-1">
-                      <h3 className="font-semibold text-base line-clamp-2 text-gray-900">{item.title}</h3>
-                      <p className="text-sm text-gray-600">{item.brand}</p>
-                    </div>
-
-                    {/* Location */}
-                    <div className="flex items-center gap-1.5 text-gray-600">
-                      <MapPin className="h-4 w-4 flex-shrink-0" />
-                      <span className="text-sm">{item.location}</span>
-                    </div>
-
-                    {/* Condition Badge */}
-                    <div className="inline-block">
-                      <span className="text-xs font-medium bg-gray-100 text-gray-700 px-3 py-1 rounded-full">
-                        {item.condition}
-                      </span>
-                    </div>
-
-                    {/* View Button */}
-                    <button
-                      onClick={() => onItemClick(item)}
-                      className="w-full bg-[#0066ff] text-white py-3 px-4 rounded-lg text-sm font-semibold hover:bg-[#0052cc] transition-colors shadow-sm"
-                    >
-                      View Details
-                    </button>
+              <div className="flex gap-3">
+                {/* Image */}
+                {item.images && item.images.length > 0 && (
+                  <div className="w-24 h-24 flex-shrink-0 rounded-lg overflow-hidden bg-muted">
+                    <img
+                      src={item.images[0]}
+                      alt={item.title}
+                      className="w-full h-full object-cover"
+                    />
                   </div>
+                )}
+
+                {/* Info */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-start justify-between gap-2 mb-1">
+                    <h3 className="font-semibold text-sm line-clamp-2">{item.title}</h3>
+                  </div>
+                  <p className="text-lg font-bold text-[#0066ff] mb-1">
+                    ${item.price.toLocaleString()}
+                  </p>
+                  <p className="text-xs text-muted-foreground mb-1">{item.brand}</p>
+                  <div className="flex items-center gap-1 text-muted-foreground">
+                    <MapPin className="h-3 w-3 flex-shrink-0" />
+                    <span className="text-xs truncate">{item.location}</span>
+                  </div>
+                  <span className="inline-block mt-1 text-xs bg-muted px-2 py-0.5 rounded-full">
+                    {item.condition}
+                  </span>
                 </div>
-              </Popup>
-            </Marker>
+              </div>
+            </Card>
           ))}
-        </MarkerClusterGroup>
-      </MapContainer>
+
+          {filteredItems.length === 0 && (
+            <div className="text-center py-12 text-muted-foreground">
+              <p>No items found</p>
+              <Button
+                variant="link"
+                size="sm"
+                onClick={() => {
+                  setLocationSearch("");
+                  setPriceRange([0, maxPrice]);
+                }}
+                className="mt-2"
+              >
+                Clear filters
+              </Button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Map Container - Takes remaining space */}
+      <div className="flex-1 h-2/3 md:h-full relative">
+        <MapContainer
+          center={defaultCenter}
+          zoom={4}
+          className="h-full w-full"
+          style={{ zIndex: 0 }}
+          scrollWheelZoom={true}
+        >
+          <MapUpdater center={mapCenter} zoom={mapZoom} />
+
+          <TileLayer
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          />
+
+          <MarkerClusterGroup
+            chunkedLoading
+            maxClusterRadius={60}
+            spiderfyOnMaxZoom={true}
+            showCoverageOnHover={false}
+            zoomToBoundsOnClick={true}
+            iconCreateFunction={(cluster) => {
+              const count = cluster.getChildCount();
+              return L.divIcon({
+                html: `<div style="
+                  background: #0066ff;
+                  color: white;
+                  border-radius: 50%;
+                  width: 40px;
+                  height: 40px;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  font-weight: 700;
+                  font-size: 16px;
+                  box-shadow: 0 2px 8px rgba(0,102,255,0.4);
+                  border: 3px solid white;
+                ">${count}</div>`,
+                className: 'custom-cluster-icon',
+                iconSize: L.point(40, 40, true),
+              });
+            }}
+          >
+            {filteredItems.map((item) => (
+              <Marker
+                key={item.id}
+                position={[item.latitude!, item.longitude!]}
+                icon={createPriceMarker(item.price, hoveredItemId === item.id || selectedItemId === item.id)}
+                ref={(ref) => {
+                  if (ref) {
+                    markerRefs.current.set(item.id, ref);
+                  }
+                }}
+                eventHandlers={{
+                  click: () => {
+                    setSelectedItemId(item.id);
+                    handleListingClick(item);
+                  },
+                  mouseover: () => {
+                    setHoveredItemId(item.id);
+                  },
+                  mouseout: () => {
+                    setHoveredItemId(null);
+                  },
+                }}
+              />
+            ))}
+          </MarkerClusterGroup>
+        </MapContainer>
+      </div>
     </div>
   );
 };
