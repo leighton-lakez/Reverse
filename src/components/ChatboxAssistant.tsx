@@ -17,7 +17,11 @@ const ChatboxAssistant = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState("");
-  const [position, setPosition] = useState({ x: 16, y: 80 }); // Start at bottom-left
+  const [position, setPosition] = useState(() => {
+    // Start at bottom-left of viewport
+    const initialY = window.innerHeight - 680; // 600px height + 80px from bottom nav
+    return { x: 16, y: Math.max(20, initialY) };
+  });
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -315,17 +319,21 @@ const ChatboxAssistant = () => {
           className="fixed z-50 w-[calc(100vw-2rem)] sm:w-96 max-h-[600px] animate-fade-in"
           style={{
             left: `${position.x}px`,
-            bottom: `${position.y}px`,
+            top: `${position.y}px`,
             cursor: isDragging ? 'grabbing' : 'default'
           }}
         >
           <Card className="h-full flex flex-col bg-card/95 backdrop-blur-xl border-border/50 shadow-2xl overflow-hidden">
             {/* Header - Draggable */}
             <div
-              className="flex items-center justify-between p-4 border-b border-border/50 bg-gradient-to-r from-primary/10 to-secondary/10 cursor-grab active:cursor-grabbing"
+              className="flex items-center justify-between p-4 border-b border-border/50 bg-gradient-to-r from-primary/10 to-secondary/10 cursor-grab active:cursor-grabbing select-none"
               onMouseDown={handleMouseDown}
             >
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
+                {/* Drag Handle */}
+                <div className="text-muted-foreground/50 hover:text-muted-foreground transition-colors">
+                  <GripVertical className="h-5 w-5" />
+                </div>
                 <div className="relative">
                   <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
                     <MessageCircle className="h-5 w-5 text-white" />
@@ -334,13 +342,16 @@ const ChatboxAssistant = () => {
                 </div>
                 <div>
                   <h3 className="font-bold text-foreground text-sm">REVRS Bot</h3>
-                  <p className="text-xs text-muted-foreground">Drag me anywhere!</p>
+                  <p className="text-xs text-muted-foreground">Drag to move</p>
                 </div>
               </div>
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => setIsOpen(false)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsOpen(false);
+                }}
                 className="h-8 w-8 rounded-full hover:bg-muted"
               >
                 <X className="h-4 w-4" />
