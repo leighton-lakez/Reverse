@@ -136,7 +136,7 @@ const BottomNav = () => {
                 </div>
               )}
             </div>
-            <span className="text-[10px] sm:text-xs font-medium">Alerts</span>
+            <span className="text-[10px] sm:text-xs font-medium">Notifications</span>
           </Button>
 
           <Button

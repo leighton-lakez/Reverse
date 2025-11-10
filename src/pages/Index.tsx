@@ -189,6 +189,70 @@ const Index = () => {
     setLoading(false);
   };
 
+  const fetchFavorites = async () => {
+    if (!user) return;
+
+    const { data, error } = await supabase
+      .from("favorites")
+      .select("item_id")
+      .eq("user_id", user.id);
+
+    if (!error && data) {
+      const favoriteIds = new Set(data.map(fav => fav.item_id));
+      setFavoritedItemIds(favoriteIds);
+    }
+  };
+
+  const toggleFavorite = async (itemId: string) => {
+    if (!user) {
+      toast({
+        title: "Sign in required",
+        description: "Please sign in to save favorites",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const isFavorited = favoritedItemIds.has(itemId);
+
+    if (isFavorited) {
+      // Remove from favorites
+      const { error } = await supabase
+        .from("favorites")
+        .delete()
+        .eq("user_id", user.id)
+        .eq("item_id", itemId);
+
+      if (!error) {
+        const newFavorites = new Set(favoritedItemIds);
+        newFavorites.delete(itemId);
+        setFavoritedItemIds(newFavorites);
+        toast({
+          title: "Removed from favorites",
+          description: "Item removed from your favorites",
+        });
+      }
+    } else {
+      // Add to favorites
+      const { error } = await supabase
+        .from("favorites")
+        .insert({
+          user_id: user.id,
+          item_id: itemId,
+        });
+
+      if (!error) {
+        const newFavorites = new Set(favoritedItemIds);
+        newFavorites.add(itemId);
+        setFavoritedItemIds(newFavorites);
+        toast({
+          title: "Added to favorites",
+          description: "Item saved to your favorites",
+        });
+      }
+    }
+  };
+
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     toast({
@@ -726,6 +790,23 @@ const Index = () => {
 
                     {/* Gradient overlay */}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+
+                    {/* Favorite Button */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleFavorite(currentItem.id);
+                      }}
+                      className="absolute top-4 right-4 z-10 bg-white/20 backdrop-blur-md p-3 rounded-full hover:bg-white/30 transition-all shadow-lg"
+                    >
+                      <Heart
+                        className={`h-6 w-6 ${
+                          favoritedItemIds.has(currentItem.id)
+                            ? 'fill-red-500 text-red-500'
+                            : 'text-white'
+                        }`}
+                      />
+                    </button>
 
                     {/* Swipe indicators */}
                     <div

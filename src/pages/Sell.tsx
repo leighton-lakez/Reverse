@@ -899,17 +899,17 @@ Please provide a price suggestion considering any visible damage or wear in the 
           {/* Video Previews */}
           {videoPreviews.length > 0 && currentStep !== "summary" && (
             <div className="flex justify-start animate-fade-in">
-              <div className="glass rounded-xl p-2 sm:p-2.5 shadow-lg border border-border/50 backdrop-blur-xl max-w-[85%] sm:max-w-[75%]">
+              <div className="glass rounded-xl p-2 sm:p-2.5 shadow-lg border border-border/50 backdrop-blur-xl max-w-[85%] sm:max-w-[75%] hover:border-secondary/30 transition-all duration-300 hover:shadow-xl hover:shadow-secondary/10">
                 <div className="flex items-center gap-1 mb-1.5">
-                  <div className="h-1 w-1 bg-secondary rounded-full" />
+                  <div className="h-1 w-1 bg-secondary rounded-full animate-pulse" />
                   <p className="text-[9px] sm:text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Videos</p>
                 </div>
                 <div className="grid grid-cols-3 gap-1.5">
                   {videoPreviews.map((preview, index) => (
-                    <div key={index} className="relative aspect-square rounded-md overflow-hidden group ring-1 ring-border/50 hover:ring-secondary/50 transition-all">
+                    <div key={index} className="relative aspect-square rounded-md overflow-hidden group ring-1 ring-border/50 hover:ring-secondary/50 transition-all duration-300 animate-fade-in hover:ring-2" style={{ animationDelay: `${index * 100}ms` }}>
                       <video src={preview} className="w-full h-full object-cover" />
-                      <div className="absolute inset-0 flex items-center justify-center bg-black/40 group-hover:bg-black/50 transition-colors">
-                        <div className="p-1.5 bg-white/90 rounded-full">
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/40 group-hover:bg-black/50 transition-colors duration-300">
+                        <div className="p-1.5 bg-white/90 rounded-full group-hover:scale-110 transition-transform duration-300">
                           <Video className="h-4 w-4 text-secondary" />
                         </div>
                       </div>
@@ -917,7 +917,7 @@ Please provide a price suggestion considering any visible damage or wear in the 
                         type="button"
                         variant="destructive"
                         size="icon"
-                        className="absolute top-1 right-1 h-5 w-5 rounded-full opacity-0 group-hover:opacity-100 transition-all shadow-lg hover:scale-110"
+                        className="absolute top-1 right-1 h-5 w-5 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 shadow-lg hover:scale-110"
                         onClick={() => removeVideo(index)}
                       >
                         <X className="h-2.5 w-2.5" />
@@ -942,7 +942,7 @@ Please provide a price suggestion considering any visible damage or wear in the 
           <div className="glass border-t border-border/50 backdrop-blur-2xl">
             <div className="max-w-4xl mx-auto px-3 sm:px-6 py-3 sm:py-5">
               {currentStep === "images" && (
-                <div className="flex gap-3">
+                <div className="flex gap-3 animate-fade-in">
                   <input
                     ref={fileInputRef}
                     type="file"
@@ -953,9 +953,9 @@ Please provide a price suggestion considering any visible damage or wear in the 
                   />
                   <Button
                     onClick={() => fileInputRef.current?.click()}
-                    className="flex-1 h-12 sm:h-14 text-sm sm:text-base bg-gradient-to-r from-primary via-primary to-primary/90 hover:from-primary/90 hover:via-primary hover:to-primary shadow-xl shadow-primary/30 hover:shadow-2xl hover:shadow-primary/40 transition-all font-bold rounded-2xl border border-primary/20"
+                    className="flex-1 h-12 sm:h-14 text-sm sm:text-base bg-gradient-to-r from-primary via-primary to-primary/90 hover:from-primary/90 hover:via-primary hover:to-primary shadow-xl shadow-primary/30 hover:shadow-2xl hover:shadow-primary/40 transition-all duration-300 font-bold rounded-2xl border border-primary/20 hover:scale-[1.02] hover:border-primary/40 group"
                   >
-                    <Upload className="h-5 w-5 mr-2.5" />
+                    <Upload className="h-5 w-5 mr-2.5 group-hover:animate-bounce" />
                     Upload Photos/Videos
                   </Button>
                 </div>
