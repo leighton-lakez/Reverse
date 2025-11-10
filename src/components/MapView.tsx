@@ -6,7 +6,7 @@ import "leaflet/dist/leaflet.css";
 import "leaflet.markercluster/dist/MarkerCluster.css";
 import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 import { Card } from "./ui/card";
-import { MapPin, DollarSign, Search, SlidersHorizontal, RotateCcw } from "lucide-react";
+import { MapPin, DollarSign, Search, SlidersHorizontal, RotateCcw, ChevronLeft, ChevronRight } from "lucide-react";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import { Slider } from "./ui/slider";
@@ -297,6 +297,12 @@ const MapView = ({ items, onItemClick }: MapViewProps) => {
   const [mapZoom, setMapZoom] = useState(4);
   const [showMapOnMobile, setShowMapOnMobile] = useState(true);
 
+  // Swipe functionality for mobile
+  const [sidebarOffset, setSidebarOffset] = useState(0); // 0 = open, negative = swiped left
+  const [isSwiping, setIsSwiping] = useState(false);
+  const [touchStartX, setTouchStartX] = useState(0);
+  const sidebarRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     const geocodeItems = async () => {
       console.log('📍 Starting geocoding for', items.length, 'items');
@@ -448,6 +454,45 @@ const MapView = ({ items, onItemClick }: MapViewProps) => {
     }
   };
 
+  // Touch handlers for swipe
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStartX(e.touches[0].clientX);
+    setIsSwiping(true);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isSwiping) return;
+
+    const currentX = e.touches[0].clientX;
+    const diff = currentX - touchStartX;
+
+    // Only allow swiping left (negative offset)
+    if (diff < 0) {
+      const sidebarWidth = sidebarRef.current?.offsetWidth || 0;
+      const maxSwipe = -sidebarWidth + 60; // Leave 60px visible as a handle
+      setSidebarOffset(Math.max(maxSwipe, diff));
+    } else if (sidebarOffset < 0) {
+      // Allow swiping back right if already swiped
+      setSidebarOffset(Math.min(0, sidebarOffset + diff));
+      setTouchStartX(currentX);
+    }
+  };
+
+  const handleTouchEnd = () => {
+    setIsSwiping(false);
+
+    const sidebarWidth = sidebarRef.current?.offsetWidth || 0;
+    const threshold = sidebarWidth * 0.3; // 30% swipe triggers close
+
+    if (sidebarOffset < -threshold) {
+      // Swipe was significant, close sidebar
+      setSidebarOffset(-sidebarWidth + 60);
+    } else {
+      // Swipe wasn't enough, snap back
+      setSidebarOffset(0);
+    }
+  };
+
   return (
     <div className="h-full w-full flex flex-col relative bg-background">
       {/* Header - Visible on mobile */}
@@ -460,8 +505,18 @@ const MapView = ({ items, onItemClick }: MapViewProps) => {
 
       {/* Main Content - Map and Sidebar */}
       <div className="flex-1 flex flex-row overflow-hidden">
-        {/* Listing Cards Sidebar - Always visible on left side */}
-        <div className="w-[45%] sm:w-[240px] md:w-[280px] lg:w-[320px] h-full flex-shrink-0 overflow-y-auto bg-background border-r border-border">
+        {/* Listing Cards Sidebar - Swipeable on mobile */}
+        <div
+          ref={sidebarRef}
+          className="w-[75%] sm:w-[240px] md:w-[280px] lg:w-[320px] h-full flex-shrink-0 overflow-y-auto bg-background border-r border-border md:translate-x-0 relative z-10"
+          style={{
+            transform: window.innerWidth < 768 ? `translateX(${sidebarOffset}px)` : 'translateX(0)',
+            transition: isSwiping ? 'none' : 'transform 0.3s ease-out'
+          }}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
         {/* Filter Controls */}
         <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-lg border-b border-border p-2 sm:p-3 md:p-4 space-y-2 sm:space-y-3">
           {/* Prominent All Filters Button */}
@@ -567,6 +622,20 @@ const MapView = ({ items, onItemClick }: MapViewProps) => {
             </div>
           )}
         </div>
+
+        {/* Swipe Handle - Visible on mobile when sidebar is partially hidden */}
+        {sidebarOffset < -10 && (
+          <button
+            onClick={() => setSidebarOffset(0)}
+            className="md:hidden fixed left-[60px] top-1/2 -translate-y-1/2 z-20 bg-primary text-primary-foreground rounded-r-lg p-2 shadow-lg"
+            style={{
+              transform: `translateY(-50%) translateX(${sidebarOffset + (sidebarRef.current?.offsetWidth || 0) - 60}px)`,
+              transition: isSwiping ? 'none' : 'transform 0.3s ease-out'
+            }}
+          >
+            <ChevronRight className="h-6 w-6" />
+          </button>
+        )}
       </div>
 
       {/* Map Container - Takes remaining space on the right */}

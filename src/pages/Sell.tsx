@@ -777,22 +777,38 @@ Please provide a price suggestion considering any visible damage or wear in the 
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-card pb-20 sm:pb-24 flex flex-col overflow-hidden relative">
-      {/* Ambient gradient background */}
-      <div className="fixed inset-0 gradient-mesh pointer-events-none opacity-30" />
+      {/* Animated ambient gradient background */}
+      <div className="fixed inset-0 gradient-mesh pointer-events-none opacity-30 animate-pulse" style={{ animationDuration: '8s' }} />
+
+      {/* Floating particles */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        {[...Array(20)].map((_, i) => (
+          <div
+            key={i}
+            className="absolute w-1 h-1 bg-primary/20 rounded-full animate-float"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              animationDelay: `${Math.random() * 5}s`,
+              animationDuration: `${15 + Math.random() * 10}s`,
+            }}
+          />
+        ))}
+      </div>
 
       {/* Header */}
-      <header className="sticky top-0 z-50 glass border-b border-border/50">
+      <header className="sticky top-0 z-50 glass border-b border-border/50 animate-fade-in">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4 sm:py-5">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3 cursor-pointer group" onClick={() => navigate("/")}>
               <div className="relative">
-                <div className="absolute inset-0 bg-primary/20 rounded-lg blur-md group-hover:blur-lg transition-all" />
-                <ReverseIcon className="w-9 h-9 relative z-10 group-hover:scale-105 transition-transform" />
+                <div className="absolute inset-0 bg-primary/20 rounded-lg blur-md group-hover:blur-lg transition-all duration-500 group-hover:rotate-180" />
+                <ReverseIcon className="w-9 h-9 relative z-10 group-hover:scale-110 group-hover:rotate-12 transition-all duration-300" />
               </div>
-              <h1 className="text-2xl font-black tracking-tighter text-gradient">REVRS</h1>
+              <h1 className="text-2xl font-black tracking-tighter text-gradient group-hover:tracking-tight transition-all duration-300">REVRS</h1>
             </div>
-            <div className="flex items-center gap-2 px-4 py-2 rounded-full glass border border-primary/20">
-              <div className="h-2 w-2 bg-green-500 rounded-full animate-pulse" />
+            <div className="flex items-center gap-2 px-4 py-2 rounded-full glass border border-primary/20 hover:border-green-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-green-500/20">
+              <div className="h-2 w-2 bg-green-500 rounded-full animate-pulse shadow-lg shadow-green-500/50" />
               <span className="text-xs font-medium text-muted-foreground">Live Assistant</span>
             </div>
           </div>
@@ -809,10 +825,10 @@ Please provide a price suggestion considering any visible damage or wear in the 
               style={{ animationDelay: `${index * 50}ms` }}
             >
               <div
-                className={`max-w-[85%] sm:max-w-[75%] rounded-xl px-2.5 sm:px-3 py-1.5 sm:py-2 shadow-lg transition-all hover:scale-[1.01] ${
+                className={`max-w-[85%] sm:max-w-[75%] rounded-xl px-2.5 sm:px-3 py-1.5 sm:py-2 shadow-lg transition-all duration-300 hover:scale-[1.02] hover:shadow-xl ${
                   message.type === "user"
-                    ? "bg-gradient-to-br from-primary via-primary to-primary/90 text-primary-foreground shadow-primary/20 border border-primary/30"
-                    : "glass text-foreground border border-border/50 backdrop-blur-xl"
+                    ? "bg-gradient-to-br from-primary via-primary to-primary/90 text-primary-foreground shadow-primary/20 border border-primary/30 hover:shadow-primary/40 hover:border-primary/50"
+                    : "glass text-foreground border border-border/50 backdrop-blur-xl hover:border-primary/30 hover:shadow-primary/10"
                 }`}
               >
                 <p className={`whitespace-pre-line leading-snug font-medium ${

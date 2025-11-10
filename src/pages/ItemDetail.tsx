@@ -220,6 +220,152 @@ const ItemDetail = () => {
               Message Seller
             </Button>
 
+            {/* Quick Message Templates */}
+            <Card className="p-3 border-border bg-card">
+              <h3 className="text-sm font-semibold text-foreground mb-2">Quick Messages</h3>
+              <div className="flex flex-col gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={async () => {
+                    const { data: { session } } = await supabase.auth.getSession();
+                    if (!session) {
+                      toast.error('Please sign in to message');
+                      navigate('/auth');
+                      return;
+                    }
+
+                    const message = `Hi! I'm interested in buying "${item.title}". Is it still available?`;
+                    await supabase.from('messages').insert({
+                      sender_id: session.user.id,
+                      receiver_id: item.user_id,
+                      content: message,
+                      item_id: item.id,
+                      read: false
+                    });
+
+                    toast.success('Message sent!');
+                    navigate("/chat", { state: { sellerId: item.user_id, item: { id: item.id, title: item.title, price: item.price, image: item.images?.[0] || item.image } } });
+                  }}
+                  className="justify-start text-left h-auto py-2 px-3 whitespace-normal"
+                >
+                  <span className="text-xs">💰 I want to buy this</span>
+                </Button>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={async () => {
+                    const { data: { session } } = await supabase.auth.getSession();
+                    if (!session) {
+                      toast.error('Please sign in to message');
+                      navigate('/auth');
+                      return;
+                    }
+
+                    const message = `Hi! Is the price negotiable for "${item.title}"?`;
+                    await supabase.from('messages').insert({
+                      sender_id: session.user.id,
+                      receiver_id: item.user_id,
+                      content: message,
+                      item_id: item.id,
+                      read: false
+                    });
+
+                    toast.success('Message sent!');
+                    navigate("/chat", { state: { sellerId: item.user_id, item: { id: item.id, title: item.title, price: item.price, image: item.images?.[0] || item.image } } });
+                  }}
+                  className="justify-start text-left h-auto py-2 px-3 whitespace-normal"
+                >
+                  <span className="text-xs">💵 Is the price negotiable?</span>
+                </Button>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={async () => {
+                    const { data: { session } } = await supabase.auth.getSession();
+                    if (!session) {
+                      toast.error('Please sign in to message');
+                      navigate('/auth');
+                      return;
+                    }
+
+                    const message = `Hi! Could you share more pictures of "${item.title}"? I'd love to see different angles.`;
+                    await supabase.from('messages').insert({
+                      sender_id: session.user.id,
+                      receiver_id: item.user_id,
+                      content: message,
+                      item_id: item.id,
+                      read: false
+                    });
+
+                    toast.success('Message sent!');
+                    navigate("/chat", { state: { sellerId: item.user_id, item: { id: item.id, title: item.title, price: item.price, image: item.images?.[0] || item.image } } });
+                  }}
+                  className="justify-start text-left h-auto py-2 px-3 whitespace-normal"
+                >
+                  <span className="text-xs">📸 Can I see more pictures?</span>
+                </Button>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={async () => {
+                    const { data: { session } } = await supabase.auth.getSession();
+                    if (!session) {
+                      toast.error('Please sign in to message');
+                      navigate('/auth');
+                      return;
+                    }
+
+                    const message = `Hi! Can we arrange a meetup to see "${item.title}" in person?`;
+                    await supabase.from('messages').insert({
+                      sender_id: session.user.id,
+                      receiver_id: item.user_id,
+                      content: message,
+                      item_id: item.id,
+                      read: false
+                    });
+
+                    toast.success('Message sent!');
+                    navigate("/chat", { state: { sellerId: item.user_id, item: { id: item.id, title: item.title, price: item.price, image: item.images?.[0] || item.image } } });
+                  }}
+                  className="justify-start text-left h-auto py-2 px-3 whitespace-normal"
+                >
+                  <span className="text-xs">🤝 Can we meet in person?</span>
+                </Button>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={async () => {
+                    const { data: { session } } = await supabase.auth.getSession();
+                    if (!session) {
+                      toast.error('Please sign in to message');
+                      navigate('/auth');
+                      return;
+                    }
+
+                    const message = `Hi! What's the condition of "${item.title}"? Are there any flaws or defects I should know about?`;
+                    await supabase.from('messages').insert({
+                      sender_id: session.user.id,
+                      receiver_id: item.user_id,
+                      content: message,
+                      item_id: item.id,
+                      read: false
+                    });
+
+                    toast.success('Message sent!');
+                    navigate("/chat", { state: { sellerId: item.user_id, item: { id: item.id, title: item.title, price: item.price, image: item.images?.[0] || item.image } } });
+                  }}
+                  className="justify-start text-left h-auto py-2 px-3 whitespace-normal"
+                >
+                  <span className="text-xs">🔍 What's the condition like?</span>
+                </Button>
+              </div>
+            </Card>
+
             {/* Location Map */}
             {item.location && (
               <Card className="p-3 border-border">
