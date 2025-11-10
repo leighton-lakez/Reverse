@@ -333,6 +333,8 @@ const MapView = ({ items, onItemClick }: MapViewProps) => {
       if (needsAPIItems.length > 0) {
         console.log('⏳ Need to geocode', needsAPIItems.length, 'items via API');
 
+        const apiGeocodedItems: Item[] = [];
+
         for (let i = 0; i < needsAPIItems.length; i++) {
           const { item } = needsAPIItems[i];
 
@@ -348,8 +350,12 @@ const MapView = ({ items, onItemClick }: MapViewProps) => {
             longitude: coords[1] + (Math.random() - 0.5) * 0.01
           };
 
-          // Add to display progressively
-          setItemsWithCoords(prev => [...prev, geocodedItem]);
+          apiGeocodedItems.push(geocodedItem);
+
+          // Update display in batches of 10 or when complete
+          if (apiGeocodedItems.length % 10 === 0 || i === needsAPIItems.length - 1) {
+            setItemsWithCoords(prev => [...prev, ...apiGeocodedItems.splice(0)]);
+          }
         }
 
         console.log('✅ All items geocoded');
