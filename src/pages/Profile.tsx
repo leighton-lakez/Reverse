@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Settings, MapPin, Calendar, Star, Package, Edit2, Eye, MessageCircle, CheckCircle, MoreVertical, RotateCcw, Upload, X, Plus, Trash2, Clock, Image as ImageIcon } from "lucide-react";
+import { Settings, MapPin, Calendar, Star, Package, Edit2, Eye, MessageCircle, CheckCircle, MoreVertical, RotateCcw, Upload, X, Plus, Trash2, Clock, Image as ImageIcon, DollarSign, CreditCard, Smartphone, Wallet } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -86,7 +86,13 @@ const Profile = () => {
     name: "",
     bio: "",
     location: "",
-    avatar: ""
+    avatar: "",
+    venmo: "",
+    cashapp: "",
+    zelle: "",
+    paypal: "",
+    apple_pay: "",
+    other_payment: ""
   });
 
   useEffect(() => {
@@ -124,7 +130,13 @@ const Profile = () => {
         name: data.display_name || "User",
         bio: data.bio || "",
         location: data.location || "",
-        avatar: data.avatar_url || ""
+        avatar: data.avatar_url || "",
+        venmo: data.venmo || "",
+        cashapp: data.cashapp || "",
+        zelle: data.zelle || "",
+        paypal: data.paypal || "",
+        apple_pay: data.apple_pay || "",
+        other_payment: data.other_payment || ""
       });
       setEditLocation(data.location || "");
     }
@@ -612,6 +624,12 @@ const Profile = () => {
     const formData = new FormData(e.currentTarget);
     const name = formData.get("name") as string;
     const bio = formData.get("bio") as string;
+    const venmo = formData.get("venmo") as string;
+    const cashapp = formData.get("cashapp") as string;
+    const zelle = formData.get("zelle") as string;
+    const paypal = formData.get("paypal") as string;
+    const apple_pay = formData.get("apple_pay") as string;
+    const other_payment = formData.get("other_payment") as string;
 
     try {
       let avatarUrl = profileData.avatar;
@@ -644,7 +662,15 @@ const Profile = () => {
 
       const { error } = await supabase
         .from("profiles")
-        .update(validationResult.data)
+        .update({
+          ...validationResult.data,
+          venmo: venmo || null,
+          cashapp: cashapp || null,
+          zelle: zelle || null,
+          paypal: paypal || null,
+          apple_pay: apple_pay || null,
+          other_payment: other_payment || null,
+        })
         .eq("id", user.id);
 
       if (error) throw error;
@@ -653,7 +679,13 @@ const Profile = () => {
         name: validationResult.data.display_name,
         bio: validationResult.data.bio || "",
         location: validationResult.data.location,
-        avatar: avatarUrl
+        avatar: avatarUrl,
+        venmo: venmo || "",
+        cashapp: cashapp || "",
+        zelle: zelle || "",
+        paypal: paypal || "",
+        apple_pay: apple_pay || "",
+        other_payment: other_payment || ""
       });
 
       // Reset file selection
@@ -685,7 +717,7 @@ const Profile = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate("/")}>
               <ReverseIcon className="w-7 h-7" />
-              <h1 className="text-lg font-black tracking-tighter text-gradient">REVERSE</h1>
+              <h1 className="text-lg font-black tracking-tighter text-gradient">REVRS</h1>
             </div>
             <Button
               variant="ghost"
@@ -843,6 +875,86 @@ const Profile = () => {
                           onChange={setEditLocation}
                         />
                       </div>
+
+                      {/* Payment Methods Section */}
+                      <div className="space-y-4 pt-4 border-t border-border">
+                        <div className="flex items-center gap-2">
+                          <Wallet className="h-5 w-5 text-primary" />
+                          <Label className="text-base font-semibold">Payment Methods</Label>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          Add your payment info so buyers know how to pay you (optional)
+                        </p>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          <div className="space-y-2">
+                            <Label htmlFor="venmo" className="text-sm">Venmo</Label>
+                            <Input
+                              id="venmo"
+                              name="venmo"
+                              placeholder="@username"
+                              defaultValue={profileData.venmo}
+                              className="bg-muted border-border"
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="cashapp" className="text-sm">Cash App</Label>
+                            <Input
+                              id="cashapp"
+                              name="cashapp"
+                              placeholder="$cashtag"
+                              defaultValue={profileData.cashapp}
+                              className="bg-muted border-border"
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="zelle" className="text-sm">Zelle</Label>
+                            <Input
+                              id="zelle"
+                              name="zelle"
+                              placeholder="email or phone"
+                              defaultValue={profileData.zelle}
+                              className="bg-muted border-border"
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="paypal" className="text-sm">PayPal</Label>
+                            <Input
+                              id="paypal"
+                              name="paypal"
+                              placeholder="email or @username"
+                              defaultValue={profileData.paypal}
+                              className="bg-muted border-border"
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="apple_pay" className="text-sm">Apple Pay</Label>
+                            <Input
+                              id="apple_pay"
+                              name="apple_pay"
+                              placeholder="email or phone"
+                              defaultValue={profileData.apple_pay}
+                              className="bg-muted border-border"
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="other_payment" className="text-sm">Other</Label>
+                            <Input
+                              id="other_payment"
+                              name="other_payment"
+                              placeholder="e.g., Google Pay, etc."
+                              defaultValue={profileData.other_payment}
+                              className="bg-muted border-border"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
                       <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
                         Save Changes
                       </Button>

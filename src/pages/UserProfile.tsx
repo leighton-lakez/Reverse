@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
 import BottomNav from "@/components/BottomNav";
 import StoryViewer from "@/components/StoryViewer";
+import PaymentMethods from "@/components/PaymentMethods";
 import { supabase } from "@/integrations/supabase/client";
 import { getUserFriendlyError } from "@/lib/errorHandler";
 import { ReverseIcon } from "@/components/ReverseIcon";
@@ -27,7 +28,13 @@ const UserProfile = () => {
     name: "",
     bio: "",
     location: "",
-    avatar: ""
+    avatar: "",
+    venmo: null as string | null,
+    cashapp: null as string | null,
+    zelle: null as string | null,
+    paypal: null as string | null,
+    apple_pay: null as string | null,
+    other_payment: null as string | null,
   });
 
   // Review state
@@ -73,7 +80,13 @@ const UserProfile = () => {
         name: data.display_name || "User",
         bio: data.bio || "",
         location: data.location || "",
-        avatar: data.avatar_url || ""
+        avatar: data.avatar_url || "",
+        venmo: data.venmo || null,
+        cashapp: data.cashapp || null,
+        zelle: data.zelle || null,
+        paypal: data.paypal || null,
+        apple_pay: data.apple_pay || null,
+        other_payment: data.other_payment || null,
       });
     }
   };
@@ -344,7 +357,7 @@ const UserProfile = () => {
         <div className="max-w-7xl mx-auto px-4 py-2">
           <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate("/")}>
             <ReverseIcon className="w-8 h-8" />
-            <h1 className="text-xl font-black tracking-tighter text-gradient">REVERSE</h1>
+            <h1 className="text-xl font-black tracking-tighter text-gradient">REVRS</h1>
           </div>
         </div>
       </header>
@@ -432,6 +445,18 @@ const UserProfile = () => {
             </div>
           </div>
         </Card>
+
+        {/* Payment Methods */}
+        <div className="animate-fade-in mb-3" style={{ animationDelay: "0.03s" }}>
+          <PaymentMethods
+            venmo={profileData.venmo}
+            cashapp={profileData.cashapp}
+            zelle={profileData.zelle}
+            paypal={profileData.paypal}
+            apple_pay={profileData.apple_pay}
+            other_payment={profileData.other_payment}
+          />
+        </div>
 
         {/* Reviews Section */}
         <div className="animate-fade-in mb-3" style={{ animationDelay: "0.05s" }}>
