@@ -741,7 +741,6 @@ const Notifications = () => {
 
           {/* Messages Tab */}
           <TabsContent value="messages">
-          <div className="animate-fade-in">
           <h2 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
             Messages
             <div className="h-1 w-12 bg-gradient-to-r from-primary to-secondary rounded-full" />
@@ -816,9 +815,6 @@ const Notifications = () => {
               </p>
             </div>
           )}
-        </div>
-
-          </div>
           </TabsContent>
 
           {/* Favorites Tab */}
