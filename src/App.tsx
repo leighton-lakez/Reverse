@@ -16,6 +16,7 @@ import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
 import ProfileSetup from "./pages/ProfileSetup";
 import EditListing from "./pages/EditListing";
+import EditDraft from "./pages/EditDraft";
 import Settings from "./pages/Settings";
 import FollowersList from "./pages/FollowersList";
 import FollowingList from "./pages/FollowingList";
@@ -52,6 +53,7 @@ const App = () => (
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/profile-setup" element={<ProfileSetup />} />
           <Route path="/edit-listing/:id" element={<EditListing />} />
+          <Route path="/edit-draft/:id" element={<EditDraft />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/followers" element={<FollowersList />} />
           <Route path="/followers/:userId" element={<FollowersList />} />

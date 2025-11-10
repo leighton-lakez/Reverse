@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Upload, X, Send, Loader2, Video, Sparkles } from "lucide-react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
@@ -53,7 +53,6 @@ type ConversationStep = (typeof conversationSteps)[number];
 
 const Sell = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const [userId, setUserId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [currentStep, setCurrentStep] = useState<ConversationStep>("welcome");
@@ -61,7 +60,6 @@ const Sell = () => {
   const [isTyping, setIsTyping] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [isGettingAIPrice, setIsGettingAIPrice] = useState(false);
-  const [editingDraftId, setEditingDraftId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -92,14 +90,7 @@ const Sell = () => {
         navigate("/auth");
       } else {
         setUserId(session.user.id);
-
-        // Check if we're editing a draft
-        const draftData = (location.state as any)?.draftData;
-        if (draftData) {
-          loadDraftData(draftData);
-        } else {
-          startConversation();
-        }
+        startConversation();
       }
     });
   }, [navigate]);
@@ -240,43 +231,6 @@ Please provide a price suggestion considering any visible damage or wear in the 
       });
       addBotMessageWithDelay("I had trouble with that. Please enter your price manually.", 600);
     }
-  };
-
-  const loadDraftData = (draft: any) => {
-    // Store the draft ID for updating later
-    setEditingDraftId(draft.id);
-
-    // Load all the draft data into itemData
-    setItemData({
-      title: draft.title || "",
-      brand: draft.brand || "",
-      category: draft.category || "",
-      description: draft.description || "",
-      condition: draft.condition || "",
-      price: draft.price ? draft.price.toString() : "",
-      location: draft.location || "",
-      size: draft.size || "",
-      tradePreference: draft.trade_preference || "",
-      images: [], // We'll set image URLs as previews
-      videos: [],
-    });
-
-    // Set image and video previews from URLs
-    if (draft.images && Array.isArray(draft.images)) {
-      setImagePreviews(draft.images);
-    }
-    if (draft.videos && Array.isArray(draft.videos)) {
-      setVideoPreviews(draft.videos);
-    }
-
-    // Jump straight to summary page since we have all the data
-    setCurrentStep("summary");
-
-    // Add a welcome message
-    addBotMessageWithDelay(
-      "Welcome back! 👋 I've loaded your draft. Review the details below and make any changes you need. When you're ready, you can save your changes or publish your item!",
-      300
-    );
   };
 
   const startConversation = () => {
@@ -527,89 +481,67 @@ Please provide a price suggestion considering any visible damage or wear in the 
     addBotMessageWithDelay("Saving your draft... 💾", 300);
 
     try {
-      // If we have existing image previews (editing draft), keep them; otherwise upload new images
-      let uploadedImageUrls: string[] = [...imagePreviews];
-
-      // Only upload new image files (File objects, not URLs)
+      // Upload images to storage first
+      const uploadedImageUrls: string[] = [];
       for (const file of itemData.images) {
-        if (file instanceof File) {
-          const fileExt = file.name.split(".").pop();
-          const fileName = `${userId}/drafts/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+        const fileExt = file.name.split(".").pop();
+        const fileName = `${userId}/drafts/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
 
-          const { data: uploadData, error: uploadError } = await supabase.storage
-            .from("item-images")
-            .upload(fileName, file);
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from("item-images")
+          .upload(fileName, file);
 
-          if (uploadError) {
-            console.error('Draft image upload error:', uploadError);
-            throw new Error(`Failed to upload images: ${uploadError.message}`);
-          }
-
-          const {
-            data: { publicUrl },
-          } = supabase.storage.from("item-images").getPublicUrl(uploadData.path);
-
-          uploadedImageUrls.push(publicUrl);
+        if (uploadError) {
+          console.error('Draft image upload error:', uploadError);
+          throw new Error(`Failed to upload images: ${uploadError.message}`);
         }
+
+        const {
+          data: { publicUrl },
+        } = supabase.storage.from("item-images").getPublicUrl(uploadData.path);
+
+        uploadedImageUrls.push(publicUrl);
       }
 
-      // If we have existing video previews (editing draft), keep them; otherwise upload new videos
-      let uploadedVideoUrls: string[] = [...videoPreviews];
-
-      // Only upload new video files (File objects, not URLs)
+      // Upload videos
+      const uploadedVideoUrls: string[] = [];
       for (const file of itemData.videos) {
-        if (file instanceof File) {
-          const fileExt = file.name.split(".").pop();
-          const fileName = `${userId}/drafts/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+        const fileExt = file.name.split(".").pop();
+        const fileName = `${userId}/drafts/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
 
-          const { data: uploadData, error: uploadError } = await supabase.storage
-            .from("item-images")
-            .upload(fileName, file);
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from("item-images")
+          .upload(fileName, file);
 
-          if (uploadError) {
-            console.error('Draft video upload error:', uploadError);
-            throw new Error(`Failed to upload videos: ${uploadError.message}`);
-          }
-
-          const {
-            data: { publicUrl },
-          } = supabase.storage.from("item-images").getPublicUrl(uploadData.path);
-
-          uploadedVideoUrls.push(publicUrl);
+        if (uploadError) {
+          console.error('Draft video upload error:', uploadError);
+          throw new Error(`Failed to upload videos: ${uploadError.message}`);
         }
+
+        const {
+          data: { publicUrl },
+        } = supabase.storage.from("item-images").getPublicUrl(uploadData.path);
+
+        uploadedVideoUrls.push(publicUrl);
       }
 
-      const draftData = {
-        user_id: userId,
-        title: itemData.title,
-        brand: itemData.brand,
-        category: itemData.category,
-        description: itemData.description,
-        condition: itemData.condition,
-        price: parseFloat(itemData.price) || null,
-        location: itemData.location,
-        size: itemData.size,
-        trade_preference: itemData.tradePreference,
-        images: uploadedImageUrls,
-        videos: uploadedVideoUrls,
-      };
-
-      // Save or update draft in database
-      let draftError;
-      if (editingDraftId) {
-        // Update existing draft
-        const { error } = await supabase
-          .from('item_drafts')
-          .update(draftData)
-          .eq('id', editingDraftId);
-        draftError = error;
-      } else {
-        // Insert new draft
-        const { error } = await supabase
-          .from('item_drafts')
-          .insert(draftData);
-        draftError = error;
-      }
+      // Save draft to database
+      const { error: draftError } = await supabase
+        .from('item_drafts')
+        .insert({
+          user_id: userId,
+          title: itemData.title,
+          brand: itemData.brand,
+          category: itemData.category,
+          description: itemData.description,
+          condition: itemData.condition,
+          price: parseFloat(itemData.price) || null,
+          location: itemData.location,
+          size: itemData.size,
+          trade_preference: itemData.tradePreference,
+          images: uploadedImageUrls,
+          videos: uploadedVideoUrls,
+        });
 
       if (draftError) {
         console.error('Draft save error:', draftError);
@@ -623,16 +555,10 @@ Please provide a price suggestion considering any visible damage or wear in the 
       }
 
       setTimeout(() => {
-        const message = editingDraftId
-          ? "Draft updated! You can find it in your profile. ✨"
-          : "Draft saved! You can find it in your profile. ✨";
-
-        addMessage(message, "bot");
+        addMessage("Draft saved! You can find it in your profile. ✨", "bot");
         toast({
-          title: editingDraftId ? "Draft Updated!" : "Draft Saved!",
-          description: editingDraftId
-            ? "Your changes have been saved to your draft."
-            : "Your draft has been saved to your profile.",
+          title: "Draft Saved!",
+          description: "Your draft has been saved to your profile.",
         });
 
         setTimeout(() => {
@@ -669,7 +595,7 @@ Please provide a price suggestion considering any visible damage or wear in the 
 
     try {
       // Check if at least one image or video is uploaded
-      if (itemData.images.length === 0 && itemData.videos.length === 0 && imagePreviews.length === 0 && videoPreviews.length === 0) {
+      if (itemData.images.length === 0 && itemData.videos.length === 0) {
         throw new Error('Please upload at least one photo or video');
       }
 
@@ -705,56 +631,48 @@ Please provide a price suggestion considering any visible damage or wear in the 
         throw new Error(`${fieldName}: ${firstError.message}`);
       }
 
-      // If we have existing image previews (editing draft), keep them; otherwise upload new images
-      let uploadedImageUrls: string[] = [...imagePreviews];
-
-      // Only upload new image files (File objects, not URLs)
+      // Upload images
+      const uploadedImageUrls: string[] = [];
       for (const file of itemData.images) {
-        if (file instanceof File) {
-          const fileExt = file.name.split(".").pop();
-          const fileName = `${userId}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+        const fileExt = file.name.split(".").pop();
+        const fileName = `${userId}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
 
-          const { data: uploadData, error: uploadError } = await supabase.storage
-            .from("item-images")
-            .upload(fileName, file);
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from("item-images")
+          .upload(fileName, file);
 
-          if (uploadError) {
-            console.error('Image upload error:', uploadError);
-            throw new Error(`Failed to upload images: ${uploadError.message}`);
-          }
-
-          const {
-            data: { publicUrl },
-          } = supabase.storage.from("item-images").getPublicUrl(uploadData.path);
-
-          uploadedImageUrls.push(publicUrl);
+        if (uploadError) {
+          console.error('Image upload error:', uploadError);
+          throw new Error(`Failed to upload images: ${uploadError.message}`);
         }
+
+        const {
+          data: { publicUrl },
+        } = supabase.storage.from("item-images").getPublicUrl(uploadData.path);
+
+        uploadedImageUrls.push(publicUrl);
       }
 
-      // If we have existing video previews (editing draft), keep them; otherwise upload new videos
-      let uploadedVideoUrls: string[] = [...videoPreviews];
-
-      // Only upload new video files (File objects, not URLs)
+      // Upload videos
+      const uploadedVideoUrls: string[] = [];
       for (const file of itemData.videos) {
-        if (file instanceof File) {
-          const fileExt = file.name.split(".").pop();
-          const fileName = `${userId}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+        const fileExt = file.name.split(".").pop();
+        const fileName = `${userId}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
 
-          const { data: uploadData, error: uploadError } = await supabase.storage
-            .from("item-images")
-            .upload(fileName, file);
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from("item-images")
+          .upload(fileName, file);
 
-          if (uploadError) {
-            console.error('Video upload error:', uploadError);
-            throw new Error(`Failed to upload videos: ${uploadError.message}`);
-          }
-
-          const {
-            data: { publicUrl },
-          } = supabase.storage.from("item-images").getPublicUrl(uploadData.path);
-
-          uploadedVideoUrls.push(publicUrl);
+        if (uploadError) {
+          console.error('Video upload error:', uploadError);
+          throw new Error(`Failed to upload videos: ${uploadError.message}`);
         }
+
+        const {
+          data: { publicUrl },
+        } = supabase.storage.from("item-images").getPublicUrl(uploadData.path);
+
+        uploadedVideoUrls.push(publicUrl);
       }
 
       // Insert item
@@ -777,14 +695,6 @@ Please provide a price suggestion considering any visible damage or wear in the 
       if (error) {
         console.error('Database insert error:', error);
         throw error;
-      }
-
-      // If we were editing a draft, delete it now that it's published
-      if (editingDraftId) {
-        await supabase
-          .from("item_drafts")
-          .delete()
-          .eq("id", editingDraftId);
       }
 
       setTimeout(() => {

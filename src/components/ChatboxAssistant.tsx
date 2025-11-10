@@ -205,17 +205,17 @@ const ChatboxAssistant = () => {
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-20 sm:bottom-24 right-4 sm:right-6 z-50 h-14 w-14 rounded-full bg-gradient-to-br from-primary to-secondary text-white shadow-2xl hover:scale-110 transition-all duration-300 flex items-center justify-center group"
+          className="fixed bottom-20 sm:bottom-24 left-4 sm:left-6 z-50 h-14 w-14 rounded-full bg-gradient-to-br from-primary to-secondary text-white shadow-2xl hover:scale-110 transition-all duration-300 flex items-center justify-center group"
           aria-label="Open navigation assistant"
         >
           <MessageCircle className="h-6 w-6 group-hover:scale-110 transition-transform" />
-          <div className="absolute -top-1 -right-1 h-4 w-4 bg-green-500 rounded-full border-2 border-background animate-pulse" />
+          <div className="absolute -top-1 -left-1 h-4 w-4 bg-green-500 rounded-full border-2 border-background animate-pulse" />
         </button>
       )}
 
       {/* Chatbox */}
       {isOpen && (
-        <div className="fixed bottom-20 sm:bottom-24 right-4 sm:right-6 z-50 w-[calc(100vw-2rem)] sm:w-96 h-[500px] animate-fade-in">
+        <div className="fixed bottom-20 sm:bottom-24 left-4 sm:left-6 z-50 w-[calc(100vw-2rem)] sm:w-96 h-[500px] animate-fade-in">
           <Card className="h-full flex flex-col bg-card/95 backdrop-blur-xl border-border/50 shadow-2xl overflow-hidden">
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-border/50 bg-gradient-to-r from-primary/10 to-secondary/10">

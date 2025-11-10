@@ -181,8 +181,8 @@ const Profile = () => {
   };
 
   const editDraft = (draft: any) => {
-    // Navigate to Sell page with draft data
-    navigate("/sell", { state: { draftData: draft } });
+    // Navigate to EditDraft page
+    navigate(`/edit-draft/${draft.id}`);
   };
 
   const deleteDraft = async (draftId: string) => {
