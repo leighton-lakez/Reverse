@@ -562,8 +562,7 @@ const Profile = () => {
         .from("stories")
         .update({
           expires_at: newExpiresAt.toISOString(),
-          created_at: new Date().toISOString(), // Update created_at to show it's fresh
-          deleted_at: null // Clear deleted_at if it exists
+          created_at: new Date().toISOString() // Update created_at to show it's fresh
         })
         .eq("id", storyId);
 
@@ -579,11 +578,9 @@ const Profile = () => {
         description: "Your story is now active for another 24 hours",
       });
 
-      // Refresh stories after a small delay to ensure DB has updated
+      // Refresh stories immediately
       if (user?.id) {
-        setTimeout(() => {
-          fetchMyStories(user.id);
-        }, 500);
+        await fetchMyStories(user.id);
       }
     } catch (error: any) {
       console.error('Revive story full error:', error);
