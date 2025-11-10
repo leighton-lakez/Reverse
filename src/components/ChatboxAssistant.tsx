@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { MessageCircle, X, Send } from "lucide-react";
+import { MessageCircle, X, Send, GripVertical } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -252,7 +252,8 @@ const ChatboxAssistant = () => {
 
   // Drag functionality
   const handleMouseDown = (e: React.MouseEvent) => {
-    if (chatboxRef.current && !isDragging) {
+    e.preventDefault();
+    if (chatboxRef.current) {
       setIsDragging(true);
       const rect = chatboxRef.current.getBoundingClientRect();
       setDragOffset({
@@ -262,27 +263,27 @@ const ChatboxAssistant = () => {
     }
   };
 
-  const handleMouseMove = (e: MouseEvent) => {
-    if (isDragging) {
-      const newX = e.clientX - dragOffset.x;
-      const newY = e.clientY - dragOffset.y;
-
-      // Keep within viewport bounds
-      const maxX = window.innerWidth - (chatboxRef.current?.offsetWidth || 384);
-      const maxY = window.innerHeight - (chatboxRef.current?.offsetHeight || 600);
-
-      setPosition({
-        x: Math.max(0, Math.min(newX, maxX)),
-        y: Math.max(0, Math.min(newY, maxY))
-      });
-    }
-  };
-
-  const handleMouseUp = () => {
-    setIsDragging(false);
-  };
-
   useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (isDragging && chatboxRef.current) {
+        const newX = e.clientX - dragOffset.x;
+        const newY = e.clientY - dragOffset.y;
+
+        // Keep within viewport bounds
+        const maxX = window.innerWidth - chatboxRef.current.offsetWidth;
+        const maxY = window.innerHeight - chatboxRef.current.offsetHeight;
+
+        setPosition({
+          x: Math.max(0, Math.min(newX, maxX)),
+          y: Math.max(0, Math.min(newY, maxY))
+        });
+      }
+    };
+
+    const handleMouseUp = () => {
+      setIsDragging(false);
+    };
+
     if (isDragging) {
       document.addEventListener('mousemove', handleMouseMove);
       document.addEventListener('mouseup', handleMouseUp);

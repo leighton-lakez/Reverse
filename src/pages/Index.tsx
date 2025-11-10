@@ -43,6 +43,14 @@ const Index = () => {
     return saved ? new Set(JSON.parse(saved)) : new Set();
   });
 
+  // Map button dragging state
+  const [mapButtonPosition, setMapButtonPosition] = useState(() => {
+    const saved = localStorage.getItem('mapButtonPosition');
+    return saved ? JSON.parse(saved) : { y: 50, side: 'left' }; // y is percentage from top, side is 'left' or 'right'
+  });
+  const [isMapButtonDragging, setIsMapButtonDragging] = useState(false);
+  const mapButtonStartRef = useRef({ x: 0, y: 0, initialY: 50 });
+
   const navigate = useNavigate();
   const cardRef = useRef<HTMLDivElement>(null);
   const startPosRef = useRef({ x: 0, y: 0 });
@@ -116,6 +124,26 @@ const Index = () => {
   useEffect(() => {
     sessionStorage.setItem('viewedItems', JSON.stringify(Array.from(viewedItemIds)));
   }, [viewedItemIds]);
+
+  // Add global mouse event listeners for map button dragging
+  useEffect(() => {
+    if (isMapButtonDragging) {
+      const handleGlobalMouseMove = (e: MouseEvent) => {
+        handleMapButtonMove(e.clientX, e.clientY);
+      };
+      const handleGlobalMouseUp = () => {
+        handleMapButtonEnd();
+      };
+
+      window.addEventListener('mousemove', handleGlobalMouseMove);
+      window.addEventListener('mouseup', handleGlobalMouseUp);
+
+      return () => {
+        window.removeEventListener('mousemove', handleGlobalMouseMove);
+        window.removeEventListener('mouseup', handleGlobalMouseUp);
+      };
+    }
+  }, [isMapButtonDragging, mapButtonPosition]);
 
   const fetchItems = async (forceRefresh = false, skipFilter = false) => {
     setLoading(true);
@@ -300,6 +328,87 @@ const Index = () => {
     handleEnd();
   };
 
+  // Map button drag handlers
+  const handleMapButtonStart = (clientX: number, clientY: number) => {
+    setIsMapButtonDragging(true);
+    mapButtonStartRef.current = {
+      x: clientX,
+      y: clientY,
+      initialY: mapButtonPosition.y
+    };
+  };
+
+  const handleMapButtonMove = (clientX: number, clientY: number) => {
+    if (!isMapButtonDragging) return;
+
+    const windowHeight = window.innerHeight;
+    const deltaY = clientY - mapButtonStartRef.current.y;
+    const deltaYPercent = (deltaY / windowHeight) * 100;
+
+    // Calculate new Y position (percentage from top)
+    let newY = mapButtonStartRef.current.initialY + deltaYPercent;
+
+    // Clamp between 10% and 90% to keep button visible
+    newY = Math.max(10, Math.min(90, newY));
+
+    // Check if dragged far enough to switch sides (30% of screen width)
+    const deltaX = clientX - mapButtonStartRef.current.x;
+    const switchThreshold = window.innerWidth * 0.3;
+
+    let newSide = mapButtonPosition.side;
+    if (mapButtonPosition.side === 'left' && deltaX > switchThreshold) {
+      newSide = 'right';
+    } else if (mapButtonPosition.side === 'right' && deltaX < -switchThreshold) {
+      newSide = 'left';
+    }
+
+    const newPosition = { y: newY, side: newSide };
+    setMapButtonPosition(newPosition);
+  };
+
+  const handleMapButtonEnd = () => {
+    if (!isMapButtonDragging) return;
+    setIsMapButtonDragging(false);
+
+    // Save position to localStorage
+    localStorage.setItem('mapButtonPosition', JSON.stringify(mapButtonPosition));
+  };
+
+  // Map button mouse events
+  const handleMapButtonMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    handleMapButtonStart(e.clientX, e.clientY);
+  };
+
+  const handleMapButtonMouseMove = (e: React.MouseEvent) => {
+    if (isMapButtonDragging) {
+      handleMapButtonMove(e.clientX, e.clientY);
+    }
+  };
+
+  const handleMapButtonMouseUp = () => {
+    handleMapButtonEnd();
+  };
+
+  // Map button touch events
+  const handleMapButtonTouchStart = (e: React.TouchEvent) => {
+    e.stopPropagation();
+    const touch = e.touches[0];
+    handleMapButtonStart(touch.clientX, touch.clientY);
+  };
+
+  const handleMapButtonTouchMove = (e: React.TouchEvent) => {
+    if (isMapButtonDragging) {
+      const touch = e.touches[0];
+      handleMapButtonMove(touch.clientX, touch.clientY);
+    }
+  };
+
+  const handleMapButtonTouchEnd = () => {
+    handleMapButtonEnd();
+  };
+
   const currentItem = items[currentIndex];
   const nextItem = items[currentIndex + 1];
   const rotation = dragOffset.x / 20;
@@ -401,16 +510,35 @@ const Index = () => {
         </div>
       </div>
 
-      {/* Map Toggle Button - Fixed on left side */}
+      {/* Map Toggle Button - Draggable */}
       <button
-        onClick={() => setShowMapView(!showMapView)}
-        className={`fixed left-0 top-1/2 -translate-y-1/2 z-50 flex flex-col items-center justify-center py-8 px-3 rounded-r-2xl shadow-2xl transition-all duration-300 ${
+        onClick={(e) => {
+          // Only toggle if not dragging (small movement threshold)
+          if (!isMapButtonDragging) {
+            setShowMapView(!showMapView);
+          }
+        }}
+        onMouseDown={handleMapButtonMouseDown}
+        onTouchStart={handleMapButtonTouchStart}
+        onTouchMove={handleMapButtonTouchMove}
+        onTouchEnd={handleMapButtonTouchEnd}
+        className={`fixed z-50 flex flex-col items-center justify-center py-8 px-3 shadow-2xl transition-colors duration-300 ${
+          isMapButtonDragging ? 'cursor-grabbing' : 'cursor-grab'
+        } ${
           showMapView
             ? 'bg-primary text-primary-foreground hover:bg-primary/90'
             : 'bg-gradient-to-br from-primary/90 to-primary text-primary-foreground hover:from-primary hover:to-primary/90'
+        } ${
+          mapButtonPosition.side === 'left' ? 'rounded-r-2xl' : 'rounded-l-2xl'
         }`}
-        title={showMapView ? "Show Cards" : "Show Map"}
-        style={!showMapView ? { animation: 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite' } : undefined}
+        title={showMapView ? "Show Cards" : "Show Map (Drag to reposition)"}
+        style={{
+          [mapButtonPosition.side === 'left' ? 'left' : 'right']: 0,
+          top: `${mapButtonPosition.y}%`,
+          transform: 'translateY(-50%)',
+          animation: !showMapView && !isMapButtonDragging ? 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite' : 'none',
+          transition: isMapButtonDragging ? 'none' : 'all 0.3s ease-out'
+        }}
       >
         <Map className="h-7 w-7 mb-2" />
         <span className="text-xs font-black tracking-wider [writing-mode:vertical-lr] rotate-180">

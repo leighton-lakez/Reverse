@@ -6,7 +6,7 @@ import "leaflet/dist/leaflet.css";
 import "leaflet.markercluster/dist/MarkerCluster.css";
 import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 import { Card } from "./ui/card";
-import { MapPin, DollarSign, Search, SlidersHorizontal } from "lucide-react";
+import { MapPin, DollarSign, Search, SlidersHorizontal, RotateCcw } from "lucide-react";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import { Slider } from "./ui/slider";
@@ -559,6 +559,20 @@ const MapView = ({ items, onItemClick }: MapViewProps) => {
           >
             <SlidersHorizontal className="h-6 w-6 mr-3" />
             All Filters
+          </Button>
+
+          {/* Refresh Button */}
+          <Button
+            onClick={() => {
+              setLocationSearch("");
+              setPriceRange([0, maxPrice]);
+              window.location.reload();
+            }}
+            variant="outline"
+            className="w-full h-12 border-2 border-primary/50 hover:bg-primary/10 font-semibold gap-2 transition-all"
+          >
+            <RotateCcw className="h-5 w-5" />
+            Refresh Listings
           </Button>
 
           {/* Quick Location Search */}
