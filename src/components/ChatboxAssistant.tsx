@@ -17,7 +17,11 @@ const ChatboxAssistant = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState("");
+  const [position, setPosition] = useState({ x: 16, y: 80 }); // Start at bottom-left
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const chatboxRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
   // Comprehensive knowledge base about REVRS
@@ -246,6 +250,49 @@ const ChatboxAssistant = () => {
     }
   };
 
+  // Drag functionality
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (chatboxRef.current && !isDragging) {
+      setIsDragging(true);
+      const rect = chatboxRef.current.getBoundingClientRect();
+      setDragOffset({
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top
+      });
+    }
+  };
+
+  const handleMouseMove = (e: MouseEvent) => {
+    if (isDragging) {
+      const newX = e.clientX - dragOffset.x;
+      const newY = e.clientY - dragOffset.y;
+
+      // Keep within viewport bounds
+      const maxX = window.innerWidth - (chatboxRef.current?.offsetWidth || 384);
+      const maxY = window.innerHeight - (chatboxRef.current?.offsetHeight || 600);
+
+      setPosition({
+        x: Math.max(0, Math.min(newX, maxX)),
+        y: Math.max(0, Math.min(newY, maxY))
+      });
+    }
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  useEffect(() => {
+    if (isDragging) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      return () => {
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+      };
+    }
+  }, [isDragging, dragOffset]);
+
   return (
     <>
       {/* Floating Button */}
@@ -262,10 +309,21 @@ const ChatboxAssistant = () => {
 
       {/* Chatbox */}
       {isOpen && (
-        <div className="fixed bottom-20 sm:bottom-24 left-4 sm:left-6 z-50 w-[calc(100vw-2rem)] sm:w-96 max-h-[600px] animate-fade-in">
+        <div
+          ref={chatboxRef}
+          className="fixed z-50 w-[calc(100vw-2rem)] sm:w-96 max-h-[600px] animate-fade-in"
+          style={{
+            left: `${position.x}px`,
+            bottom: `${position.y}px`,
+            cursor: isDragging ? 'grabbing' : 'default'
+          }}
+        >
           <Card className="h-full flex flex-col bg-card/95 backdrop-blur-xl border-border/50 shadow-2xl overflow-hidden">
-            {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b border-border/50 bg-gradient-to-r from-primary/10 to-secondary/10">
+            {/* Header - Draggable */}
+            <div
+              className="flex items-center justify-between p-4 border-b border-border/50 bg-gradient-to-r from-primary/10 to-secondary/10 cursor-grab active:cursor-grabbing"
+              onMouseDown={handleMouseDown}
+            >
               <div className="flex items-center gap-3">
                 <div className="relative">
                   <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
@@ -274,8 +332,8 @@ const ChatboxAssistant = () => {
                   <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 bg-green-500 rounded-full border-2 border-card" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-foreground text-sm">REVRS Assistant</h3>
-                  <p className="text-xs text-muted-foreground">I know everything!</p>
+                  <h3 className="font-bold text-foreground text-sm">REVRS Bot</h3>
+                  <p className="text-xs text-muted-foreground">Drag me anywhere!</p>
                 </div>
               </div>
               <Button
