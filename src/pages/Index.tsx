@@ -511,37 +511,44 @@ const Index = () => {
                   title="Play UNO!"
                   className="group flex items-center gap-2 sm:gap-3 hover:scale-105 transition-all duration-500"
                 >
-                  {/* UNO Reverse Card Icon - Compact */}
-                  <div
-                    className="relative w-8 h-8 sm:w-10 sm:h-10"
-                    style={{ perspective: '800px' }}
-                  >
-                    {/* Shadow */}
-                    <div className="absolute inset-0 bg-black/60 rounded-lg blur-md transform translate-y-1" />
+                  {/* UNO Reverse Card Icon - Modern Design */}
+                  <div className="relative w-10 h-10 sm:w-12 sm:h-12">
+                    {/* Animated glow ring */}
+                    <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-primary via-primary to-primary/80 blur-lg opacity-50 group-hover:opacity-75 transition-all duration-500 animate-pulse" style={{ animationDuration: '3s' }} />
 
-                    {/* Card */}
-                    <div
-                      className="absolute inset-0 bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700 rounded-lg border-2 border-blue-900/80 shadow-[0_4px_12px_rgba(0,0,0,0.6),inset_0_1px_0_rgba(255,255,255,0.3)] transition-all duration-500 group-hover:rotate-12"
-                      style={{
-                        transformStyle: 'preserve-3d',
-                        transform: 'rotateX(5deg) rotateY(-5deg)'
-                      }}
-                    >
-                      {/* Glossy highlight */}
-                      <div className="absolute inset-0 bg-gradient-to-b from-white/30 to-transparent rounded-t-md" />
+                    {/* Card container */}
+                    <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-primary via-primary/95 to-primary/90 shadow-lg shadow-primary/40 group-hover:shadow-xl group-hover:shadow-primary/60 transition-all duration-500 overflow-hidden border border-primary/30 group-hover:border-primary/50">
+                      {/* Shine effect */}
+                      <div className="absolute inset-0 bg-gradient-to-br from-white/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
-                      {/* Reverse symbol */}
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="text-white font-black text-xl sm:text-2xl drop-shadow-lg leading-none">⟲</div>
-                      </div>
+                      {/* Circular arrows design */}
+                      <svg className="w-full h-full p-2 group-hover:rotate-180 transition-transform duration-700" viewBox="0 0 24 24" fill="none">
+                        {/* Outer circle */}
+                        <circle cx="12" cy="12" r="10" stroke="white" strokeWidth="1.5" opacity="0.3" />
 
-                      {/* Glow */}
-                      <div className="absolute inset-0 rounded-lg shadow-[0_0_15px_rgba(59,130,246,0.5)] group-hover:shadow-[0_0_20px_rgba(59,130,246,0.7)] transition-all duration-500" />
+                        {/* Curved arrows forming reverse symbol */}
+                        <path
+                          d="M16 8 L16 4 L12 7 M16 8 C16 8 14 10 12 10 C10 10 8 8 8 8"
+                          stroke="white"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          fill="none"
+                        />
+                        <path
+                          d="M8 16 L8 20 L12 17 M8 16 C8 16 10 14 12 14 C14 14 16 16 16 16"
+                          stroke="white"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          fill="none"
+                        />
+                      </svg>
                     </div>
                   </div>
 
                   {/* PLAY UNO Text */}
-                  <h2 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tighter text-gradient">
+                  <h2 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tighter text-gradient group-hover:tracking-tight transition-all duration-300">
                     PLAY UNO
                   </h2>
                 </button>
