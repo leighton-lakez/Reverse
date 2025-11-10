@@ -3,7 +3,7 @@ import BottomNav from "@/components/BottomNav";
 import { ReverseIcon } from "@/components/ReverseIcon";
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import MapView from "@/components/MapView";
@@ -117,7 +117,7 @@ const Index = () => {
     sessionStorage.setItem('viewedItems', JSON.stringify(Array.from(viewedItemIds)));
   }, [viewedItemIds]);
 
-  const fetchItems = async (forceRefresh = false) => {
+  const fetchItems = async (forceRefresh = false, skipFilter = false) => {
     setLoading(true);
     let query = supabase
       .from("items")
@@ -137,9 +137,9 @@ const Index = () => {
     const { data, error } = await query;
 
     if (!error && data) {
-      // Filter out viewed items unless force refresh
+      // Filter out viewed items unless force refresh or skip filter
       let filteredData = data;
-      if (!forceRefresh && viewedItemIds.size > 0) {
+      if (!skipFilter && !forceRefresh && viewedItemIds.size > 0) {
         filteredData = data.filter(item => !viewedItemIds.has(item.id));
       }
 
@@ -403,10 +403,14 @@ const Index = () => {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => {
-                setViewedItemIds(new Set());
+              onClick={async () => {
+                // Clear viewed items from session storage and state
                 sessionStorage.removeItem('viewedItems');
-                fetchItems(true);
+                setViewedItemIds(new Set());
+
+                // Fetch all items, skipping the viewed filter completely
+                await fetchItems(false, true);
+
                 toast({
                   title: "Refreshed!",
                   description: "Showing all items again",
