@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft, RotateCcw, Users, Copy, Share2, Send, Settings } from "lucide-react";
+import { ArrowLeft, RotateCcw, Users, Copy, Share2, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ReverseIcon } from "@/components/ReverseIcon";
@@ -51,7 +51,6 @@ const UnoGame = () => {
   const [opponentProfile, setOpponentProfile] = useState<any>(null);
   const [waitingForOpponent, setWaitingForOpponent] = useState(false);
   const [botDifficulty, setBotDifficulty] = useState<"easy" | "medium" | "hard">("medium");
-  const [showDifficultySelector, setShowDifficultySelector] = useState(false);
 
   const colors: CardColor[] = ["red", "blue", "green", "yellow"];
   const values: CardValue[] = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "skip", "reverse", "draw2"];
@@ -863,17 +862,6 @@ const UnoGame = () => {
               <h1 className="text-2xl font-black tracking-tighter text-gradient">UNO REVERSE</h1>
             </div>
             <div className="flex items-center gap-2">
-              {!isMultiplayer && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setShowDifficultySelector(true)}
-                  className="hover:bg-muted h-12 w-12"
-                  title="Bot Difficulty"
-                >
-                  <Settings className="h-7 w-7" />
-                </Button>
-              )}
               <Button
                 variant="ghost"
                 size="icon"
@@ -911,7 +899,7 @@ const UnoGame = () => {
 
         {/* Opponent/Bot Hand */}
         <div className="mb-4 sm:mb-8 landscape:mb-2">
-          <div className="flex items-center justify-center gap-2 mb-2 sm:mb-4 landscape:mb-1">
+          <div className="flex flex-col items-center gap-2 mb-2 sm:mb-4 landscape:mb-1">
             <div className="px-4 py-2 rounded-full bg-black/40 backdrop-blur-sm border border-white/20">
               <p className="text-sm font-semibold text-white">
                 {isMultiplayer
@@ -920,12 +908,46 @@ const UnoGame = () => {
               </p>
             </div>
             {!isMultiplayer && (
-              <div className={`px-3 py-1.5 rounded-full text-xs font-bold backdrop-blur-sm border ${
-                botDifficulty === "easy" ? "bg-green-500/20 border-green-500/50 text-green-200" :
-                botDifficulty === "medium" ? "bg-yellow-500/20 border-yellow-500/50 text-yellow-200" :
-                "bg-red-500/20 border-red-500/50 text-red-200"
-              }`}>
-                {botDifficulty === "easy" ? "🟢 Easy" : botDifficulty === "medium" ? "🟡 Medium" : "🔴 Hard"}
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    setBotDifficulty("easy");
+                    toast({ title: "🟢 Easy Mode", description: "Bot will play randomly" });
+                  }}
+                  className={`px-4 py-2 rounded-full text-xs font-bold backdrop-blur-sm border-2 transition-all ${
+                    botDifficulty === "easy"
+                      ? "bg-green-500/30 border-green-500 text-green-100 shadow-lg shadow-green-500/20 scale-105"
+                      : "bg-black/40 border-white/20 text-white/60 hover:border-green-500/50 hover:text-green-200"
+                  }`}
+                >
+                  🟢 Easy
+                </button>
+                <button
+                  onClick={() => {
+                    setBotDifficulty("medium");
+                    toast({ title: "🟡 Medium Mode", description: "Bot prefers action cards" });
+                  }}
+                  className={`px-4 py-2 rounded-full text-xs font-bold backdrop-blur-sm border-2 transition-all ${
+                    botDifficulty === "medium"
+                      ? "bg-yellow-500/30 border-yellow-500 text-yellow-100 shadow-lg shadow-yellow-500/20 scale-105"
+                      : "bg-black/40 border-white/20 text-white/60 hover:border-yellow-500/50 hover:text-yellow-200"
+                  }`}
+                >
+                  🟡 Medium
+                </button>
+                <button
+                  onClick={() => {
+                    setBotDifficulty("hard");
+                    toast({ title: "🔴 Hard Mode", description: "Bot uses advanced strategy!" });
+                  }}
+                  className={`px-4 py-2 rounded-full text-xs font-bold backdrop-blur-sm border-2 transition-all ${
+                    botDifficulty === "hard"
+                      ? "bg-red-500/30 border-red-500 text-red-100 shadow-lg shadow-red-500/20 scale-105"
+                      : "bg-black/40 border-white/20 text-white/60 hover:border-red-500/50 hover:text-red-200"
+                  }`}
+                >
+                  🔴 Hard
+                </button>
               </div>
             )}
           </div>
@@ -1195,86 +1217,6 @@ const UnoGame = () => {
           </div>
         </div>
       </main>
-
-      {/* Difficulty Selector Modal */}
-      <Dialog open={showDifficultySelector} onOpenChange={setShowDifficultySelector}>
-        <DialogContent className="bg-gradient-to-b from-card to-card/95 border-primary/20 sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text flex items-center gap-2">
-              <Settings className="h-6 w-6 text-primary" />
-              Bot Difficulty
-            </DialogTitle>
-            <DialogDescription className="text-muted-foreground">
-              Choose how challenging you want the bot to be
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-3 pt-4">
-            <button
-              onClick={() => {
-                setBotDifficulty("easy");
-                setShowDifficultySelector(false);
-                toast({ title: "🟢 Easy Mode", description: "Bot will play randomly" });
-              }}
-              className={`w-full p-4 rounded-xl border-2 transition-all text-left ${
-                botDifficulty === "easy"
-                  ? "border-green-500 bg-green-500/10"
-                  : "border-border hover:border-green-500/50"
-              }`}
-            >
-              <div className="flex items-center gap-3">
-                <div className="text-3xl">🟢</div>
-                <div className="flex-1">
-                  <p className="font-bold text-lg">Easy</p>
-                  <p className="text-sm text-muted-foreground">Bot plays random cards - perfect for beginners!</p>
-                </div>
-              </div>
-            </button>
-
-            <button
-              onClick={() => {
-                setBotDifficulty("medium");
-                setShowDifficultySelector(false);
-                toast({ title: "🟡 Medium Mode", description: "Bot prefers action cards" });
-              }}
-              className={`w-full p-4 rounded-xl border-2 transition-all text-left ${
-                botDifficulty === "medium"
-                  ? "border-yellow-500 bg-yellow-500/10"
-                  : "border-border hover:border-yellow-500/50"
-              }`}
-            >
-              <div className="flex items-center gap-3">
-                <div className="text-3xl">🟡</div>
-                <div className="flex-1">
-                  <p className="font-bold text-lg">Medium</p>
-                  <p className="text-sm text-muted-foreground">Bot prefers action cards - balanced gameplay</p>
-                </div>
-              </div>
-            </button>
-
-            <button
-              onClick={() => {
-                setBotDifficulty("hard");
-                setShowDifficultySelector(false);
-                toast({ title: "🔴 Hard Mode", description: "Bot uses advanced strategy!" });
-              }}
-              className={`w-full p-4 rounded-xl border-2 transition-all text-left ${
-                botDifficulty === "hard"
-                  ? "border-red-500 bg-red-500/10"
-                  : "border-border hover:border-red-500/50"
-              }`}
-            >
-              <div className="flex items-center gap-3">
-                <div className="text-3xl">🔴</div>
-                <div className="flex-1">
-                  <p className="font-bold text-lg">Hard</p>
-                  <p className="text-sm text-muted-foreground">Bot uses strategic thinking - prepare for a challenge!</p>
-                </div>
-              </div>
-            </button>
-          </div>
-        </DialogContent>
-      </Dialog>
 
       {/* Invite Friends Modal */}
       <Dialog open={inviteModalOpen} onOpenChange={setInviteModalOpen}>
