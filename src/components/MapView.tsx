@@ -438,9 +438,9 @@ const MapView = ({ items, onItemClick }: MapViewProps) => {
   };
 
   return (
-    <div className="h-full w-full flex flex-col md:flex-row relative bg-background">
+    <div className="h-full w-full flex flex-row relative bg-background">
       {/* Listing Cards Sidebar - Scrollable */}
-      <div className="w-full md:w-[400px] lg:w-[450px] h-1/3 md:h-full flex-shrink-0 overflow-y-auto bg-background border-r border-border">
+      <div className="w-[380px] sm:w-[400px] lg:w-[450px] h-full flex-shrink-0 overflow-y-auto bg-background border-r border-border">
         {/* Filter Controls */}
         <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-lg border-b border-border p-4 space-y-3">
           {/* Location Search */}
@@ -570,7 +570,7 @@ const MapView = ({ items, onItemClick }: MapViewProps) => {
       </div>
 
       {/* Map Container - Takes remaining space */}
-      <div className="flex-1 h-2/3 md:h-full relative">
+      <div className="flex-1 h-full relative">
         <MapContainer
           center={defaultCenter}
           zoom={4}
