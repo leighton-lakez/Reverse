@@ -37,6 +37,11 @@ const Index = () => {
   const [showContent, setShowContent] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [showMapView, setShowMapView] = useState(false);
+  const [viewedItemIds, setViewedItemIds] = useState<Set<string>>(() => {
+    // Load viewed items from sessionStorage
+    const saved = sessionStorage.getItem('viewedItems');
+    return saved ? new Set(JSON.parse(saved)) : new Set();
+  });
 
   const navigate = useNavigate();
   const cardRef = useRef<HTMLDivElement>(null);
@@ -93,7 +98,26 @@ const Index = () => {
     }
   }, []);
 
-  const fetchItems = async () => {
+  // Mark current item as viewed
+  useEffect(() => {
+    if (items.length > 0 && currentIndex < items.length) {
+      const currentItem = items[currentIndex];
+      if (currentItem && !viewedItemIds.has(currentItem.id)) {
+        const newViewedIds = new Set(viewedItemIds);
+        newViewedIds.add(currentItem.id);
+        setViewedItemIds(newViewedIds);
+        // Save to sessionStorage
+        sessionStorage.setItem('viewedItems', JSON.stringify(Array.from(newViewedIds)));
+      }
+    }
+  }, [currentIndex, items]);
+
+  // Save viewed items to sessionStorage whenever it changes
+  useEffect(() => {
+    sessionStorage.setItem('viewedItems', JSON.stringify(Array.from(viewedItemIds)));
+  }, [viewedItemIds]);
+
+  const fetchItems = async (forceRefresh = false) => {
     setLoading(true);
     let query = supabase
       .from("items")
@@ -113,8 +137,14 @@ const Index = () => {
     const { data, error } = await query;
 
     if (!error && data) {
+      // Filter out viewed items unless force refresh
+      let filteredData = data;
+      if (!forceRefresh && viewedItemIds.size > 0) {
+        filteredData = data.filter(item => !viewedItemIds.has(item.id));
+      }
+
       // Randomize the order of items
-      const shuffled = data.sort(() => Math.random() - 0.5);
+      const shuffled = filteredData.sort(() => Math.random() - 0.5);
       setItems(shuffled);
       setCurrentIndex(0); // Reset to first item when category changes
       setSkippedItems([]); // Clear skipped items
@@ -343,23 +373,51 @@ const Index = () => {
       {/* Category Filter */}
       <div className="flex-shrink-0 bg-background/95 backdrop-blur-lg border-b border-border">
         <div className="max-w-7xl mx-auto px-2 sm:px-4 py-2">
-          <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
-            <Filter className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-            {categories.map((category) => (
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide flex-1">
               <Button
-                key={category}
-                variant={selectedCategory === category ? "default" : "outline"}
+                variant="outline"
                 size="sm"
-                onClick={() => setSelectedCategory(category)}
-                className={`flex-shrink-0 transition-all ${
-                  selectedCategory === category
-                    ? "bg-primary text-primary-foreground hover:bg-primary/90"
-                    : "hover:bg-primary/10"
-                }`}
+                onClick={() => navigate("/filters")}
+                className="flex-shrink-0 hover:bg-primary/10 gap-2 border-2 border-primary/50"
               >
-                {category}
+                <Filter className="h-4 w-4" />
+                <span>Filters</span>
               </Button>
-            ))}
+              {categories.map((category) => (
+                <Button
+                  key={category}
+                  variant={selectedCategory === category ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setSelectedCategory(category)}
+                  className={`flex-shrink-0 transition-all ${
+                    selectedCategory === category
+                      ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                      : "hover:bg-primary/10"
+                  }`}
+                >
+                  {category}
+                </Button>
+              ))}
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setViewedItemIds(new Set());
+                sessionStorage.removeItem('viewedItems');
+                fetchItems(true);
+                toast({
+                  title: "Refreshed!",
+                  description: "Showing all items again",
+                });
+              }}
+              className="flex-shrink-0 gap-2"
+              title="Reset and show all items"
+            >
+              <RotateCcw className="h-4 w-4" />
+              <span className="hidden sm:inline">Refresh</span>
+            </Button>
           </div>
         </div>
       </div>
