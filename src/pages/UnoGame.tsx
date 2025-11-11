@@ -994,16 +994,33 @@ const UnoGame = () => {
           </div>
         )}
 
-        {/* Opponent/Bot Hand */}
+        {/* Opponent/Bot Hand(s) */}
         <div className="mb-4 sm:mb-8 landscape:mb-2">
           <div className="flex flex-col items-center gap-2 mb-2 sm:mb-4 landscape:mb-1">
-            <div className="px-4 py-2 rounded-full bg-black/40 backdrop-blur-sm border border-white/20">
-              <p className="text-sm font-semibold text-white">
-                {isMultiplayer
-                  ? `${opponentProfile?.display_name || 'Opponent'}: ${opponentHand.length} cards`
-                  : `Bot: ${botHand.length} cards`}
-              </p>
-            </div>
+            {/* Show all bot names when multiple bots */}
+            {!isMultiplayer && numberOfPlayers > 2 ? (
+              <div className="flex gap-3 flex-wrap justify-center">
+                {botHands.map((hand, index) => (
+                  <div key={index} className={`px-4 py-2 rounded-full backdrop-blur-sm border-2 transition-all ${
+                    currentPlayerIndex === index + 1
+                      ? 'bg-primary/30 border-primary text-primary-foreground shadow-lg shadow-primary/20'
+                      : 'bg-black/40 border-white/20'
+                  }`}>
+                    <p className="text-sm font-semibold text-white">
+                      {botNames[index]}: {hand.length} cards
+                    </p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="px-4 py-2 rounded-full bg-black/40 backdrop-blur-sm border border-white/20">
+                <p className="text-sm font-semibold text-white">
+                  {isMultiplayer
+                    ? `${opponentProfile?.display_name || 'Opponent'}: ${opponentHand.length} cards`
+                    : `Bot: ${botHand.length} cards`}
+                </p>
+              </div>
+            )}
             {!isMultiplayer && (
               <div className="flex flex-col gap-2">
                 {/* Player Count Selection */}
@@ -1076,20 +1093,63 @@ const UnoGame = () => {
               </div>
             )}
           </div>
-          <div className="flex justify-center gap-1 flex-wrap" style={{ perspective: '1000px' }}>
-            {(isMultiplayer ? opponentHand : botHand).map((card, index) => {
-              const rotation = (index - botHand.length / 2) * 2.5;
-              const yOffset = Math.abs(index - botHand.length / 2) * 3;
-              return (
-                <div
-                  key={card.id}
-                  className="w-16 h-24 sm:w-24 sm:h-36 landscape:w-20 landscape:h-28 relative transition-all duration-300"
-                  style={{
-                    transform: `rotateZ(${rotation}deg) translateY(${yOffset}px) rotateX(-5deg)`,
-                    zIndex: botHand.length - Math.abs(index - botHand.length / 2),
-                    transformStyle: 'preserve-3d'
-                  }}
-                >
+
+          {/* Display cards for multiple bots or single bot/opponent */}
+          {!isMultiplayer && numberOfPlayers > 2 ? (
+            // Multiple bots - show them in a grid layout
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-6">
+              {botHands.map((hand, botIndex) => (
+                <div key={botIndex} className="flex flex-col items-center gap-2">
+                  <div className={`text-xs font-bold px-3 py-1 rounded-full ${
+                    currentPlayerIndex === botIndex + 1
+                      ? 'bg-primary/30 text-primary-foreground'
+                      : 'bg-black/30 text-white/70'
+                  }`}>
+                    {botNames[botIndex]}
+                  </div>
+                  <div className="flex gap-1" style={{ perspective: '800px' }}>
+                    {hand.slice(0, 5).map((card, cardIndex) => {
+                      const rotation = (cardIndex - 2.5) * 3;
+                      return (
+                        <div
+                          key={card.id}
+                          className="w-12 h-18 sm:w-16 sm:h-24 relative"
+                          style={{
+                            transform: `rotateZ(${rotation}deg) rotateX(-5deg)`,
+                            transformStyle: 'preserve-3d'
+                          }}
+                        >
+                          <div className="absolute inset-0 bg-black/50 rounded-lg blur-sm" />
+                          <div className="absolute inset-0 bg-gradient-to-br from-red-600 via-red-700 to-red-600 rounded-lg border border-white/10 flex items-center justify-center">
+                            <span className="text-yellow-400 font-black text-xs drop-shadow-lg">UNO</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                    {hand.length > 5 && (
+                      <div className="text-white/50 text-xs self-center ml-1">+{hand.length - 5}</div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            // Single bot or multiplayer opponent
+            <div className="flex justify-center gap-1 flex-wrap" style={{ perspective: '1000px' }}>
+              {(isMultiplayer ? opponentHand : botHand).map((card, index) => {
+                const currentHand = isMultiplayer ? opponentHand : botHand;
+                const rotation = (index - currentHand.length / 2) * 2.5;
+                const yOffset = Math.abs(index - currentHand.length / 2) * 3;
+                return (
+                  <div
+                    key={card.id}
+                    className="w-16 h-24 sm:w-24 sm:h-36 landscape:w-20 landscape:h-28 relative transition-all duration-300"
+                    style={{
+                      transform: `rotateZ(${rotation}deg) translateY(${yOffset}px) rotateX(-5deg)`,
+                      zIndex: currentHand.length - Math.abs(index - currentHand.length / 2),
+                      transformStyle: 'preserve-3d'
+                    }}
+                  >
                   {/* Shadow */}
                   <div className="absolute inset-0 bg-black/50 rounded-[18px] blur-lg transform translate-y-3" />
 
@@ -1121,7 +1181,8 @@ const UnoGame = () => {
                 </div>
               );
             })}
-          </div>
+            </div>
+          )}
         </div>
 
         {/* Game Board */}
