@@ -800,12 +800,12 @@ const MapView = ({ items, onItemClick }: MapViewProps) => {
         {sidebarOffset < -10 && (
           <button
             onClick={() => setSidebarOffset(0)}
-            className="md:hidden fixed left-0 top-1/2 -translate-y-1/2 z-30 bg-primary hover:bg-primary/90 text-primary-foreground rounded-r-xl px-3 py-6 shadow-xl hover:shadow-2xl transition-all duration-300 animate-pulse hover:animate-none"
+            className="md:hidden fixed left-0 top-1/2 -translate-y-1/2 z-30 bg-background/90 backdrop-blur-sm hover:bg-background border-2 border-border hover:border-primary/50 text-foreground rounded-r-lg px-2 py-4 shadow-md hover:shadow-lg transition-all duration-300"
           >
-            <div className="flex flex-col items-center gap-2">
-              <ChevronRight className="h-6 w-6" />
-              <div className="text-[10px] font-bold whitespace-nowrap transform -rotate-0 tracking-wider">
-                SHOW
+            <div className="flex flex-col items-center gap-1">
+              <ChevronRight className="h-5 w-5 text-muted-foreground" />
+              <div className="text-[9px] font-medium text-muted-foreground tracking-wide">
+                LIST
               </div>
             </div>
           </button>
