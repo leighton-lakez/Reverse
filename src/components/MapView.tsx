@@ -337,7 +337,6 @@ const MapView = ({ items, onItemClick }: MapViewProps) => {
   const markerRefs = useRef<Map<string, L.Marker>>(new Map());
   const [mapCenter, setMapCenter] = useState<[number, number]>([39.8283, -98.5795]);
   const [mapZoom, setMapZoom] = useState(4);
-  const [showMapOnMobile, setShowMapOnMobile] = useState(true);
   const [geocodingProgress, setGeocodingProgress] = useState<{ current: number; total: number } | null>(null);
 
   // Swipe functionality for mobile
@@ -540,24 +539,33 @@ const MapView = ({ items, onItemClick }: MapViewProps) => {
 
   return (
     <div className="h-full w-full flex flex-col relative bg-background">
-      {/* Mobile Toggle Buttons */}
+      {/* Mobile Hide List Button */}
       <div className="md:hidden flex-shrink-0 bg-background border-b border-border p-2">
-        <div className="flex gap-2">
-          <Button
-            variant={showMapOnMobile ? "default" : "outline"}
-            onClick={() => setShowMapOnMobile(true)}
-            className="flex-1"
-          >
-            Map
-          </Button>
-          <Button
-            variant={!showMapOnMobile ? "default" : "outline"}
-            onClick={() => setShowMapOnMobile(false)}
-            className="flex-1"
-          >
-            List ({filteredItems.length})
-          </Button>
-        </div>
+        <Button
+          onClick={() => {
+            const sidebarWidth = sidebarRef.current?.offsetWidth || 0;
+            if (sidebarOffset === 0) {
+              // Hide list
+              setSidebarOffset(-sidebarWidth + 60);
+            } else {
+              // Show list
+              setSidebarOffset(0);
+            }
+          }}
+          className="w-full h-12 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary text-primary-foreground font-bold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2"
+        >
+          {sidebarOffset === 0 ? (
+            <>
+              <ChevronLeft className="h-5 w-5" />
+              Hide List
+            </>
+          ) : (
+            <>
+              <ChevronRight className="h-5 w-5" />
+              Show List ({filteredItems.length})
+            </>
+          )}
+        </Button>
       </div>
 
       {/* Main Content - Map and Sidebar */}
