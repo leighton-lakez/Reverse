@@ -943,71 +943,65 @@ const UnoGame = () => {
 
   return (
     <div className="min-h-screen pb-24 relative overflow-hidden">
-      {/* Beach sunset background matching reference photo */}
-      <div className="absolute inset-0 pointer-events-none" style={{
-        background: 'linear-gradient(to bottom, #c77d8c 0%, #e89a7f 20%, #f4b58e 40%, #8db5c5 60%, #5a96a8 80%, #4a7a8a 100%)'
-      }}>
-        {/* Dramatic sunset clouds */}
-        <div className="absolute inset-0" style={{
-          backgroundImage: `
-            radial-gradient(ellipse at 30% 25%, rgba(255, 150, 100, 0.4) 0%, transparent 40%),
-            radial-gradient(ellipse at 60% 30%, rgba(200, 100, 150, 0.3) 0%, transparent 35%),
-            radial-gradient(ellipse at 80% 20%, rgba(180, 120, 160, 0.35) 0%, transparent 40%),
-            radial-gradient(ellipse at 45% 35%, rgba(220, 140, 120, 0.25) 0%, transparent 45%)
-          `
-        }} />
-
-        {/* Ocean waves */}
-        <div className="absolute bottom-0 left-0 right-0 h-[45%]" style={{
-          background: 'linear-gradient(to bottom, rgba(90, 140, 155, 0.7) 0%, rgba(70, 120, 135, 0.8) 50%, rgba(60, 100, 115, 0.9) 100%)'
-        }} />
-
-        {/* Wave foam and texture */}
-        <div className="absolute bottom-0 left-0 right-0 h-[20%] opacity-40" style={{
-          backgroundImage: `
-            repeating-linear-gradient(90deg,
-              transparent 0px,
-              rgba(255,255,255,0.2) 10px,
-              transparent 30px
-            )
-          `
-        }} />
-
-        {/* Sandy beach floor */}
-        <div className="absolute bottom-0 left-0 right-0 h-[25%]" style={{
-          background: 'linear-gradient(to bottom, rgba(180, 165, 140, 0.4) 0%, rgba(150, 140, 120, 0.6) 100%)'
-        }} />
+      {/* Photorealistic beach background using actual photo URL */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          backgroundImage: 'url(https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1920&q=80)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          filter: 'brightness(0.9) contrast(1.1)'
+        }}
+      >
+        {/* Subtle overlay to ensure text readability */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/20" />
       </div>
 
-      {/* Realistic round table with white tablecloth from reference */}
+      {/* Photorealistic round table with white tablecloth */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[85%] max-w-4xl aspect-square rounded-full pointer-events-none" style={{
-        background: 'radial-gradient(circle at center, rgba(245, 245, 250, 0.95) 0%, rgba(235, 235, 245, 0.92) 60%, rgba(220, 220, 235, 0.88) 100%)',
-        boxShadow: '0 40px 120px rgba(0,0,0,0.5), inset 0 2px 30px rgba(255,255,255,0.4), inset 0 -8px 40px rgba(0,0,0,0.15)'
+        background: `
+          radial-gradient(circle at 45% 40%,
+            rgba(255, 255, 255, 0.98) 0%,
+            rgba(250, 250, 252, 0.96) 30%,
+            rgba(240, 240, 245, 0.94) 50%,
+            rgba(230, 230, 240, 0.92) 70%,
+            rgba(220, 220, 235, 0.88) 100%
+          )
+        `,
+        boxShadow: `
+          0 50px 150px rgba(0, 0, 0, 0.4),
+          0 20px 60px rgba(0, 0, 0, 0.3),
+          inset -10px -10px 40px rgba(0, 0, 0, 0.08),
+          inset 5px 5px 30px rgba(255, 255, 255, 0.5)
+        `,
+        filter: 'drop-shadow(0 30px 80px rgba(0,0,0,0.3))'
       }}>
-        {/* Fabric texture on tablecloth */}
-        <div className="absolute inset-0 rounded-full opacity-20" style={{
+        {/* Realistic linen/fabric texture */}
+        <div className="absolute inset-0 rounded-full" style={{
           backgroundImage: `
-            repeating-linear-gradient(0deg,
-              transparent,
-              transparent 2px,
-              rgba(0,0,0,0.03) 2px,
-              rgba(0,0,0,0.03) 4px
-            ),
-            repeating-linear-gradient(90deg,
-              transparent,
-              transparent 2px,
-              rgba(0,0,0,0.03) 2px,
-              rgba(0,0,0,0.03) 4px
-            )
-          `
+            url("data:image/svg+xml,%3Csvg width='100' height='100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence baseFrequency='0.9' numOctaves='4' /%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E")
+          `,
+          mixBlendMode: 'multiply',
+          opacity: 0.4
         }} />
 
-        {/* Subtle folds and shadows on cloth */}
-        <div className="absolute top-[20%] left-[15%] w-32 h-24 rounded-full" style={{
-          background: 'radial-gradient(ellipse, rgba(0,0,0,0.06) 0%, transparent 60%)'
+        {/* Cloth wrinkles and natural folds */}
+        <div className="absolute top-[15%] left-[20%] w-40 h-32 rounded-full blur-2xl" style={{
+          background: 'radial-gradient(ellipse, rgba(0,0,0,0.04) 0%, transparent 70%)',
+          transform: 'rotate(-15deg)'
         }} />
-        <div className="absolute bottom-[25%] right-[20%] w-28 h-20 rounded-full" style={{
-          background: 'radial-gradient(ellipse, rgba(0,0,0,0.05) 0%, transparent 60%)'
+        <div className="absolute top-[35%] right-[18%] w-36 h-28 rounded-full blur-2xl" style={{
+          background: 'radial-gradient(ellipse, rgba(0,0,0,0.035) 0%, transparent 70%)',
+          transform: 'rotate(25deg)'
+        }} />
+        <div className="absolute bottom-[20%] left-[25%] w-44 h-36 rounded-full blur-3xl" style={{
+          background: 'radial-gradient(ellipse, rgba(0,0,0,0.045) 0%, transparent 70%)',
+          transform: 'rotate(-8deg)'
+        }} />
+
+        {/* Ambient light reflection from sunset */}
+        <div className="absolute inset-0 rounded-full" style={{
+          background: 'radial-gradient(ellipse at 30% 30%, rgba(255, 200, 150, 0.08) 0%, transparent 50%)'
         }} />
       </div>
 
