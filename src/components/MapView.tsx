@@ -794,6 +794,7 @@ const MapView = ({ items, onItemClick }: MapViewProps) => {
             </div>
           )}
         </div>
+        </div>
 
         {/* Swipe Handle - Visible on mobile when sidebar is partially hidden */}
         {sidebarOffset < -10 && (
