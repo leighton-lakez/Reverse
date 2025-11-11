@@ -18,7 +18,16 @@ const ItemDetail = () => {
   const params = useParams();
   const [item, setItem] = useState<any>(location.state?.item || null);
   const [liked, setLiked] = useState(false);
+  const [isFavorited, setIsFavorited] = useState(false);
   const [loading, setLoading] = useState(!location.state?.item);
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    // Get current user
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+  }, []);
 
   useEffect(() => {
     // Fetch real item data with seller information from database
@@ -71,6 +80,18 @@ const ItemDetail = () => {
               // The unique constraint will prevent duplicate entries
             });
         }
+
+        // Check if item is favorited
+        if (session) {
+          const { data: favoriteData } = await supabase
+            .from('favorites')
+            .select('id')
+            .eq('user_id', session.user.id)
+            .eq('item_id', itemId)
+            .single();
+
+          setIsFavorited(!!favoriteData);
+        }
       } else {
         toast.error('Item not found');
         navigate('/');
@@ -79,6 +100,47 @@ const ItemDetail = () => {
 
     fetchItemDetails();
   }, [location.state?.item, navigate]);
+
+  const toggleFavorite = async () => {
+    if (!user) {
+      toast.error('Please sign in to save favorites');
+      navigate('/auth');
+      return;
+    }
+
+    if (!item?.id) return;
+
+    if (isFavorited) {
+      // Remove from favorites
+      const { error } = await supabase
+        .from('favorites')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('item_id', item.id);
+
+      if (!error) {
+        setIsFavorited(false);
+        toast.success('Removed from favorites');
+      } else {
+        toast.error('Failed to remove favorite');
+      }
+    } else {
+      // Add to favorites
+      const { error } = await supabase
+        .from('favorites')
+        .insert({
+          user_id: user.id,
+          item_id: item.id,
+        });
+
+      if (!error) {
+        setIsFavorited(true);
+        toast.success('Added to favorites');
+      } else {
+        toast.error('Failed to add favorite');
+      }
+    }
+  };
 
   if (loading || !item) {
     return (
@@ -104,10 +166,10 @@ const ItemDetail = () => {
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => setLiked(!liked)}
+                onClick={toggleFavorite}
                 className="hover:bg-muted"
               >
-                <Heart className={`h-5 w-5 ${liked ? "fill-primary text-primary" : ""}`} />
+                <Heart className={`h-5 w-5 ${isFavorited ? "fill-red-500 text-red-500" : ""}`} />
               </Button>
               <Button variant="ghost" size="icon" className="hover:bg-muted">
                 <Share2 className="h-5 w-5" />

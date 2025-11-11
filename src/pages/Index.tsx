@@ -821,16 +821,16 @@ const Index = () => {
                       className="absolute top-4 sm:top-8 right-4 sm:right-8 pointer-events-none"
                       style={{ opacity: dragOffset.x < 0 ? opacity : 0 }}
                     >
-                      <div className="bg-red-500 text-white px-3 py-2 sm:px-6 sm:py-3 rounded-xl font-bold text-lg sm:text-2xl rotate-12 border-2 sm:border-4 border-white shadow-xl">
-                        NOPE
+                      <div className="bg-gradient-to-br from-red-500 to-red-600 text-white px-4 py-2 sm:px-7 sm:py-4 rounded-2xl font-black text-xl sm:text-3xl rotate-12 border-3 sm:border-4 border-white shadow-2xl animate-pulse">
+                        PASS! 🙅
                       </div>
                     </div>
                     <div
                       className="absolute top-4 sm:top-8 left-4 sm:left-8 pointer-events-none"
                       style={{ opacity: dragOffset.x > 0 ? opacity : 0 }}
                     >
-                      <div className="bg-green-500 text-white px-3 py-2 sm:px-6 sm:py-3 rounded-xl font-bold text-base sm:text-2xl -rotate-12 border-2 sm:border-4 border-white shadow-xl">
-                        INTERESTED
+                      <div className="bg-gradient-to-br from-green-500 to-emerald-600 text-white px-4 py-2 sm:px-7 sm:py-4 rounded-2xl font-black text-xl sm:text-3xl -rotate-12 border-3 sm:border-4 border-white shadow-2xl animate-pulse">
+                        YES! 🔥
                       </div>
                     </div>
 
