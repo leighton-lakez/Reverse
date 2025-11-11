@@ -88,7 +88,7 @@ const ItemDetail = () => {
             .select('id')
             .eq('user_id', session.user.id)
             .eq('item_id', itemId)
-            .single();
+            .maybeSingle();
 
           setIsFavorited(!!favoriteData);
         }
@@ -110,35 +110,44 @@ const ItemDetail = () => {
 
     if (!item?.id) return;
 
-    if (isFavorited) {
-      // Remove from favorites
-      const { error } = await supabase
-        .from('favorites')
-        .delete()
-        .eq('user_id', user.id)
-        .eq('item_id', item.id);
+    try {
+      if (isFavorited) {
+        // Remove from favorites
+        const { error } = await supabase
+          .from('favorites')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('item_id', item.id);
 
-      if (!error) {
+        if (error) {
+          console.error('Error removing favorite:', error);
+          toast.error('Failed to remove favorite');
+          return;
+        }
+
         setIsFavorited(false);
         toast.success('Removed from favorites');
       } else {
-        toast.error('Failed to remove favorite');
-      }
-    } else {
-      // Add to favorites
-      const { error } = await supabase
-        .from('favorites')
-        .insert({
-          user_id: user.id,
-          item_id: item.id,
-        });
+        // Add to favorites
+        const { error } = await supabase
+          .from('favorites')
+          .insert({
+            user_id: user.id,
+            item_id: item.id,
+          });
 
-      if (!error) {
+        if (error) {
+          console.error('Error adding favorite:', error);
+          toast.error('Failed to add favorite');
+          return;
+        }
+
         setIsFavorited(true);
         toast.success('Added to favorites');
-      } else {
-        toast.error('Failed to add favorite');
       }
+    } catch (err) {
+      console.error('Unexpected error toggling favorite:', err);
+      toast.error('Something went wrong');
     }
   };
 
