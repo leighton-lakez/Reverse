@@ -942,16 +942,33 @@ const UnoGame = () => {
 
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-900 via-green-800 to-green-900 pb-24 relative overflow-hidden">
+    <div className="min-h-screen pb-24 relative overflow-hidden" style={{
+      background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)'
+    }}>
 
-      {/* Lightweight felt table texture - simplified for mobile performance */}
-      <div className="absolute inset-0 pointer-events-none opacity-30" style={{
-        backgroundImage: `radial-gradient(circle at 50% 50%, transparent 0%, rgba(0,0,0,0.4) 100%)`,
+      {/* Realistic wooden table surface */}
+      <div className="absolute inset-0 pointer-events-none" style={{
+        backgroundImage: `
+          linear-gradient(rgba(139, 69, 19, 0.15), rgba(101, 67, 33, 0.15)),
+          repeating-linear-gradient(90deg, rgba(139, 69, 19, 0.1) 0px, rgba(160, 82, 45, 0.1) 1px, transparent 1px, transparent 40px),
+          repeating-linear-gradient(0deg, rgba(139, 69, 19, 0.05) 0px, rgba(160, 82, 45, 0.05) 1px, transparent 1px, transparent 80px)
+        `,
+        backgroundColor: '#2d1f1f'
       }} />
 
-      {/* Ambient lighting - reduced for mobile */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[400px] h-[400px] bg-yellow-200/5 rounded-full blur-3xl pointer-events-none hidden sm:block" />
-      <div className="absolute bottom-0 left-1/4 w-[300px] h-[300px] bg-blue-200/3 rounded-full blur-2xl pointer-events-none hidden sm:block" />
+      {/* Green felt playing area in center */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-5xl aspect-[16/10] rounded-[3rem] pointer-events-none" style={{
+        background: 'radial-gradient(ellipse at center, #0a5f38 0%, #054a2e 70%, #032d1c 100%)',
+        boxShadow: 'inset 0 0 80px rgba(0,0,0,0.4), 0 20px 60px rgba(0,0,0,0.5)'
+      }} />
+
+      {/* Overhead warm lighting */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-yellow-200/10 rounded-full blur-3xl pointer-events-none" />
+
+      {/* Table edge shadow */}
+      <div className="absolute inset-0 pointer-events-none" style={{
+        background: 'radial-gradient(ellipse at center, transparent 0%, transparent 40%, rgba(0,0,0,0.3) 80%)'
+      }} />
 
       {/* Header */}
       <header className="sticky top-0 z-40 glass border-b border-border/50">
@@ -1110,13 +1127,33 @@ const UnoGame = () => {
             // Multiple bots - show them in rows with full card fans
             <div className="flex flex-col gap-4">
               {botHands.map((hand, botIndex) => (
-                <div key={botIndex} className="flex flex-col items-center gap-1">
-                  <div className={`text-xs font-bold px-3 py-1.5 rounded-full backdrop-blur-sm border-2 transition-all ${
-                    currentPlayerIndex === botIndex + 1
-                      ? 'bg-primary/30 border-primary text-primary-foreground shadow-lg shadow-primary/20 scale-105'
-                      : 'bg-black/40 border-white/20 text-white/70'
-                  }`}>
-                    {botNames[botIndex]}
+                <div key={botIndex} className="flex flex-col items-center gap-2">
+                  {/* Player avatar */}
+                  <div className="flex items-center gap-3">
+                    <div className={`relative w-10 h-10 sm:w-12 sm:h-12 rounded-full overflow-hidden border-2 transition-all ${
+                      currentPlayerIndex === botIndex + 1
+                        ? 'border-primary shadow-lg shadow-primary/50 scale-110'
+                        : 'border-white/30'
+                    }`} style={{
+                      background: `linear-gradient(135deg, ${
+                        botIndex === 0 ? '#3b82f6, #1d4ed8' :
+                        botIndex === 1 ? '#10b981, #059669' :
+                        '#f59e0b, #d97706'
+                      })`
+                    }}>
+                      {/* Simplified person silhouette */}
+                      <svg viewBox="0 0 24 24" fill="white" className="w-full h-full p-1.5">
+                        <circle cx="12" cy="8" r="3" opacity="0.9"/>
+                        <path d="M12 14c-4 0-6 2-6 4v2h12v-2c0-2-2-4-6-4z" opacity="0.9"/>
+                      </svg>
+                    </div>
+                    <div className={`text-xs sm:text-sm font-bold px-3 py-1.5 rounded-full backdrop-blur-sm border-2 transition-all ${
+                      currentPlayerIndex === botIndex + 1
+                        ? 'bg-primary/30 border-primary text-primary-foreground shadow-lg shadow-primary/20 scale-105'
+                        : 'bg-black/40 border-white/20 text-white/70'
+                    }`}>
+                      {botNames[botIndex]}
+                    </div>
                   </div>
                   <div className="flex justify-center gap-1 flex-wrap" style={{ perspective: '1000px' }}>
                     {hand.map((card, cardIndex) => {
@@ -1328,7 +1365,22 @@ const UnoGame = () => {
 
         {/* Player Hand */}
         <div>
-          <div className="flex items-center justify-center gap-2 mb-2 sm:mb-4 landscape:mb-2">
+          <div className="flex items-center justify-center gap-3 mb-2 sm:mb-4 landscape:mb-2">
+            {/* Your avatar */}
+            <div className={`relative w-10 h-10 sm:w-12 sm:h-12 rounded-full overflow-hidden border-2 transition-all ${
+              isPlayerTurn && !gameOver
+                ? 'border-yellow-400 shadow-lg shadow-yellow-400/50 scale-110'
+                : 'border-white/30'
+            }`} style={{
+              background: 'linear-gradient(135deg, #eab308, #ca8a04)'
+            }}>
+              <svg viewBox="0 0 24 24" fill="white" className="w-full h-full p-1.5">
+                <circle cx="12" cy="8" r="3" opacity="0.9"/>
+                <path d="M12 14c-4 0-6 2-6 4v2h12v-2c0-2-2-4-6-4z" opacity="0.9"/>
+              </svg>
+              {/* Crown for player */}
+              <div className="absolute -top-1 -right-1 text-yellow-300 text-lg">👑</div>
+            </div>
             <div className="px-4 py-2 rounded-full bg-black/40 backdrop-blur-sm border border-white/20">
               <p className="text-sm font-semibold text-white">Your Hand: {playerHand.length} cards</p>
             </div>
