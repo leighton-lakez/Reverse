@@ -304,13 +304,22 @@ const getCoordinatesSync = (location: string): [number, number] | null => {
   return null; // Signal that API call is needed
 };
 
-// Component to handle map centering
-const MapUpdater = ({ center, zoom }: { center: [number, number], zoom: number }) => {
+// Component to handle map centering and resizing
+const MapUpdater = ({ center, zoom, triggerResize }: { center: [number, number], zoom: number, triggerResize?: number }) => {
   const map = useMap();
 
   useEffect(() => {
     map.setView(center, zoom, { animate: true, duration: 0.5 });
   }, [center, zoom, map]);
+
+  useEffect(() => {
+    // Invalidate size when container dimensions change (e.g., sidebar moves)
+    if (triggerResize !== undefined) {
+      setTimeout(() => {
+        map.invalidateSize();
+      }, 350); // Wait for sidebar animation to complete
+    }
+  }, [triggerResize, map]);
 
   return null;
 };
@@ -562,7 +571,7 @@ const MapView = ({ items, onItemClick }: MapViewProps) => {
             style={{ zIndex: 0 }}
             scrollWheelZoom={true}
           >
-            <MapUpdater center={mapCenter} zoom={mapZoom} />
+            <MapUpdater center={mapCenter} zoom={mapZoom} triggerResize={sidebarOffset} />
 
             {/* Satellite imagery layer */}
             <TileLayer
@@ -796,87 +805,6 @@ const MapView = ({ items, onItemClick }: MapViewProps) => {
             </div>
           </button>
         )}
-        </div>
-
-        {/* Map Container - Takes remaining space on the right */}
-        <div className="flex-1 h-full relative">
-          <MapContainer
-            center={defaultCenter}
-            zoom={4}
-            className="h-full w-full"
-            style={{ zIndex: 0 }}
-            scrollWheelZoom={true}
-          >
-            <MapUpdater center={mapCenter} zoom={mapZoom} />
-
-            {/* Satellite imagery layer */}
-            <TileLayer
-              attribution='Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
-              url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-              maxZoom={19}
-            />
-            {/* Labels overlay for streets and place names */}
-            <TileLayer
-              attribution=''
-              url="https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}"
-              maxZoom={19}
-            />
-
-            <MarkerClusterGroup
-              chunkedLoading
-              maxClusterRadius={60}
-              spiderfyOnMaxZoom={true}
-              showCoverageOnHover={false}
-              zoomToBoundsOnClick={true}
-              iconCreateFunction={(cluster) => {
-                const count = cluster.getChildCount();
-                return L.divIcon({
-                  html: `<div style="
-                    background: #0066ff;
-                    color: white;
-                    border-radius: 50%;
-                    width: 40px;
-                    height: 40px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    font-weight: 700;
-                    font-size: 16px;
-                    box-shadow: 0 2px 8px rgba(0,102,255,0.4);
-                    border: 3px solid white;
-                  ">${count}</div>`,
-                  className: 'custom-cluster-icon',
-                  iconSize: L.point(40, 40, true),
-                });
-              }}
-            >
-              {filteredItems.map((item) => (
-                <Marker
-                  key={item.id}
-                  position={[item.latitude!, item.longitude!]}
-                  icon={createPriceMarker(item.price, hoveredItemId === item.id || selectedItemId === item.id)}
-                  ref={(ref) => {
-                    if (ref) {
-                      markerRefs.current.set(item.id, ref);
-                    }
-                  }}
-                  eventHandlers={{
-                    click: () => {
-                      setSelectedItemId(item.id);
-                      handleListingClick(item);
-                    },
-                    mouseover: () => {
-                      setHoveredItemId(item.id);
-                    },
-                    mouseout: () => {
-                      setHoveredItemId(null);
-                    },
-                  }}
-                />
-              ))}
-            </MarkerClusterGroup>
-          </MapContainer>
-        </div>
       </div>
     </div>
   );
