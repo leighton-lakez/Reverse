@@ -1107,39 +1107,62 @@ const UnoGame = () => {
 
           {/* Display cards for multiple bots or single bot/opponent */}
           {!isMultiplayer && numberOfPlayers > 2 ? (
-            // Multiple bots - show them in a grid layout
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-6">
+            // Multiple bots - show them in rows with full card fans
+            <div className="flex flex-col gap-4">
               {botHands.map((hand, botIndex) => (
-                <div key={botIndex} className="flex flex-col items-center gap-2">
-                  <div className={`text-xs font-bold px-3 py-1 rounded-full ${
+                <div key={botIndex} className="flex flex-col items-center gap-1">
+                  <div className={`text-xs font-bold px-3 py-1.5 rounded-full backdrop-blur-sm border-2 transition-all ${
                     currentPlayerIndex === botIndex + 1
-                      ? 'bg-primary/30 text-primary-foreground'
-                      : 'bg-black/30 text-white/70'
+                      ? 'bg-primary/30 border-primary text-primary-foreground shadow-lg shadow-primary/20 scale-105'
+                      : 'bg-black/40 border-white/20 text-white/70'
                   }`}>
                     {botNames[botIndex]}
                   </div>
-                  <div className="flex gap-1" style={{ perspective: '800px' }}>
-                    {hand.slice(0, 5).map((card, cardIndex) => {
-                      const rotation = (cardIndex - 2.5) * 3;
+                  <div className="flex justify-center gap-1 flex-wrap" style={{ perspective: '1000px' }}>
+                    {hand.map((card, cardIndex) => {
+                      const rotation = (cardIndex - hand.length / 2) * 2;
+                      const yOffset = Math.abs(cardIndex - hand.length / 2) * 2;
                       return (
                         <div
                           key={card.id}
-                          className="w-12 h-18 sm:w-16 sm:h-24 relative"
+                          className="w-12 h-18 sm:w-16 sm:h-24 landscape:w-14 landscape:h-20 relative transition-all duration-300"
                           style={{
-                            transform: `rotateZ(${rotation}deg) rotateX(-5deg)`,
+                            transform: `rotateZ(${rotation}deg) translateY(${yOffset}px) rotateX(-5deg)`,
+                            zIndex: hand.length - Math.abs(cardIndex - hand.length / 2),
                             transformStyle: 'preserve-3d'
                           }}
                         >
-                          <div className="absolute inset-0 bg-black/50 rounded-lg blur-sm" />
-                          <div className="absolute inset-0 bg-gradient-to-br from-red-600 via-red-700 to-red-600 rounded-lg border border-white/10 flex items-center justify-center">
-                            <span className="text-yellow-400 font-black text-xs drop-shadow-lg">UNO</span>
+                          {/* Shadow */}
+                          <div className="absolute inset-0 bg-black/50 rounded-[14px] blur-md transform translate-y-2" />
+
+                          {/* Card back with official UNO design */}
+                          <div className="absolute inset-0 bg-black rounded-[14px] shadow-[0_6px_24px_rgba(0,0,0,0.8)]" style={{ border: '2px solid rgba(255,255,255,0.1)', transformStyle: 'preserve-3d' }}>
+                            {/* Red diagonal stripe design */}
+                            <div className="absolute inset-0 overflow-hidden rounded-[14px]">
+                              <div
+                                className="absolute inset-[-20%] bg-gradient-to-br from-red-600 via-red-700 to-red-600"
+                                style={{
+                                  transform: 'rotate(-25deg)',
+                                  clipPath: 'polygon(25% 0%, 75% 0%, 50% 100%, 0% 100%)'
+                                }}
+                              />
+                            </div>
+
+                            {/* UNO logo in center */}
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <div className="relative">
+                                <div className="text-yellow-400 font-black text-sm sm:text-lg tracking-wider drop-shadow-[0_0_8px_rgba(250,204,21,0.6)]" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.8)' }}>
+                                  UNO
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Glossy highlight */}
+                            <div className="absolute top-0 left-0 right-0 h-1/3 bg-gradient-to-b from-white/10 to-transparent rounded-t-[12px]" />
                           </div>
                         </div>
                       );
                     })}
-                    {hand.length > 5 && (
-                      <div className="text-white/50 text-xs self-center ml-1">+{hand.length - 5}</div>
-                    )}
                   </div>
                 </div>
               ))}
