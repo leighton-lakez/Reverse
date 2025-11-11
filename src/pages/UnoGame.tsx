@@ -775,7 +775,15 @@ const UnoGame = () => {
   };
 
   const botPlay = (botIndex: number = 0) => {
-    const currentBotHand = botHands[botIndex] || botHand;
+    // Get the correct bot hand
+    const currentBotHand = (numberOfPlayers > 2 && botHands[botIndex]) ? botHands[botIndex] : botHand;
+
+    if (!currentBotHand || currentBotHand.length === 0) {
+      console.error('Bot hand is empty or undefined', { botIndex, numberOfPlayers, botHands, botHand });
+      advanceTurn();
+      return;
+    }
+
     const playableCards = currentBotHand.filter(canPlayCard);
 
     if (playableCards.length > 0) {
