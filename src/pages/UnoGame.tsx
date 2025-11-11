@@ -943,84 +943,76 @@ const UnoGame = () => {
 
   return (
     <div className="min-h-screen pb-24 relative overflow-hidden">
-      {/* Beautiful beach sunset background */}
+      {/* Realistic beach background */}
       <div className="absolute inset-0 pointer-events-none" style={{
-        backgroundImage: 'linear-gradient(to bottom, #ff7e5f 0%, #feb47b 30%, #86a8e7 60%, #7f7fd5 100%)',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center'
+        background: 'linear-gradient(to bottom, #87CEEB 0%, #B0D9F1 40%, #E6F3F8 70%, #F0E5D8 100%)'
       }}>
-        {/* Soft clouds */}
-        <div className="absolute inset-0 opacity-30" style={{
-          backgroundImage: `
-            radial-gradient(ellipse at 20% 30%, rgba(255,255,255,0.4) 0%, transparent 50%),
-            radial-gradient(ellipse at 60% 20%, rgba(255,255,255,0.3) 0%, transparent 50%),
-            radial-gradient(ellipse at 80% 40%, rgba(255,255,255,0.35) 0%, transparent 50%)
-          `
+        {/* Sandy beach floor */}
+        <div className="absolute bottom-0 left-0 right-0 h-1/2" style={{
+          background: 'linear-gradient(to bottom, rgba(238, 214, 175, 0.3) 0%, rgba(194, 178, 128, 0.5) 100%)'
         }} />
 
-        {/* Ocean horizon */}
-        <div className="absolute bottom-0 left-0 right-0 h-1/3" style={{
-          background: 'linear-gradient(to bottom, rgba(91, 192, 222, 0.3) 0%, rgba(52, 152, 219, 0.4) 100%)'
+        {/* Ocean in distance */}
+        <div className="absolute bottom-[40%] left-0 right-0 h-[15%]" style={{
+          background: 'linear-gradient(to bottom, #006994 0%, #0093C4 50%, #5BBCD6 100%)',
+          opacity: 0.7
         }} />
 
-        {/* Gentle waves */}
-        <div className="absolute bottom-0 left-0 right-0 h-24 opacity-40" style={{
-          background: `
-            repeating-linear-gradient(90deg,
-              transparent 0px,
-              rgba(255,255,255,0.1) 20px,
-              transparent 40px
-            )
-          `
-        }} />
+        {/* Soft white clouds */}
+        <div className="absolute top-[10%] left-[15%] w-32 h-12 bg-white/60 rounded-full blur-xl" />
+        <div className="absolute top-[8%] left-[25%] w-40 h-14 bg-white/50 rounded-full blur-xl" />
+        <div className="absolute top-[15%] right-[20%] w-36 h-12 bg-white/55 rounded-full blur-xl" />
       </div>
 
-      {/* Round beach table surface */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[95%] max-w-6xl aspect-square rounded-full pointer-events-none" style={{
-        background: `
-          radial-gradient(circle at 40% 40%, #f5deb3 0%, #d2b48c 40%, #c19a6b 100%)
-        `,
-        boxShadow: `
-          0 30px 90px rgba(0,0,0,0.4),
-          inset 0 2px 20px rgba(255,255,255,0.3),
-          inset 0 -5px 30px rgba(0,0,0,0.2)
-        `
+      {/* Realistic wooden table - dark brown wood */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-5xl aspect-square rounded-full pointer-events-none" style={{
+        background: '#5D4E37',
+        boxShadow: '0 40px 100px rgba(0,0,0,0.6), inset 0 -10px 30px rgba(0,0,0,0.4), inset 0 5px 20px rgba(139, 90, 43, 0.3)'
       }}>
-        {/* Wood grain texture */}
-        <div className="absolute inset-0 rounded-full opacity-20" style={{
+        {/* Realistic wood grain */}
+        <div className="absolute inset-0 rounded-full opacity-40" style={{
           backgroundImage: `
-            repeating-linear-gradient(90deg,
-              transparent 0px,
-              rgba(139, 69, 19, 0.15) 1px,
-              transparent 2px,
-              transparent 60px
-            ),
             repeating-linear-gradient(0deg,
-              transparent 0px,
-              rgba(101, 67, 33, 0.1) 1px,
-              transparent 2px,
-              transparent 100px
+              transparent,
+              transparent 3px,
+              rgba(0,0,0,0.1) 3px,
+              rgba(0,0,0,0.1) 4px
+            ),
+            repeating-linear-gradient(90deg,
+              transparent,
+              transparent 80px,
+              rgba(139, 90, 43, 0.15) 80px,
+              rgba(139, 90, 43, 0.15) 82px
             )
           `
         }} />
 
-        {/* Table cloth in center */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[75%] h-[75%] rounded-full" style={{
-          background: 'radial-gradient(circle at center, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.85) 100%)',
-          boxShadow: 'inset 0 0 40px rgba(0,0,0,0.1), 0 10px 30px rgba(0,0,0,0.2)'
+        {/* Wood knots and imperfections */}
+        <div className="absolute top-[20%] left-[30%] w-8 h-8 rounded-full" style={{
+          background: 'radial-gradient(circle, rgba(0,0,0,0.3) 0%, transparent 70%)'
+        }} />
+        <div className="absolute top-[60%] right-[25%] w-6 h-6 rounded-full" style={{
+          background: 'radial-gradient(circle, rgba(0,0,0,0.25) 0%, transparent 70%)'
+        }} />
+
+        {/* Playing surface in center - light colored felt/cloth */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[70%] h-[70%] rounded-full" style={{
+          background: 'linear-gradient(135deg, #2D5F2E 0%, #367C38 50%, #2D5F2E 100%)',
+          boxShadow: 'inset 0 2px 20px rgba(0,0,0,0.3), 0 5px 30px rgba(0,0,0,0.4)'
         }}>
-          {/* Subtle pattern on tablecloth */}
-          <div className="absolute inset-0 rounded-full opacity-10" style={{
+          {/* Felt texture */}
+          <div className="absolute inset-0 rounded-full opacity-30" style={{
             backgroundImage: `
-              radial-gradient(circle, rgba(200,200,200,0.3) 1px, transparent 1px)
-            `,
-            backgroundSize: '20px 20px'
+              repeating-linear-gradient(45deg,
+                transparent,
+                transparent 2px,
+                rgba(0,0,0,0.05) 2px,
+                rgba(0,0,0,0.05) 4px
+              )
+            `
           }} />
         </div>
       </div>
-
-      {/* Warm sunset lighting */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-orange-300/20 rounded-full blur-3xl pointer-events-none" />
 
       {/* Header */}
       <header className="sticky top-0 z-40 glass border-b border-border/50">
@@ -1185,49 +1177,28 @@ const UnoGame = () => {
                     <div className={`relative transition-all ${
                       currentPlayerIndex === botIndex + 1 ? 'scale-110' : ''
                     }`}>
-                      {/* Person's upper body */}
-                      <div className="relative w-16 h-20 sm:w-20 sm:h-24">
-                        {/* Head */}
-                        <div className={`absolute top-0 left-1/2 -translate-x-1/2 w-10 h-10 sm:w-12 sm:h-12 rounded-full border-3 ${
+                      {/* Person avatar */}
+                      <div className="relative w-12 h-12 sm:w-14 sm:h-14">
+                        <div className={`w-full h-full rounded-full border-3 ${
                           currentPlayerIndex === botIndex + 1
-                            ? 'border-yellow-400 shadow-lg shadow-yellow-400/50'
-                            : 'border-white/40'
+                            ? 'border-yellow-400 shadow-lg shadow-yellow-400/50 ring-2 ring-yellow-400/30'
+                            : 'border-gray-300/60'
                         }`} style={{
-                          background: `radial-gradient(circle at 30% 30%, ${
-                            botIndex === 0 ? '#fcd34d' :
-                            botIndex === 1 ? '#a78bfa' :
-                            '#fb923c'
-                          }, ${
-                            botIndex === 0 ? '#f59e0b' :
-                            botIndex === 1 ? '#7c3aed' :
-                            '#ea580c'
-                          })`,
-                          boxShadow: 'inset 0 2px 8px rgba(0,0,0,0.2)'
-                        }}>
-                          {/* Face details */}
-                          <div className="absolute top-1/3 left-1/2 -translate-x-1/2 flex gap-1.5">
-                            <div className="w-1.5 h-1.5 bg-black/70 rounded-full"></div>
-                            <div className="w-1.5 h-1.5 bg-black/70 rounded-full"></div>
-                          </div>
-                          <div className="absolute bottom-1/3 left-1/2 -translate-x-1/2 w-2 h-1 bg-black/50 rounded-full"></div>
-                        </div>
-
-                        {/* Shoulders/torso */}
-                        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-14 h-12 sm:w-16 sm:h-14 rounded-t-full" style={{
-                          background: `linear-gradient(to bottom, ${
+                          background: `linear-gradient(135deg, ${
+                            botIndex === 0 ? '#60a5fa' :
+                            botIndex === 1 ? '#34d399' :
+                            '#f87171'
+                          } 0%, ${
                             botIndex === 0 ? '#3b82f6' :
                             botIndex === 1 ? '#10b981' :
                             '#ef4444'
-                          }, ${
-                            botIndex === 0 ? '#1d4ed8' :
-                            botIndex === 1 ? '#059669' :
-                            '#dc2626'
-                          })`,
-                          boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
+                          } 100%)`,
+                          boxShadow: '0 4px 12px rgba(0,0,0,0.25), inset 0 2px 8px rgba(255,255,255,0.2)'
                         }}>
-                          {/* Arms on table */}
-                          <div className="absolute top-1/2 -left-3 w-3 h-8 bg-current rounded-full opacity-80 transform -rotate-45"></div>
-                          <div className="absolute top-1/2 -right-3 w-3 h-8 bg-current rounded-full opacity-80 transform rotate-45"></div>
+                          {/* Simple face icon */}
+                          <div className="absolute inset-0 flex items-center justify-center text-white text-2xl font-bold">
+                            {botIndex === 0 ? '🧑' : botIndex === 1 ? '👩' : '👨'}
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -1450,36 +1421,23 @@ const UnoGame = () => {
         {/* Player Hand */}
         <div>
           <div className="flex items-center justify-center gap-3 mb-2 sm:mb-4 landscape:mb-2">
-            {/* You - sitting perspective */}
+            {/* You - player avatar */}
             <div className={`relative transition-all ${isPlayerTurn && !gameOver ? 'scale-110' : ''}`}>
-              <div className="relative w-16 h-20 sm:w-20 sm:h-24">
-                {/* Your head with crown */}
-                <div className={`absolute top-0 left-1/2 -translate-x-1/2 w-10 h-10 sm:w-12 sm:h-12 rounded-full border-3 ${
+              <div className="relative w-12 h-12 sm:w-14 sm:h-14">
+                <div className={`w-full h-full rounded-full border-3 ${
                   isPlayerTurn && !gameOver
-                    ? 'border-yellow-400 shadow-lg shadow-yellow-400/50'
-                    : 'border-white/40'
+                    ? 'border-yellow-400 shadow-lg shadow-yellow-400/50 ring-2 ring-yellow-400/30'
+                    : 'border-gray-300/60'
                 }`} style={{
-                  background: 'radial-gradient(circle at 30% 30%, #fde68a, #fbbf24)',
-                  boxShadow: 'inset 0 2px 8px rgba(0,0,0,0.2)'
+                  background: 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.25), inset 0 2px 8px rgba(255,255,255,0.2)'
                 }}>
-                  {/* Face */}
-                  <div className="absolute top-1/3 left-1/2 -translate-x-1/2 flex gap-1.5">
-                    <div className="w-1.5 h-1.5 bg-black/70 rounded-full"></div>
-                    <div className="w-1.5 h-1.5 bg-black/70 rounded-full"></div>
+                  {/* Player face icon with crown */}
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="relative">
+                      <div className="text-xl">👑</div>
+                    </div>
                   </div>
-                  <div className="absolute bottom-1/3 left-1/2 -translate-x-1/2 w-3 h-1.5 bg-black/50 rounded-full"></div>
-                  {/* Crown */}
-                  <div className="absolute -top-2 left-1/2 -translate-x-1/2 text-xl">👑</div>
-                </div>
-
-                {/* Your torso */}
-                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-14 h-12 sm:w-16 sm:h-14 rounded-t-full" style={{
-                  background: 'linear-gradient(to bottom, #eab308, #ca8a04)',
-                  boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
-                }}>
-                  {/* Your arms */}
-                  <div className="absolute top-1/2 -left-3 w-3 h-8 bg-current rounded-full opacity-80 transform -rotate-45"></div>
-                  <div className="absolute top-1/2 -right-3 w-3 h-8 bg-current rounded-full opacity-80 transform rotate-45"></div>
                 </div>
               </div>
             </div>
