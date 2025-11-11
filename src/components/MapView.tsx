@@ -529,8 +529,8 @@ const MapView = ({ items, onItemClick }: MapViewProps) => {
     const threshold = sidebarWidth * 0.3; // 30% swipe triggers close
 
     if (sidebarOffset < -threshold) {
-      // Swipe was significant, close sidebar
-      setSidebarOffset(-sidebarWidth + 60);
+      // Swipe was significant, close sidebar completely
+      setSidebarOffset(-sidebarWidth);
     } else {
       // Swipe wasn't enough, snap back
       setSidebarOffset(0);
@@ -545,8 +545,8 @@ const MapView = ({ items, onItemClick }: MapViewProps) => {
           onClick={() => {
             const sidebarWidth = sidebarRef.current?.offsetWidth || 0;
             if (sidebarOffset === 0) {
-              // Hide list
-              setSidebarOffset(-sidebarWidth + 60);
+              // Hide list completely
+              setSidebarOffset(-sidebarWidth);
             } else {
               // Show list
               setSidebarOffset(0);
@@ -796,15 +796,11 @@ const MapView = ({ items, onItemClick }: MapViewProps) => {
         </div>
         </div>
 
-        {/* Swipe Handle - Visible on mobile when sidebar is partially hidden */}
+        {/* Swipe Handle - Visible on mobile when sidebar is hidden */}
         {sidebarOffset < -10 && (
           <button
             onClick={() => setSidebarOffset(0)}
-            className="md:hidden fixed top-1/2 -translate-y-1/2 z-30 bg-primary hover:bg-primary/90 text-primary-foreground rounded-r-xl px-3 py-6 shadow-xl hover:shadow-2xl transition-all duration-300 animate-pulse hover:animate-none"
-            style={{
-              left: `${Math.max(60, (sidebarRef.current?.offsetWidth || 0) + sidebarOffset)}px`,
-              transition: isSwiping ? 'none' : 'all 0.3s ease-out'
-            }}
+            className="md:hidden fixed left-0 top-1/2 -translate-y-1/2 z-30 bg-primary hover:bg-primary/90 text-primary-foreground rounded-r-xl px-3 py-6 shadow-xl hover:shadow-2xl transition-all duration-300 animate-pulse hover:animate-none"
           >
             <div className="flex flex-col items-center gap-2">
               <ChevronRight className="h-6 w-6" />
