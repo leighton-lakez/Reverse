@@ -52,6 +52,12 @@ const UnoGame = () => {
   const [waitingForOpponent, setWaitingForOpponent] = useState(false);
   const [botDifficulty, setBotDifficulty] = useState<"easy" | "medium" | "hard">("medium");
 
+  // Multi-bot state
+  const [numberOfPlayers, setNumberOfPlayers] = useState<2 | 3 | 4>(2);
+  const [botHands, setBotHands] = useState<UnoCard[][]>([]);
+  const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0); // 0 = player, 1+ = bots
+  const botNames = ["Bot 1", "Bot 2", "Bot 3"];
+
   const colors: CardColor[] = ["red", "blue", "green", "yellow"];
   const values: CardValue[] = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "skip", "reverse", "draw2"];
 
@@ -105,13 +111,21 @@ const UnoGame = () => {
   const startGame = () => {
     const deck = createDeck();
     const playerCards = deck.splice(0, 7);
-    const botCards = deck.splice(0, 7);
+
+    // Deal cards to all bots based on number of players
+    const newBotHands: UnoCard[][] = [];
+    for (let i = 0; i < numberOfPlayers - 1; i++) {
+      newBotHands.push(deck.splice(0, 7));
+    }
+
     const firstCard = deck.pop()!;
 
     setPlayerHand(playerCards);
-    setBotHand(botCards);
+    setBotHand(newBotHands[0] || []); // Keep first bot in old state for compatibility
+    setBotHands(newBotHands);
     setDiscardPile([firstCard]);
     setCurrentColor(firstCard.color === "wild" ? "red" : firstCard.color);
+    setCurrentPlayerIndex(0);
     setIsPlayerTurn(true);
     setGameOver(false);
     setWinner("");
@@ -471,12 +485,13 @@ const UnoGame = () => {
 
   useEffect(() => {
     // Only run bot AI in single-player mode
-    if (!isMultiplayer && !isPlayerTurn && !gameOver) {
+    if (!isMultiplayer && !isPlayerTurn && !gameOver && currentPlayerIndex > 0) {
       setTimeout(() => {
-        botPlay();
+        // Bot plays (currentPlayerIndex - 1 because index 0 is player)
+        botPlay(currentPlayerIndex - 1);
       }, 1000);
     }
-  }, [isPlayerTurn, gameOver, isMultiplayer]);
+  }, [isPlayerTurn, gameOver, isMultiplayer, currentPlayerIndex]);
 
   const canPlayCard = (card: UnoCard): boolean => {
     const topCard = discardPile[discardPile.length - 1];
@@ -576,29 +591,56 @@ const UnoGame = () => {
       setPlayerHand(newPlayerHand);
       setCurrentColor(newColor);
 
-      // Handle special cards for bot
+      if (newPlayerHand.length === 0) {
+        checkWinner("You");
+        return;
+      }
+
+      // Handle special cards for multi-player
       if (card.value === "reverse") {
         setIsReversed(!isReversed);
         toast({ title: "🔄 Reverse!", description: "Direction reversed!" });
+        advanceTurn();
       } else if (card.value === "skip") {
-        toast({ title: "⏭️ Skip!", description: "Bot's turn skipped!" });
-        return; // Player gets another turn
+        const nextIndex = getNextPlayerIndex();
+        const skippedPlayer = nextIndex === 0 ? "You" : botNames[nextIndex - 1];
+        toast({ title: "⏭️ Skip!", description: `${skippedPlayer}'s turn skipped!` });
+        advanceTurn(); // Skip
+        advanceTurn(); // Then move to next
       } else if (card.value === "draw2") {
-        drawCards(botHand, setBotHand, 2);
-        toast({ title: "➕ Draw 2!", description: "Bot draws 2 cards!" });
-        return;
+        const nextPlayerIndex = getNextPlayerIndex();
+        if (nextPlayerIndex === 0) {
+          // Should not happen but handle anyway
+          drawCards(playerHand, setPlayerHand, 2);
+        } else if (numberOfPlayers === 2) {
+          drawCards(botHand, setBotHand, 2);
+        } else {
+          const nextBotHand = botHands[nextPlayerIndex - 1];
+          const drawnCards = createDeck().splice(0, 2);
+          const newBotHands = [...botHands];
+          newBotHands[nextPlayerIndex - 1] = [...nextBotHand, ...drawnCards];
+          setBotHands(newBotHands);
+        }
+        toast({ title: "➕ Draw 2!", description: `${nextPlayerIndex === 0 ? "You" : botNames[nextPlayerIndex - 1]} draws 2 cards!` });
+        advanceTurn();
       } else if (card.value === "wild4") {
-        drawCards(botHand, setBotHand, 4);
-        toast({ title: "➕ Wild Draw 4!", description: "Bot draws 4 cards!" });
-        return;
+        const nextPlayerIndex = getNextPlayerIndex();
+        if (nextPlayerIndex === 0) {
+          drawCards(playerHand, setPlayerHand, 4);
+        } else if (numberOfPlayers === 2) {
+          drawCards(botHand, setBotHand, 4);
+        } else {
+          const nextBotHand = botHands[nextPlayerIndex - 1];
+          const drawnCards = createDeck().splice(0, 4);
+          const newBotHands = [...botHands];
+          newBotHands[nextPlayerIndex - 1] = [...nextBotHand, ...drawnCards];
+          setBotHands(newBotHands);
+        }
+        toast({ title: "➕ Wild Draw 4!", description: `${nextPlayerIndex === 0 ? "You" : botNames[nextPlayerIndex - 1]} draws 4 cards!` });
+        advanceTurn();
+      } else {
+        advanceTurn();
       }
-
-      if (newPlayerHand.length === 0) {
-        checkWinner("Player");
-        return;
-      }
-
-      setIsPlayerTurn(false);
     }
   };
 
@@ -729,13 +771,23 @@ const UnoGame = () => {
     }
   };
 
-  const botPlay = () => {
-    const playableCards = botHand.filter(canPlayCard);
+  const botPlay = (botIndex: number = 0) => {
+    const currentBotHand = botHands[botIndex] || botHand;
+    const playableCards = currentBotHand.filter(canPlayCard);
 
     if (playableCards.length > 0) {
       const card = selectBotCard(playableCards);
-      const newBotHand = botHand.filter((c) => c.id !== card.id);
-      setBotHand(newBotHand);
+      const newBotHand = currentBotHand.filter((c) => c.id !== card.id);
+
+      // Update the appropriate bot hand
+      if (numberOfPlayers > 2) {
+        const newBotHands = [...botHands];
+        newBotHands[botIndex] = newBotHand;
+        setBotHands(newBotHands);
+      } else {
+        setBotHand(newBotHand);
+      }
+
       setDiscardPile([...discardPile, card]);
 
       if (card.color === "wild") {
@@ -747,50 +799,95 @@ const UnoGame = () => {
 
       // Check win condition
       if (newBotHand.length === 0) {
-        checkWinner("Bot");
+        checkWinner(numberOfPlayers > 2 ? botNames[botIndex] : "Bot");
         return;
       }
 
-      // Handle special cards
+      // Handle special cards for multi-player
       if (card.value === "reverse") {
         setIsReversed(!isReversed);
         toast({
-          title: "🔄 Bot played Reverse!",
+          title: `🔄 ${numberOfPlayers > 2 ? botNames[botIndex] : "Bot"} played Reverse!`,
           description: "Direction reversed!",
         });
-        setIsPlayerTurn(true);
+        advanceTurn();
       } else if (card.value === "skip") {
         toast({
-          title: "⏭️ Bot played Skip!",
-          description: "Your turn skipped! Bot plays again.",
+          title: `⏭️ ${numberOfPlayers > 2 ? botNames[botIndex] : "Bot"} played Skip!`,
+          description: "Next player skipped!",
         });
-        // Bot gets another turn - briefly set to true then back to false to trigger useEffect
-        setIsPlayerTurn(true);
-        setTimeout(() => {
-          setIsPlayerTurn(false);
-        }, 1500);
-        return;
+        advanceTurn(); // Skip once
+        advanceTurn(); // Then move to next player
       } else if (card.value === "draw2") {
-        drawCards(playerHand, setPlayerHand, 2);
-        toast({
-          title: "➕ Bot played Draw 2!",
-          description: "You draw 2 cards!",
-        });
-        setIsPlayerTurn(true);
+        const nextPlayerIndex = getNextPlayerIndex();
+        if (nextPlayerIndex === 0) {
+          drawCards(playerHand, setPlayerHand, 2);
+          toast({
+            title: `➕ ${numberOfPlayers > 2 ? botNames[botIndex] : "Bot"} played Draw 2!`,
+            description: "You draw 2 cards!",
+          });
+        } else {
+          // Next bot draws
+          const nextBotHand = botHands[nextPlayerIndex - 1];
+          const drawnCards = createDeck().splice(0, 2);
+          const newBotHands = [...botHands];
+          newBotHands[nextPlayerIndex - 1] = [...nextBotHand, ...drawnCards];
+          setBotHands(newBotHands);
+          toast({
+            title: `➕ ${botNames[botIndex]} played Draw 2!`,
+            description: `${botNames[nextPlayerIndex - 1]} draws 2 cards!`,
+          });
+        }
+        advanceTurn();
       } else if (card.value === "wild4") {
-        drawCards(playerHand, setPlayerHand, 4);
-        toast({
-          title: "➕ Bot played Wild Draw 4!",
-          description: "You draw 4 cards!",
-        });
-        setIsPlayerTurn(true);
+        const nextPlayerIndex = getNextPlayerIndex();
+        if (nextPlayerIndex === 0) {
+          drawCards(playerHand, setPlayerHand, 4);
+          toast({
+            title: `➕ ${numberOfPlayers > 2 ? botNames[botIndex] : "Bot"} played Wild Draw 4!`,
+            description: "You draw 4 cards!",
+          });
+        } else {
+          // Next bot draws
+          const nextBotHand = botHands[nextPlayerIndex - 1];
+          const drawnCards = createDeck().splice(0, 4);
+          const newBotHands = [...botHands];
+          newBotHands[nextPlayerIndex - 1] = [...nextBotHand, ...drawnCards];
+          setBotHands(newBotHands);
+          toast({
+            title: `➕ ${botNames[botIndex]} played Wild Draw 4!`,
+            description: `${botNames[nextPlayerIndex - 1]} draws 4 cards!`,
+          });
+        }
+        advanceTurn();
       } else {
-        setIsPlayerTurn(true);
+        advanceTurn();
       }
     } else {
-      drawCards(botHand, setBotHand, 1);
-      setIsPlayerTurn(true);
+      // Bot draws a card
+      const drawnCards = createDeck().splice(0, 1);
+      if (numberOfPlayers > 2) {
+        const newBotHands = [...botHands];
+        newBotHands[botIndex] = [...currentBotHand, ...drawnCards];
+        setBotHands(newBotHands);
+      } else {
+        drawCards(botHand, setBotHand, 1);
+      }
+      advanceTurn();
     }
+  };
+
+  const getNextPlayerIndex = () => {
+    let nextIndex = currentPlayerIndex + (isReversed ? -1 : 1);
+    if (nextIndex < 0) nextIndex = numberOfPlayers - 1;
+    if (nextIndex >= numberOfPlayers) nextIndex = 0;
+    return nextIndex;
+  };
+
+  const advanceTurn = () => {
+    const nextIndex = getNextPlayerIndex();
+    setCurrentPlayerIndex(nextIndex);
+    setIsPlayerTurn(nextIndex === 0);
   };
 
   const checkWinner = (player: string) => {
@@ -908,46 +1005,74 @@ const UnoGame = () => {
               </p>
             </div>
             {!isMultiplayer && (
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => {
-                    setBotDifficulty("easy");
-                    toast({ title: "🟢 Easy Mode", description: "Bot will play randomly" });
-                  }}
-                  className={`px-4 py-2 rounded-full text-xs font-bold backdrop-blur-sm border-2 transition-all ${
-                    botDifficulty === "easy"
-                      ? "bg-green-500/30 border-green-500 text-green-100 shadow-lg shadow-green-500/20 scale-105"
-                      : "bg-black/40 border-white/20 text-white/60 hover:border-green-500/50 hover:text-green-200"
-                  }`}
-                >
-                  🟢 Easy
-                </button>
-                <button
-                  onClick={() => {
-                    setBotDifficulty("medium");
-                    toast({ title: "🟡 Medium Mode", description: "Bot prefers action cards" });
-                  }}
-                  className={`px-4 py-2 rounded-full text-xs font-bold backdrop-blur-sm border-2 transition-all ${
-                    botDifficulty === "medium"
-                      ? "bg-yellow-500/30 border-yellow-500 text-yellow-100 shadow-lg shadow-yellow-500/20 scale-105"
-                      : "bg-black/40 border-white/20 text-white/60 hover:border-yellow-500/50 hover:text-yellow-200"
-                  }`}
-                >
-                  🟡 Medium
-                </button>
-                <button
-                  onClick={() => {
-                    setBotDifficulty("hard");
-                    toast({ title: "🔴 Hard Mode", description: "Bot uses advanced strategy!" });
-                  }}
-                  className={`px-4 py-2 rounded-full text-xs font-bold backdrop-blur-sm border-2 transition-all ${
-                    botDifficulty === "hard"
-                      ? "bg-red-500/30 border-red-500 text-red-100 shadow-lg shadow-red-500/20 scale-105"
-                      : "bg-black/40 border-white/20 text-white/60 hover:border-red-500/50 hover:text-red-200"
-                  }`}
-                >
-                  🔴 Hard
-                </button>
+              <div className="flex flex-col gap-2">
+                {/* Player Count Selection */}
+                <div className="flex items-center gap-2 justify-center">
+                  <span className="text-xs text-white/70 font-semibold">Players:</span>
+                  {([2, 3, 4] as const).map((count) => (
+                    <button
+                      key={count}
+                      onClick={() => {
+                        setNumberOfPlayers(count);
+                        toast({
+                          title: `${count} Players`,
+                          description: `You vs ${count - 1} bot${count > 2 ? 's' : ''}`
+                        });
+                        startGame();
+                      }}
+                      className={`px-3 py-1.5 rounded-full text-xs font-bold backdrop-blur-sm border-2 transition-all ${
+                        numberOfPlayers === count
+                          ? "bg-blue-500/30 border-blue-500 text-blue-100 shadow-lg shadow-blue-500/20 scale-105"
+                          : "bg-black/40 border-white/20 text-white/60 hover:border-blue-500/50 hover:text-blue-200"
+                      }`}
+                    >
+                      {count}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Difficulty Selection */}
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => {
+                      setBotDifficulty("easy");
+                      toast({ title: "🟢 Easy Mode", description: "Bot will play randomly" });
+                    }}
+                    className={`px-4 py-2 rounded-full text-xs font-bold backdrop-blur-sm border-2 transition-all ${
+                      botDifficulty === "easy"
+                        ? "bg-green-500/30 border-green-500 text-green-100 shadow-lg shadow-green-500/20 scale-105"
+                        : "bg-black/40 border-white/20 text-white/60 hover:border-green-500/50 hover:text-green-200"
+                    }`}
+                  >
+                    🟢 Easy
+                  </button>
+                  <button
+                    onClick={() => {
+                      setBotDifficulty("medium");
+                      toast({ title: "🟡 Medium Mode", description: "Bot prefers action cards" });
+                    }}
+                    className={`px-4 py-2 rounded-full text-xs font-bold backdrop-blur-sm border-2 transition-all ${
+                      botDifficulty === "medium"
+                        ? "bg-yellow-500/30 border-yellow-500 text-yellow-100 shadow-lg shadow-yellow-500/20 scale-105"
+                        : "bg-black/40 border-white/20 text-white/60 hover:border-yellow-500/50 hover:text-yellow-200"
+                    }`}
+                  >
+                    🟡 Medium
+                  </button>
+                  <button
+                    onClick={() => {
+                      setBotDifficulty("hard");
+                      toast({ title: "🔴 Hard Mode", description: "Bot uses advanced strategy!" });
+                    }}
+                    className={`px-4 py-2 rounded-full text-xs font-bold backdrop-blur-sm border-2 transition-all ${
+                      botDifficulty === "hard"
+                        ? "bg-red-500/30 border-red-500 text-red-100 shadow-lg shadow-red-500/20 scale-105"
+                        : "bg-black/40 border-white/20 text-white/60 hover:border-red-500/50 hover:text-red-200"
+                    }`}
+                  >
+                    🔴 Hard
+                  </button>
+                </div>
               </div>
             )}
           </div>
