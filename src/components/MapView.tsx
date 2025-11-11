@@ -485,15 +485,9 @@ const MapView = ({ items, onItemClick }: MapViewProps) => {
     });
   };
 
-  // Handle listing card click - center map on that item
+  // Handle listing card click - navigate to item detail
   const handleListingClick = (item: Item) => {
-    if (item.latitude && item.longitude) {
-      setMapCenter([item.latitude, item.longitude]);
-      setMapZoom(13);
-      setSelectedItemId(item.id);
-      // On mobile, switch to map view when clicking a listing
-      setShowMapOnMobile(true);
-    }
+    navigate("/item-detail", { state: { item } });
   };
 
   // Touch handlers for swipe
@@ -537,53 +531,112 @@ const MapView = ({ items, onItemClick }: MapViewProps) => {
 
   return (
     <div className="h-full w-full flex flex-col relative bg-background">
-      {/* Header - Visible on mobile */}
-      <div className="md:hidden flex-shrink-0 bg-background border-b border-border p-4 flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-bold">Map View</h1>
-          <p className="text-sm text-muted-foreground">
-            {filteredItems.length} listing{filteredItems.length !== 1 ? 's' : ''}
-          </p>
+      {/* Mobile Toggle Buttons */}
+      <div className="md:hidden flex-shrink-0 bg-background border-b border-border p-2">
+        <div className="flex gap-2">
+          <Button
+            variant={showMapOnMobile ? "default" : "outline"}
+            onClick={() => setShowMapOnMobile(true)}
+            className="flex-1"
+          >
+            Map
+          </Button>
+          <Button
+            variant={!showMapOnMobile ? "default" : "outline"}
+            onClick={() => setShowMapOnMobile(false)}
+            className="flex-1"
+          >
+            List ({filteredItems.length})
+          </Button>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => {
-            const sidebarWidth = sidebarRef.current?.offsetWidth || 0;
-            if (sidebarOffset === 0) {
-              // Hide sidebar
-              setSidebarOffset(-sidebarWidth + 60);
-            } else {
-              // Show sidebar
-              setSidebarOffset(0);
-            }
-          }}
-          className="h-9 px-3 gap-2"
-        >
-          {sidebarOffset === 0 ? (
-            <>
-              <span className="text-xs">Hide List</span>
-              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-            </>
-          ) : (
-            <>
-              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-              <span className="text-xs">Show List</span>
-            </>
-          )}
-        </Button>
       </div>
 
       {/* Main Content - Map and Sidebar */}
-      <div className="flex-1 flex flex-row overflow-hidden">
-        {/* Listing Cards Sidebar - Swipeable on mobile */}
+      <div className="flex-1 flex flex-row overflow-hidden relative">
+        {/* Map Container - Full width, behind sidebar on mobile */}
+        <div className="absolute inset-0 md:relative md:flex-1 h-full">
+          <MapContainer
+            center={defaultCenter}
+            zoom={4}
+            className="h-full w-full"
+            style={{ zIndex: 0 }}
+            scrollWheelZoom={true}
+          >
+            <MapUpdater center={mapCenter} zoom={mapZoom} />
+
+            {/* Satellite imagery layer */}
+            <TileLayer
+              attribution='Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+              url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+              maxZoom={19}
+            />
+            {/* Labels overlay for streets and place names */}
+            <TileLayer
+              attribution=''
+              url="https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}"
+              maxZoom={19}
+            />
+
+            <MarkerClusterGroup
+              chunkedLoading
+              maxClusterRadius={60}
+              spiderfyOnMaxZoom={true}
+              showCoverageOnHover={false}
+              zoomToBoundsOnClick={true}
+              iconCreateFunction={(cluster) => {
+                const count = cluster.getChildCount();
+                return L.divIcon({
+                  html: `<div style="
+                    background: #0066ff;
+                    color: white;
+                    border-radius: 50%;
+                    width: 40px;
+                    height: 40px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-weight: 700;
+                    font-size: 16px;
+                    box-shadow: 0 2px 8px rgba(0,102,255,0.4);
+                    border: 3px solid white;
+                  ">${count}</div>`,
+                  className: 'custom-cluster-icon',
+                  iconSize: L.point(40, 40, true),
+                });
+              }}
+            >
+              {filteredItems.map((item) => (
+                <Marker
+                  key={item.id}
+                  position={[item.latitude!, item.longitude!]}
+                  icon={createPriceMarker(item.price, hoveredItemId === item.id || selectedItemId === item.id)}
+                  ref={(ref) => {
+                    if (ref) {
+                      markerRefs.current.set(item.id, ref);
+                    }
+                  }}
+                  eventHandlers={{
+                    click: () => {
+                      setSelectedItemId(item.id);
+                      handleListingClick(item);
+                    },
+                    mouseover: () => {
+                      setHoveredItemId(item.id);
+                    },
+                    mouseout: () => {
+                      setHoveredItemId(null);
+                    },
+                  }}
+                />
+              ))}
+            </MarkerClusterGroup>
+          </MapContainer>
+        </div>
+
+        {/* Listing Cards Sidebar - Swipeable overlay on mobile, static on desktop */}
         <div
           ref={sidebarRef}
-          className="w-[75%] sm:w-[240px] md:w-[280px] lg:w-[320px] h-full flex-shrink-0 overflow-y-auto bg-background border-r border-border md:translate-x-0 relative z-10"
+          className="absolute md:relative w-[75%] sm:w-[240px] md:w-[280px] lg:w-[320px] h-full flex-shrink-0 overflow-y-auto bg-background border-r border-border md:translate-x-0 z-10"
           style={{
             transform: window.innerWidth < 768 ? `translateX(${sidebarOffset}px)` : 'translateX(0)',
             transition: isSwiping ? 'none' : 'transform 0.3s ease-out'
@@ -729,96 +782,20 @@ const MapView = ({ items, onItemClick }: MapViewProps) => {
         {sidebarOffset < -10 && (
           <button
             onClick={() => setSidebarOffset(0)}
-            className="md:hidden fixed left-[60px] top-1/2 -translate-y-1/2 z-20 bg-primary text-primary-foreground rounded-r-lg p-2 shadow-lg"
+            className="md:hidden fixed top-1/2 -translate-y-1/2 z-30 bg-primary hover:bg-primary/90 text-primary-foreground rounded-r-xl px-3 py-6 shadow-xl hover:shadow-2xl transition-all duration-300 animate-pulse hover:animate-none"
             style={{
-              transform: `translateY(-50%) translateX(${sidebarOffset + (sidebarRef.current?.offsetWidth || 0) - 60}px)`,
-              transition: isSwiping ? 'none' : 'transform 0.3s ease-out'
+              left: `${Math.max(60, (sidebarRef.current?.offsetWidth || 0) + sidebarOffset)}px`,
+              transition: isSwiping ? 'none' : 'all 0.3s ease-out'
             }}
           >
-            <ChevronRight className="h-6 w-6" />
+            <div className="flex flex-col items-center gap-2">
+              <ChevronRight className="h-6 w-6" />
+              <div className="text-[10px] font-bold whitespace-nowrap transform -rotate-0 tracking-wider">
+                SHOW
+              </div>
+            </div>
           </button>
         )}
-      </div>
-
-      {/* Map Container - Takes remaining space on the right */}
-      <div className="flex-1 h-full relative">
-        <MapContainer
-          center={defaultCenter}
-          zoom={4}
-          className="h-full w-full"
-          style={{ zIndex: 0 }}
-          scrollWheelZoom={true}
-        >
-          <MapUpdater center={mapCenter} zoom={mapZoom} />
-
-          {/* Satellite imagery layer */}
-          <TileLayer
-            attribution='Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
-            url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-            maxZoom={19}
-          />
-          {/* Labels overlay for streets and place names */}
-          <TileLayer
-            attribution=''
-            url="https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}"
-            maxZoom={19}
-          />
-
-          <MarkerClusterGroup
-            chunkedLoading
-            maxClusterRadius={60}
-            spiderfyOnMaxZoom={true}
-            showCoverageOnHover={false}
-            zoomToBoundsOnClick={true}
-            iconCreateFunction={(cluster) => {
-              const count = cluster.getChildCount();
-              return L.divIcon({
-                html: `<div style="
-                  background: #0066ff;
-                  color: white;
-                  border-radius: 50%;
-                  width: 40px;
-                  height: 40px;
-                  display: flex;
-                  align-items: center;
-                  justify-content: center;
-                  font-weight: 700;
-                  font-size: 16px;
-                  box-shadow: 0 2px 8px rgba(0,102,255,0.4);
-                  border: 3px solid white;
-                ">${count}</div>`,
-                className: 'custom-cluster-icon',
-                iconSize: L.point(40, 40, true),
-              });
-            }}
-          >
-            {filteredItems.map((item) => (
-              <Marker
-                key={item.id}
-                position={[item.latitude!, item.longitude!]}
-                icon={createPriceMarker(item.price, hoveredItemId === item.id || selectedItemId === item.id)}
-                ref={(ref) => {
-                  if (ref) {
-                    markerRefs.current.set(item.id, ref);
-                  }
-                }}
-                eventHandlers={{
-                  click: () => {
-                    setSelectedItemId(item.id);
-                    handleListingClick(item);
-                  },
-                  mouseover: () => {
-                    setHoveredItemId(item.id);
-                  },
-                  mouseout: () => {
-                    setHoveredItemId(null);
-                  },
-                }}
-              />
-            ))}
-          </MarkerClusterGroup>
-        </MapContainer>
-      </div>
       </div>
     </div>
   );
