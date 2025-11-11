@@ -108,13 +108,16 @@ const UnoGame = () => {
     return shuffled;
   };
 
-  const startGame = () => {
+  const startGame = (playerCount?: number) => {
     const deck = createDeck();
     const playerCards = deck.splice(0, 7);
 
+    // Use provided playerCount or current numberOfPlayers
+    const actualPlayerCount = playerCount || numberOfPlayers;
+
     // Deal cards to all bots based on number of players
     const newBotHands: UnoCard[][] = [];
-    for (let i = 0; i < numberOfPlayers - 1; i++) {
+    for (let i = 0; i < actualPlayerCount - 1; i++) {
       newBotHands.push(deck.splice(0, 7));
     }
 
@@ -1035,7 +1038,7 @@ const UnoGame = () => {
                           title: `${count} Players`,
                           description: `You vs ${count - 1} bot${count > 2 ? 's' : ''}`
                         });
-                        startGame();
+                        startGame(count);
                       }}
                       className={`px-3 py-1.5 rounded-full text-xs font-bold backdrop-blur-sm border-2 transition-all ${
                         numberOfPlayers === count
