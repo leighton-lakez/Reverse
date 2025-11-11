@@ -703,7 +703,7 @@ const UnoGame = () => {
     }
   };
 
-  const selectBotCard = (playableCards: UnoCard[]): UnoCard => {
+  const selectBotCard = (playableCards: UnoCard[], currentBotHand: UnoCard[]): UnoCard => {
     if (botDifficulty === "easy") {
       // Easy: Random selection
       return playableCards[Math.floor(Math.random() * playableCards.length)];
@@ -716,7 +716,7 @@ const UnoGame = () => {
     } else {
       // Hard: Strategic play
       // 1. Prioritize Wild Draw 4 if bot has many cards
-      if (botHand.length > 5) {
+      if (currentBotHand.length > 5) {
         const wild4 = playableCards.find(c => c.value === "wild4");
         if (wild4) return wild4;
       }
@@ -750,14 +750,14 @@ const UnoGame = () => {
     }
   };
 
-  const chooseBotWildColor = (): CardColor => {
+  const chooseBotWildColor = (currentBotHand: UnoCard[]): CardColor => {
     if (botDifficulty === "easy") {
       // Easy: Random color
       return colors[Math.floor(Math.random() * colors.length)];
     } else {
       // Medium & Hard: Choose most common color in hand
       const colorCounts = { red: 0, blue: 0, green: 0, yellow: 0 };
-      botHand.forEach(card => {
+      currentBotHand.forEach(card => {
         if (card.color !== "wild") {
           colorCounts[card.color]++;
         }
@@ -776,7 +776,7 @@ const UnoGame = () => {
     const playableCards = currentBotHand.filter(canPlayCard);
 
     if (playableCards.length > 0) {
-      const card = selectBotCard(playableCards);
+      const card = selectBotCard(playableCards, currentBotHand);
       const newBotHand = currentBotHand.filter((c) => c.id !== card.id);
 
       // Update the appropriate bot hand
@@ -791,7 +791,7 @@ const UnoGame = () => {
       setDiscardPile([...discardPile, card]);
 
       if (card.color === "wild") {
-        const chosenColor = chooseBotWildColor();
+        const chosenColor = chooseBotWildColor(currentBotHand);
         setCurrentColor(chosenColor);
       } else {
         setCurrentColor(card.color);
