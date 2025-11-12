@@ -957,30 +957,11 @@ const UnoGame = () => {
         <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/20" />
       </div>
 
-      {/* Real UNO game table with chairs from reference photo */}
-      <div
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[95%] max-w-6xl pointer-events-none"
-        style={{
-          aspectRatio: '16/9',
-          filter: 'drop-shadow(0 50px 120px rgba(0,0,0,0.6))'
-        }}
-      >
-        {/* Actual UNO table image */}
-        <img
-          src="https://images.unsplash.com/photo-1596838132731-3301c3fd4317?w=1400&q=90"
-          alt="UNO table"
-          className="w-full h-full object-contain"
-          style={{
-            filter: 'brightness(1.1) contrast(1.05) saturate(1.1)'
-          }}
-        />
-
-        {/* Blend the table naturally with beach lighting */}
-        <div className="absolute inset-0" style={{
-          background: 'radial-gradient(ellipse at center, transparent 0%, transparent 50%, rgba(135, 206, 235, 0.08) 100%)',
-          mixBlendMode: 'soft-light'
-        }} />
-      </div>
+      {/* Simple playing surface overlay on beach sand */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[85%] max-w-4xl aspect-square rounded-full pointer-events-none" style={{
+        background: 'radial-gradient(circle at center, rgba(245, 240, 230, 0.3) 0%, rgba(220, 210, 195, 0.2) 60%, transparent 100%)',
+        filter: 'blur(40px)'
+      }} />
 
       {/* Header */}
       <header className="sticky top-0 z-40 glass border-b border-border/50">
