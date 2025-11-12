@@ -1117,22 +1117,23 @@ const UnoGame = () => {
 
           {/* Display cards for multiple bots or single bot/opponent */}
           {!isMultiplayer && numberOfPlayers > 2 ? (
-            // Multiple bots - show them in rows with full card fans
-            <div className="flex flex-col gap-6">
+            // Multiple bots - show them horizontally side by side
+            <div className="flex justify-center items-start gap-4 sm:gap-8 flex-wrap">
               {botHands.map((hand, botIndex) => (
                 <div key={botIndex} className="flex flex-col items-center gap-2">
-                  <div className="flex justify-center gap-1 flex-wrap" style={{ perspective: '1000px' }}>
+                  <div className="flex justify-center gap-0" style={{ perspective: '800px' }}>
                     {hand.map((card, cardIndex) => {
-                      const rotation = (cardIndex - hand.length / 2) * 2;
+                      const rotation = (cardIndex - hand.length / 2) * 2.5;
                       const yOffset = Math.abs(cardIndex - hand.length / 2) * 2;
                       return (
                         <div
                           key={card.id}
-                          className="w-12 h-18 sm:w-16 sm:h-24 landscape:w-14 landscape:h-20 relative transition-all duration-300"
+                          className="w-14 h-20 sm:w-20 sm:h-28 landscape:w-16 landscape:h-24 relative transition-all duration-300"
                           style={{
                             transform: `rotateZ(${rotation}deg) translateY(${yOffset}px) rotateX(-5deg)`,
                             zIndex: hand.length - Math.abs(cardIndex - hand.length / 2),
-                            transformStyle: 'preserve-3d'
+                            transformStyle: 'preserve-3d',
+                            marginLeft: cardIndex > 0 ? '-0.5rem' : '0'
                           }}
                         >
                           {/* Shadow */}
