@@ -957,51 +957,20 @@ const UnoGame = () => {
         <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/20" />
       </div>
 
-      {/* Photorealistic round table with white tablecloth */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[85%] max-w-4xl aspect-square rounded-full pointer-events-none" style={{
-        background: `
-          radial-gradient(circle at 45% 40%,
-            rgba(255, 255, 255, 0.98) 0%,
-            rgba(250, 250, 252, 0.96) 30%,
-            rgba(240, 240, 245, 0.94) 50%,
-            rgba(230, 230, 240, 0.92) 70%,
-            rgba(220, 220, 235, 0.88) 100%
-          )
-        `,
-        boxShadow: `
-          0 50px 150px rgba(0, 0, 0, 0.4),
-          0 20px 60px rgba(0, 0, 0, 0.3),
-          inset -10px -10px 40px rgba(0, 0, 0, 0.08),
-          inset 5px 5px 30px rgba(255, 255, 255, 0.5)
-        `,
-        filter: 'drop-shadow(0 30px 80px rgba(0,0,0,0.3))'
-      }}>
-        {/* Realistic linen/fabric texture */}
+      {/* Real beach dinner table photo */}
+      <div
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-5xl aspect-square pointer-events-none"
+        style={{
+          backgroundImage: 'url(https://images.unsplash.com/photo-1559329007-40df8a9345d8?w=1200&q=85)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          filter: 'drop-shadow(0 40px 100px rgba(0,0,0,0.5))',
+          borderRadius: '50%'
+        }}
+      >
+        {/* Subtle vignette to focus attention on center */}
         <div className="absolute inset-0 rounded-full" style={{
-          backgroundImage: `
-            url("data:image/svg+xml,%3Csvg width='100' height='100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence baseFrequency='0.9' numOctaves='4' /%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E")
-          `,
-          mixBlendMode: 'multiply',
-          opacity: 0.4
-        }} />
-
-        {/* Cloth wrinkles and natural folds */}
-        <div className="absolute top-[15%] left-[20%] w-40 h-32 rounded-full blur-2xl" style={{
-          background: 'radial-gradient(ellipse, rgba(0,0,0,0.04) 0%, transparent 70%)',
-          transform: 'rotate(-15deg)'
-        }} />
-        <div className="absolute top-[35%] right-[18%] w-36 h-28 rounded-full blur-2xl" style={{
-          background: 'radial-gradient(ellipse, rgba(0,0,0,0.035) 0%, transparent 70%)',
-          transform: 'rotate(25deg)'
-        }} />
-        <div className="absolute bottom-[20%] left-[25%] w-44 h-36 rounded-full blur-3xl" style={{
-          background: 'radial-gradient(ellipse, rgba(0,0,0,0.045) 0%, transparent 70%)',
-          transform: 'rotate(-8deg)'
-        }} />
-
-        {/* Ambient light reflection from sunset */}
-        <div className="absolute inset-0 rounded-full" style={{
-          background: 'radial-gradient(ellipse at 30% 30%, rgba(255, 200, 150, 0.08) 0%, transparent 50%)'
+          background: 'radial-gradient(circle at center, transparent 0%, transparent 40%, rgba(0,0,0,0.15) 100%)'
         }} />
       </div>
 
