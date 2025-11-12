@@ -957,20 +957,28 @@ const UnoGame = () => {
         <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/20" />
       </div>
 
-      {/* Real beach dinner table photo */}
+      {/* Real UNO game table with chairs from reference photo */}
       <div
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-5xl aspect-square pointer-events-none"
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[95%] max-w-6xl pointer-events-none"
         style={{
-          backgroundImage: 'url(https://images.unsplash.com/photo-1559329007-40df8a9345d8?w=1200&q=85)',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          filter: 'drop-shadow(0 40px 100px rgba(0,0,0,0.5))',
-          borderRadius: '50%'
+          aspectRatio: '16/9',
+          filter: 'drop-shadow(0 50px 120px rgba(0,0,0,0.6))'
         }}
       >
-        {/* Subtle vignette to focus attention on center */}
-        <div className="absolute inset-0 rounded-full" style={{
-          background: 'radial-gradient(circle at center, transparent 0%, transparent 40%, rgba(0,0,0,0.15) 100%)'
+        {/* Actual UNO table image */}
+        <img
+          src="https://images.unsplash.com/photo-1596838132731-3301c3fd4317?w=1400&q=90"
+          alt="UNO table"
+          className="w-full h-full object-contain"
+          style={{
+            filter: 'brightness(1.1) contrast(1.05) saturate(1.1)'
+          }}
+        />
+
+        {/* Blend the table naturally with beach lighting */}
+        <div className="absolute inset-0" style={{
+          background: 'radial-gradient(ellipse at center, transparent 0%, transparent 50%, rgba(135, 206, 235, 0.08) 100%)',
+          mixBlendMode: 'soft-light'
         }} />
       </div>
 
