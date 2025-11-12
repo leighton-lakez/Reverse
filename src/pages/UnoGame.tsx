@@ -1223,13 +1223,13 @@ const UnoGame = () => {
         </div>
 
         {/* Game Board - Centered */}
-        <div className="mb-6 sm:mb-12 landscape:mb-4">
-          <div className="flex items-center justify-center gap-8 sm:gap-16 landscape:gap-10">
+        <div className="mb-4 sm:mb-8 landscape:mb-2">
+          <div className="flex items-center justify-center gap-6 sm:gap-10 landscape:gap-8">
             {/* Discard Pile */}
-            <div className="relative" style={{ perspective: '1500px' }}>
-              <p className="text-sm font-bold text-center mb-3 sm:mb-4 landscape:mb-2 text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)] bg-black/30 px-4 py-1.5 rounded-full backdrop-blur-sm">Discard Pile</p>
+            <div className="relative" style={{ perspective: '1000px' }}>
+              <p className="text-xs font-semibold text-center mb-2 sm:mb-3 landscape:mb-1 text-white drop-shadow-lg">Discard Pile</p>
               {discardPile.length > 0 && (
-                <div className="relative w-32 h-48 sm:w-48 sm:h-72 landscape:w-36 landscape:h-54">
+                <div className="relative w-24 h-36 sm:w-32 sm:h-48 landscape:w-28 landscape:h-42">
                   {/* Multiple stacked cards for depth */}
                   {discardPile.length > 2 && (
                     <div className="absolute inset-0 bg-gradient-to-br from-gray-800 to-gray-900 rounded-[24px] border-4 border-gray-700 transform translate-y-2 translate-x-1 opacity-50" />
@@ -1308,24 +1308,22 @@ const UnoGame = () => {
               )}
             </div>
 
-            {/* Game Info - Enhanced */}
+            {/* Game Info - Compact */}
             <div className="text-center">
-              <div className="bg-white/20 backdrop-blur-md rounded-3xl p-4 sm:p-8 landscape:p-5 border-2 border-white/40 space-y-3 sm:space-y-4 landscape:space-y-3 shadow-2xl">
-                <p className="text-sm font-bold text-white drop-shadow-lg mb-2">Current Color</p>
-                <div className={`w-20 h-20 sm:w-24 sm:h-24 rounded-full mx-auto border-4 border-white shadow-2xl ${getColorClass(currentColor)}`} style={{
-                  boxShadow: '0 8px 32px rgba(0,0,0,0.4), inset 0 2px 8px rgba(255,255,255,0.3)'
-                }} />
+              <div className="bg-black/40 backdrop-blur-sm rounded-2xl p-3 sm:p-6 landscape:p-4 border border-white/20 space-y-2 sm:space-y-3 landscape:space-y-2">
+                <p className="text-xs font-semibold text-white/80">Current Color</p>
+                <div className={`w-16 h-16 sm:w-20 sm:h-20 rounded-full mx-auto border-4 border-white shadow-xl ${getColorClass(currentColor)}`} />
                 {!gameOver && (
-                  <div className={`px-5 py-3 rounded-full ${isPlayerTurn ? "bg-gradient-to-r from-yellow-400 to-yellow-600" : "bg-gradient-to-r from-blue-400 to-blue-600"} shadow-2xl border-2 border-white/50`}>
-                    <p className="text-base font-black text-white drop-shadow-md">
-                      {isPlayerTurn ? "🎮 YOUR TURN" : "🤖 BOT'S TURN"}
+                  <div className={`px-4 py-2 rounded-full ${isPlayerTurn ? "bg-yellow-500/80" : "bg-blue-500/80"} shadow-lg`}>
+                    <p className="text-sm font-bold text-white">
+                      {isPlayerTurn ? "🎮 Your Turn" : "🤖 Bot's Turn"}
                     </p>
                   </div>
                 )}
                 {gameOver && (
-                  <div className="px-6 py-4 rounded-full bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 shadow-2xl border-2 border-white/50 animate-pulse">
-                    <p className="text-lg font-black text-white drop-shadow-lg">
-                      {winner} WINS! 🎉
+                  <div className="px-4 py-3 rounded-full bg-gradient-to-r from-yellow-500 to-orange-500 shadow-xl">
+                    <p className="text-sm font-black text-white">
+                      {winner} Wins! 🎉
                     </p>
                   </div>
                 )}
@@ -1354,10 +1352,10 @@ const UnoGame = () => {
               </Button>
             )}
           </div>
-          <div className="flex justify-center gap-0 flex-wrap" style={{ perspective: '1500px' }}>
+          <div className="flex justify-center gap-0" style={{ perspective: '1000px' }}>
             {playerHand.map((card, index) => {
-              const rotation = (index - playerHand.length / 2) * 3;
-              const yOffset = Math.abs(index - playerHand.length / 2) * 4;
+              const rotation = (index - playerHand.length / 2) * 2.5;
+              const yOffset = Math.abs(index - playerHand.length / 2) * 3;
               const canPlay = isPlayerTurn && !gameOver && canPlayCard(card);
 
               return (
@@ -1365,15 +1363,15 @@ const UnoGame = () => {
                   key={card.id}
                   onClick={() => handleCardClick(card)}
                   disabled={!isPlayerTurn || gameOver}
-                  className={`relative w-24 h-36 sm:w-36 sm:h-54 landscape:w-28 landscape:h-42 transition-all duration-300 ${
+                  className={`relative w-16 h-24 sm:w-24 sm:h-36 landscape:w-20 landscape:h-28 transition-all duration-300 ${
                     canPlay
-                      ? "hover:scale-110 hover:-translate-y-8 sm:hover:-translate-y-12 landscape:hover:-translate-y-10 cursor-pointer active:scale-100 hover:z-50"
+                      ? "hover:scale-105 hover:-translate-y-4 sm:hover:-translate-y-8 landscape:hover:-translate-y-6 cursor-pointer active:scale-100 hover:z-50"
                       : "opacity-50 cursor-not-allowed"
                   }`}
                   style={{
                     transform: `rotateZ(${rotation}deg) translateY(${yOffset}px)`,
                     zIndex: canPlay ? 30 : playerHand.length - Math.abs(index - playerHand.length / 2),
-                    marginLeft: index > 0 ? '-1rem' : '0'
+                    marginLeft: index > 0 ? '-0.75rem' : '0'
                   }}
                 >
                   {/* Enhanced shadow */}
