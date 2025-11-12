@@ -1015,440 +1015,240 @@ const UnoGame = () => {
           </div>
         )}
 
-        {/* Opponent/Bot Hand(s) */}
-        <div className="mb-4 sm:mb-8 landscape:mb-2">
-          <div className="flex flex-col items-center gap-3 mb-4 sm:mb-6 landscape:mb-2">
-            {/* Show all bot names when multiple bots */}
-            {!isMultiplayer && numberOfPlayers > 2 ? (
-              <div className="flex gap-4 flex-wrap justify-center">
-                {botHands.map((hand, index) => (
-                  <div key={index} className={`px-5 py-2.5 rounded-full backdrop-blur-md border-2 transition-all ${
-                    currentPlayerIndex === index + 1
-                      ? 'bg-white/30 border-white text-white shadow-lg shadow-white/30 scale-105'
-                      : 'bg-white/10 border-white/30 text-white/80'
-                  }`}>
-                    <p className="text-sm font-bold drop-shadow-lg">
-                      {botNames[index]}: {hand.length} cards
-                    </p>
-                  </div>
+        {/* Game Layout - Players positioned around center */}
+        <div className="relative w-full max-w-6xl mx-auto" style={{ minHeight: '70vh' }}>
+
+          {/* TOP PLAYER (First Bot) */}
+          {!isMultiplayer && numberOfPlayers > 2 && botHands[0] && (
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2">
+              <div className="flex flex-col items-center gap-1">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center text-2xl border-4 border-white shadow-lg">
+                  👩
+                </div>
+                <p className="text-sm font-bold text-white bg-black/50 px-3 py-1 rounded-full">{botNames[0]}</p>
+              </div>
+              <div className="flex gap-0">
+                {botHands[0].slice(0, 5).map((card, idx) => (
+                  <div key={card.id} className="w-10 h-14 bg-black rounded-lg border-2 border-white/20" style={{ marginLeft: idx > 0 ? '-0.5rem' : '0' }} />
                 ))}
               </div>
-            ) : (
-              <div className="px-5 py-2.5 rounded-full bg-white/10 backdrop-blur-md border-2 border-white/30">
-                <p className="text-sm font-bold text-white drop-shadow-lg">
-                  {isMultiplayer
-                    ? `${opponentProfile?.display_name || 'Opponent'}: ${opponentHand.length} cards`
-                    : `Bot: ${botHand.length} cards`}
-                </p>
-              </div>
-            )}
-            {!isMultiplayer && (
-              <div className="flex flex-col gap-2">
-                {/* Player Count Selection */}
-                <div className="flex items-center gap-2 justify-center">
-                  <span className="text-xs text-white/70 font-semibold">Players:</span>
-                  {([2, 3, 4] as const).map((count) => (
-                    <button
-                      key={count}
-                      onClick={() => {
-                        setNumberOfPlayers(count);
-                        toast({
-                          title: `${count} Players`,
-                          description: `You vs ${count - 1} bot${count > 2 ? 's' : ''}`
-                        });
-                        startGame(count);
-                      }}
-                      className={`px-3 py-1.5 rounded-full text-xs font-bold backdrop-blur-sm border-2 transition-all ${
-                        numberOfPlayers === count
-                          ? "bg-blue-500/30 border-blue-500 text-blue-100 shadow-lg shadow-blue-500/20 scale-105"
-                          : "bg-black/40 border-white/20 text-white/60 hover:border-blue-500/50 hover:text-blue-200"
-                      }`}
-                    >
-                      {count}
-                    </button>
-                  ))}
-                </div>
-
-                {/* Difficulty Selection */}
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => {
-                      setBotDifficulty("easy");
-                      toast({ title: "🟢 Easy Mode", description: "Bot will play randomly" });
-                    }}
-                    className={`px-4 py-2 rounded-full text-xs font-bold backdrop-blur-sm border-2 transition-all ${
-                      botDifficulty === "easy"
-                        ? "bg-green-500/30 border-green-500 text-green-100 shadow-lg shadow-green-500/20 scale-105"
-                        : "bg-black/40 border-white/20 text-white/60 hover:border-green-500/50 hover:text-green-200"
-                    }`}
-                  >
-                    🟢 Easy
-                  </button>
-                  <button
-                    onClick={() => {
-                      setBotDifficulty("medium");
-                      toast({ title: "🟡 Medium Mode", description: "Bot prefers action cards" });
-                    }}
-                    className={`px-4 py-2 rounded-full text-xs font-bold backdrop-blur-sm border-2 transition-all ${
-                      botDifficulty === "medium"
-                        ? "bg-yellow-500/30 border-yellow-500 text-yellow-100 shadow-lg shadow-yellow-500/20 scale-105"
-                        : "bg-black/40 border-white/20 text-white/60 hover:border-yellow-500/50 hover:text-yellow-200"
-                    }`}
-                  >
-                    🟡 Medium
-                  </button>
-                  <button
-                    onClick={() => {
-                      setBotDifficulty("hard");
-                      toast({ title: "🔴 Hard Mode", description: "Bot uses advanced strategy!" });
-                    }}
-                    className={`px-4 py-2 rounded-full text-xs font-bold backdrop-blur-sm border-2 transition-all ${
-                      botDifficulty === "hard"
-                        ? "bg-red-500/30 border-red-500 text-red-100 shadow-lg shadow-red-500/20 scale-105"
-                        : "bg-black/40 border-white/20 text-white/60 hover:border-red-500/50 hover:text-red-200"
-                    }`}
-                  >
-                    🔴 Hard
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Display cards for multiple bots or single bot/opponent */}
-          {!isMultiplayer && numberOfPlayers > 2 ? (
-            // Multiple bots - show them horizontally side by side
-            <div className="flex justify-center items-start gap-4 sm:gap-8 flex-wrap">
-              {botHands.map((hand, botIndex) => (
-                <div key={botIndex} className="flex flex-col items-center gap-2">
-                  <div className="flex justify-center gap-0" style={{ perspective: '800px' }}>
-                    {hand.map((card, cardIndex) => {
-                      const rotation = (cardIndex - hand.length / 2) * 2.5;
-                      const yOffset = Math.abs(cardIndex - hand.length / 2) * 2;
-                      return (
-                        <div
-                          key={card.id}
-                          className="w-14 h-20 sm:w-20 sm:h-28 landscape:w-16 landscape:h-24 relative transition-all duration-300"
-                          style={{
-                            transform: `rotateZ(${rotation}deg) translateY(${yOffset}px) rotateX(-5deg)`,
-                            zIndex: hand.length - Math.abs(cardIndex - hand.length / 2),
-                            transformStyle: 'preserve-3d',
-                            marginLeft: cardIndex > 0 ? '-0.5rem' : '0'
-                          }}
-                        >
-                          {/* Shadow */}
-                          <div className="absolute inset-0 bg-black/50 rounded-[14px] blur-md transform translate-y-2" />
-
-                          {/* Card back with official UNO design */}
-                          <div className="absolute inset-0 bg-black rounded-[14px] shadow-[0_6px_24px_rgba(0,0,0,0.8)]" style={{ border: '2px solid rgba(255,255,255,0.1)', transformStyle: 'preserve-3d' }}>
-                            {/* Red diagonal stripe design */}
-                            <div className="absolute inset-0 overflow-hidden rounded-[14px]">
-                              <div
-                                className="absolute inset-[-20%] bg-gradient-to-br from-red-600 via-red-700 to-red-600"
-                                style={{
-                                  transform: 'rotate(-25deg)',
-                                  clipPath: 'polygon(25% 0%, 75% 0%, 50% 100%, 0% 100%)'
-                                }}
-                              />
-                            </div>
-
-                            {/* UNO logo in center */}
-                            <div className="absolute inset-0 flex items-center justify-center">
-                              <div className="relative">
-                                <div className="text-yellow-400 font-black text-sm sm:text-lg tracking-wider drop-shadow-[0_0_8px_rgba(250,204,21,0.6)]" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.8)' }}>
-                                  UNO
-                                </div>
-                              </div>
-                            </div>
-
-                            {/* Glossy highlight */}
-                            <div className="absolute top-0 left-0 right-0 h-1/3 bg-gradient-to-b from-white/10 to-transparent rounded-t-[12px]" />
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            // Single bot or multiplayer opponent
-            <div className="flex justify-center gap-1 flex-wrap" style={{ perspective: '1000px' }}>
-              {(isMultiplayer ? opponentHand : botHand).map((card, index) => {
-                const currentHand = isMultiplayer ? opponentHand : botHand;
-                const rotation = (index - currentHand.length / 2) * 2.5;
-                const yOffset = Math.abs(index - currentHand.length / 2) * 3;
-                return (
-                  <div
-                    key={card.id}
-                    className="w-16 h-24 sm:w-24 sm:h-36 landscape:w-20 landscape:h-28 relative transition-all duration-300"
-                    style={{
-                      transform: `rotateZ(${rotation}deg) translateY(${yOffset}px) rotateX(-5deg)`,
-                      zIndex: currentHand.length - Math.abs(index - currentHand.length / 2),
-                      transformStyle: 'preserve-3d'
-                    }}
-                  >
-                  {/* Shadow */}
-                  <div className="absolute inset-0 bg-black/50 rounded-[18px] blur-lg transform translate-y-3" />
-
-                  {/* Card back with official UNO design */}
-                  <div className="absolute inset-0 bg-black rounded-[18px] shadow-[0_8px_32px_rgba(0,0,0,0.8)]" style={{ border: '2px solid rgba(255,255,255,0.1)', transformStyle: 'preserve-3d' }}>
-                    {/* Red diagonal stripe design */}
-                    <div className="absolute inset-0 overflow-hidden rounded-[18px]">
-                      <div
-                        className="absolute inset-[-20%] bg-gradient-to-br from-red-600 via-red-700 to-red-600"
-                        style={{
-                          transform: 'rotate(-25deg)',
-                          clipPath: 'polygon(25% 0%, 75% 0%, 50% 100%, 0% 100%)'
-                        }}
-                      />
-                    </div>
-
-                    {/* UNO logo in center */}
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="relative">
-                        <div className="text-yellow-400 font-black text-lg sm:text-2xl tracking-wider drop-shadow-[0_0_10px_rgba(250,204,21,0.6)]" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.8)' }}>
-                          UNO
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Glossy highlight */}
-                    <div className="absolute top-0 left-0 right-0 h-1/3 bg-gradient-to-b from-white/10 to-transparent rounded-t-[14px]" />
-                  </div>
-                </div>
-              );
-            })}
             </div>
           )}
-        </div>
 
-        {/* Game Board - Centered */}
-        <div className="mb-4 sm:mb-8 landscape:mb-2">
-          <div className="flex items-center justify-center gap-6 sm:gap-10 landscape:gap-8">
+          {/* LEFT PLAYER (Second Bot) */}
+          {!isMultiplayer && numberOfPlayers > 3 && botHands[1] && (
+            <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-2">
+              <div className="flex flex-col items-center gap-1">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-2xl border-4 border-white shadow-lg">
+                  🧑
+                </div>
+                <p className="text-sm font-bold text-white bg-black/50 px-3 py-1 rounded-full">{botNames[1]}</p>
+              </div>
+              <div className="flex flex-col gap-0">
+                {botHands[1].slice(0, 5).map((card, idx) => (
+                  <div key={card.id} className="w-10 h-14 bg-black rounded-lg border-2 border-white/20" style={{ marginTop: idx > 0 ? '-0.5rem' : '0' }} />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* RIGHT PLAYER (Third Bot or Single Bot) */}
+          {!isMultiplayer && (numberOfPlayers === 2 ? botHand : botHands[numberOfPlayers === 4 ? 2 : 1]) && (
+            <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2">
+              <div className="flex flex-col gap-0">
+                {(numberOfPlayers === 2 ? botHand : botHands[numberOfPlayers === 4 ? 2 : 1]).slice(0, 5).map((card, idx) => (
+                  <div key={card.id} className="w-10 h-14 bg-black rounded-lg border-2 border-white/20" style={{ marginTop: idx > 0 ? '-0.5rem' : '0' }} />
+                ))}
+              </div>
+              <div className="flex flex-col items-center gap-1">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-2xl border-4 border-white shadow-lg">
+                  👨
+                </div>
+                <p className="text-sm font-bold text-white bg-black/50 px-3 py-1 rounded-full">
+                  {numberOfPlayers === 2 ? 'Bot' : botNames[numberOfPlayers === 4 ? 2 : 1]}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* CENTER - Draw Deck and Discard Pile */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-6">
+            {/* Draw Deck */}
+            <div className="relative w-24 h-36 sm:w-32 sm:h-48">
+              <div className="absolute inset-0 bg-black rounded-[18px] border-4 border-white/30 shadow-2xl">
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="text-yellow-400 font-black text-2xl">UNO</div>
+                </div>
+              </div>
+            </div>
+
             {/* Discard Pile */}
-            <div className="relative" style={{ perspective: '1000px' }}>
-              <p className="text-xs font-semibold text-center mb-2 sm:mb-3 landscape:mb-1 text-white drop-shadow-lg">Discard Pile</p>
-              {discardPile.length > 0 && (
-                <div className="relative w-24 h-36 sm:w-32 sm:h-48 landscape:w-28 landscape:h-42">
-                  {/* Multiple stacked cards for depth */}
-                  {discardPile.length > 2 && (
-                    <div className="absolute inset-0 bg-gradient-to-br from-gray-800 to-gray-900 rounded-[24px] border-4 border-gray-700 transform translate-y-2 translate-x-1 opacity-50" />
-                  )}
-                  {discardPile.length > 1 && (
-                    <div className="absolute inset-0 bg-gradient-to-br from-gray-800 to-gray-900 rounded-[24px] border-4 border-gray-700 transform translate-y-1 translate-x-0.5 opacity-70" />
-                  )}
-
-                  {/* Enhanced shadow for depth */}
-                  <div className="absolute inset-0 bg-black/60 rounded-[24px] blur-2xl transform translate-y-6" />
-
-                  {/* Main card with official UNO design */}
-                  <div
-                    className={`relative w-full h-full rounded-[24px] transition-all duration-300 hover:scale-105 ${getColorClass(
-                      currentColor
-                    )}`}
-                    style={{
-                      boxShadow: '0 25px 60px rgba(0,0,0,0.6), 0 10px 20px rgba(0,0,0,0.4)',
-                      border: '3px solid rgba(0,0,0,0.3)'
-                    }}
-                  >
-                    {/* White curved oval shape - official UNO style */}
-                    <div className="absolute inset-[8%] flex items-center justify-center">
+            {discardPile.length > 0 && (
+              <div className="relative w-24 h-36 sm:w-32 sm:h-48">
+                <div
+                  className={`relative w-full h-full rounded-[18px] ${getColorClass(currentColor)}`}
+                  style={{
+                    boxShadow: '0 15px 40px rgba(0,0,0,0.5)',
+                    border: '4px solid rgba(0,0,0,0.3)'
+                  }}
+                >
+                  <div className="absolute inset-[8%] flex items-center justify-center">
+                    <div
+                      className="relative w-full h-full bg-white flex items-center justify-center"
+                      style={{
+                        borderRadius: '45% 45% 45% 45% / 50% 50% 50% 50%',
+                        transform: 'rotate(-25deg)'
+                      }}
+                    >
                       <div
-                        className="relative w-full h-full bg-white flex items-center justify-center"
-                        style={{
-                          borderRadius: '45% 45% 45% 45% / 50% 50% 50% 50%',
-                          boxShadow: 'inset 0 4px 12px rgba(0,0,0,0.15)',
-                          transform: 'rotate(-25deg)'
-                        }}
+                        className={`text-4xl sm:text-6xl font-black ${
+                          currentColor === "yellow" ? "text-yellow-500" :
+                          currentColor === "red" ? "text-red-600" :
+                          currentColor === "blue" ? "text-blue-600" :
+                          currentColor === "green" ? "text-green-600" :
+                          "bg-gradient-to-br from-red-500 via-blue-500 to-green-500 bg-clip-text text-transparent"
+                        }`}
+                        style={{ transform: 'rotate(25deg)' }}
                       >
-                        <div
-                          className={`text-7xl font-black ${
-                            currentColor === "yellow" ? "text-yellow-500" :
-                            currentColor === "red" ? "text-red-600" :
-                            currentColor === "blue" ? "text-blue-600" :
-                            currentColor === "green" ? "text-green-600" :
-                            "bg-gradient-to-br from-red-500 via-blue-500 to-green-500 bg-clip-text text-transparent"
-                          }`}
-                          style={{
-                            transform: 'rotate(25deg)',
-                            textShadow: '3px 3px 6px rgba(0,0,0,0.25)'
-                          }}
-                        >
-                          {discardPile[discardPile.length - 1].value === "skip" ? "⊘" :
-                           discardPile[discardPile.length - 1].value === "reverse" ? "⟲" :
-                           discardPile[discardPile.length - 1].value === "draw2" ? "+2" :
-                           discardPile[discardPile.length - 1].value === "wild" ? "W" :
-                           discardPile[discardPile.length - 1].value === "wild4" ? "+4" :
-                           discardPile[discardPile.length - 1].value.toUpperCase()}
-                        </div>
+                        {discardPile[discardPile.length - 1].value === "skip" ? "⊘" :
+                         discardPile[discardPile.length - 1].value === "reverse" ? "⟲" :
+                         discardPile[discardPile.length - 1].value === "draw2" ? "+2" :
+                         discardPile[discardPile.length - 1].value === "wild" ? "W" :
+                         discardPile[discardPile.length - 1].value === "wild4" ? "+4" :
+                         discardPile[discardPile.length - 1].value.toUpperCase()}
                       </div>
-                    </div>
-
-                    {/* Top left corner number */}
-                    <div className="absolute top-2 left-2 text-white font-black text-base" style={{ textShadow: '1px 1px 3px rgba(0,0,0,0.6)' }}>
-                      {discardPile[discardPile.length - 1].value === "skip" ? "⊘" :
-                       discardPile[discardPile.length - 1].value === "reverse" ? "⟲" :
-                       discardPile[discardPile.length - 1].value === "draw2" ? "+2" :
-                       discardPile[discardPile.length - 1].value === "wild" ? "" :
-                       discardPile[discardPile.length - 1].value === "wild4" ? "+4" :
-                       discardPile[discardPile.length - 1].value.toUpperCase()}
-                    </div>
-
-                    {/* Bottom right corner number (rotated) */}
-                    <div className="absolute bottom-2 right-2 text-white font-black text-base rotate-180" style={{ textShadow: '1px 1px 3px rgba(0,0,0,0.6)' }}>
-                      {discardPile[discardPile.length - 1].value === "skip" ? "⊘" :
-                       discardPile[discardPile.length - 1].value === "reverse" ? "⟲" :
-                       discardPile[discardPile.length - 1].value === "draw2" ? "+2" :
-                       discardPile[discardPile.length - 1].value === "wild" ? "" :
-                       discardPile[discardPile.length - 1].value === "wild4" ? "+4" :
-                       discardPile[discardPile.length - 1].value.toUpperCase()}
                     </div>
                   </div>
                 </div>
-              )}
-            </div>
-
-            {/* Game Info - Compact */}
-            <div className="text-center">
-              <div className="bg-black/40 backdrop-blur-sm rounded-2xl p-3 sm:p-6 landscape:p-4 border border-white/20 space-y-2 sm:space-y-3 landscape:space-y-2">
-                <p className="text-xs font-semibold text-white/80">Current Color</p>
-                <div className={`w-16 h-16 sm:w-20 sm:h-20 rounded-full mx-auto border-4 border-white shadow-xl ${getColorClass(currentColor)}`} />
-                {!gameOver && (
-                  <div className={`px-4 py-2 rounded-full ${isPlayerTurn ? "bg-yellow-500/80" : "bg-blue-500/80"} shadow-lg`}>
-                    <p className="text-sm font-bold text-white">
-                      {isPlayerTurn ? "🎮 Your Turn" : "🤖 Bot's Turn"}
-                    </p>
-                  </div>
-                )}
-                {gameOver && (
-                  <div className="px-4 py-3 rounded-full bg-gradient-to-r from-yellow-500 to-orange-500 shadow-xl">
-                    <p className="text-sm font-black text-white">
-                      {winner} Wins! 🎉
-                    </p>
-                  </div>
-                )}
               </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Player Hand */}
-        <div>
-          <div className="flex items-center justify-center gap-3 mb-3 sm:mb-5 landscape:mb-2">
-            <div className={`px-5 py-2.5 rounded-full backdrop-blur-md border-2 transition-all ${
-              isPlayerTurn && !gameOver
-                ? 'bg-white/30 border-white text-white shadow-lg shadow-white/30 scale-105'
-                : 'bg-white/10 border-white/30 text-white/80'
-            }`}>
-              <p className="text-sm font-bold drop-shadow-lg">Your Hand: {playerHand.length} cards</p>
-            </div>
-            {isPlayerTurn && !gameOver && (
-              <Button
-                onClick={drawCard}
-                size="sm"
-                className="rounded-full bg-yellow-500 hover:bg-yellow-600 text-black font-bold shadow-lg"
-              >
-                🎴 Draw Card
-              </Button>
             )}
           </div>
-          <div className="flex justify-center gap-0" style={{ perspective: '1000px' }}>
-            {playerHand.map((card, index) => {
-              const rotation = (index - playerHand.length / 2) * 2.5;
-              const yOffset = Math.abs(index - playerHand.length / 2) * 3;
-              const canPlay = isPlayerTurn && !gameOver && canPlayCard(card);
 
-              return (
-                <button
-                  key={card.id}
-                  onClick={() => handleCardClick(card)}
-                  disabled={!isPlayerTurn || gameOver}
-                  className={`relative w-16 h-24 sm:w-24 sm:h-36 landscape:w-20 landscape:h-28 transition-all duration-300 ${
-                    canPlay
-                      ? "hover:scale-105 hover:-translate-y-4 sm:hover:-translate-y-8 landscape:hover:-translate-y-6 cursor-pointer active:scale-100 hover:z-50"
-                      : "opacity-50 cursor-not-allowed"
-                  }`}
-                  style={{
-                    transform: `rotateZ(${rotation}deg) translateY(${yOffset}px)`,
-                    zIndex: canPlay ? 30 : playerHand.length - Math.abs(index - playerHand.length / 2),
-                    marginLeft: index > 0 ? '-0.75rem' : '0'
-                  }}
-                >
-                  {/* Enhanced shadow */}
-                  <div className="absolute inset-0 bg-black/60 rounded-[24px] blur-2xl transform translate-y-4" />
+          {/* BOTTOM PLAYER (You) */}
+          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3">
+            <div className="flex gap-0" style={{ perspective: '1000px' }}>
+              {playerHand.map((card, index) => {
+                const rotation = (index - playerHand.length / 2) * 2.5;
+                const yOffset = Math.abs(index - playerHand.length / 2) * 3;
+                const canPlay = isPlayerTurn && !gameOver && canPlayCard(card);
 
-                  {/* Card with official UNO design */}
-                  <div
-                    className={`relative w-full h-full rounded-[20px] sm:rounded-[24px] ${getColorClass(card.color)}`}
+                return (
+                  <button
+                    key={card.id}
+                    onClick={() => handleCardClick(card)}
+                    disabled={!isPlayerTurn || gameOver}
+                    className={`relative w-16 h-24 sm:w-24 sm:h-36 transition-all duration-300 ${
+                      canPlay
+                        ? "hover:scale-105 hover:-translate-y-4 cursor-pointer hover:z-50"
+                        : "opacity-50 cursor-not-allowed"
+                    }`}
                     style={{
-                      boxShadow: '0 15px 40px rgba(0,0,0,0.5), 0 5px 15px rgba(0,0,0,0.3)',
-                      border: '3px solid rgba(0,0,0,0.3)'
+                      transform: `rotateZ(${rotation}deg) translateY(${yOffset}px)`,
+                      zIndex: canPlay ? 30 : playerHand.length - Math.abs(index - playerHand.length / 2),
+                      marginLeft: index > 0 ? '-0.75rem' : '0'
                     }}
                   >
-                    {/* White curved oval shape - official UNO style */}
-                    <div className="absolute inset-[8%] flex items-center justify-center">
-                      <div
-                        className="relative w-full h-full bg-white flex items-center justify-center"
-                        style={{
-                          borderRadius: '45% 45% 45% 45% / 50% 50% 50% 50%',
-                          boxShadow: 'inset 0 2px 8px rgba(0,0,0,0.1)',
-                          transform: 'rotate(-25deg)'
-                        }}
-                      >
+                    <div className="absolute inset-0 bg-black/60 rounded-[20px] blur-xl transform translate-y-3" />
+                    <div
+                      className={`relative w-full h-full rounded-[18px] ${getColorClass(card.color)}`}
+                      style={{
+                        boxShadow: '0 15px 40px rgba(0,0,0,0.5)',
+                        border: '3px solid rgba(0,0,0,0.3)'
+                      }}
+                    >
+                      <div className="absolute inset-[8%] flex items-center justify-center">
                         <div
-                          className={`text-3xl sm:text-6xl font-black ${
-                            card.color === "yellow" ? "text-yellow-500" :
-                            card.color === "red" ? "text-red-600" :
-                            card.color === "blue" ? "text-blue-600" :
-                            card.color === "green" ? "text-green-600" :
-                            "bg-gradient-to-br from-red-500 via-blue-500 to-green-500 bg-clip-text text-transparent"
-                          }`}
+                          className="relative w-full h-full bg-white flex items-center justify-center"
                           style={{
-                            transform: 'rotate(25deg)',
-                            textShadow: '2px 2px 4px rgba(0,0,0,0.2)'
+                            borderRadius: '45% 45% 45% 45% / 50% 50% 50% 50%',
+                            transform: 'rotate(-25deg)'
                           }}
                         >
-                          {card.value === "skip" ? "⊘" :
-                           card.value === "reverse" ? "⟲" :
-                           card.value === "draw2" ? "+2" :
-                           card.value === "wild" ? "W" :
-                           card.value === "wild4" ? "+4" :
-                           card.value.toUpperCase()}
+                          <div
+                            className={`text-2xl sm:text-5xl font-black ${
+                              card.color === "yellow" ? "text-yellow-500" :
+                              card.color === "red" ? "text-red-600" :
+                              card.color === "blue" ? "text-blue-600" :
+                              card.color === "green" ? "text-green-600" :
+                              "bg-gradient-to-br from-red-500 via-blue-500 to-green-500 bg-clip-text text-transparent"
+                            }`}
+                            style={{ transform: 'rotate(25deg)' }}
+                          >
+                            {card.value === "skip" ? "⊘" :
+                             card.value === "reverse" ? "⟲" :
+                             card.value === "draw2" ? "+2" :
+                             card.value === "wild" ? "W" :
+                             card.value === "wild4" ? "+4" :
+                             card.value.toUpperCase()}
+                          </div>
                         </div>
                       </div>
+                      {canPlay && (
+                        <div className="absolute inset-0 rounded-[18px] ring-2 ring-yellow-400 animate-pulse" />
+                      )}
                     </div>
-
-                    {/* Top left corner number */}
-                    <div className="absolute top-1 left-1 sm:top-2 sm:left-2 text-white font-black text-xs sm:text-sm" style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.5)' }}>
-                      {card.value === "skip" ? "⊘" :
-                       card.value === "reverse" ? "⟲" :
-                       card.value === "draw2" ? "+2" :
-                       card.value === "wild" ? "" :
-                       card.value === "wild4" ? "+4" :
-                       card.value.toUpperCase()}
-                    </div>
-
-                    {/* Bottom right corner number (rotated) */}
-                    <div className="absolute bottom-1 right-1 sm:bottom-2 sm:right-2 text-white font-black text-xs sm:text-sm rotate-180" style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.5)' }}>
-                      {card.value === "skip" ? "⊘" :
-                       card.value === "reverse" ? "⟲" :
-                       card.value === "draw2" ? "+2" :
-                       card.value === "wild" ? "" :
-                       card.value === "wild4" ? "+4" :
-                       card.value.toUpperCase()}
-                    </div>
-
-                    {/* Playable card glow effect */}
-                    {canPlay && (
-                      <div className="absolute inset-0 rounded-[16px] sm:rounded-[22px] ring-2 ring-yellow-400 ring-opacity-50 animate-pulse" />
-                    )}
-                  </div>
-                </button>
-              );
-            })}
+                  </button>
+                );
+              })}
+            </div>
+            <div className="flex flex-col items-center gap-1">
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center text-2xl border-4 border-white shadow-lg">
+                👑
+              </div>
+              <p className="text-sm font-bold text-white bg-black/50 px-3 py-1 rounded-full">You</p>
+              {isPlayerTurn && !gameOver && (
+                <Button
+                  onClick={drawCard}
+                  size="sm"
+                  className="rounded-full bg-yellow-500 hover:bg-yellow-600 text-black font-bold"
+                >
+                  🎴 Draw
+                </Button>
+              )}
+            </div>
           </div>
+
+          {/* Settings in top-right corner */}
+          {!isMultiplayer && (
+            <div className="absolute top-2 right-2 flex flex-col gap-2">
+              <div className="flex items-center gap-2 bg-black/60 rounded-full px-3 py-2 backdrop-blur-sm">
+                <span className="text-xs text-white/70 font-semibold">Players:</span>
+                {([2, 3, 4] as const).map((count) => (
+                  <button
+                    key={count}
+                    onClick={() => {
+                      setNumberOfPlayers(count);
+                      startGame(count);
+                    }}
+                    className={`w-8 h-8 rounded-full text-xs font-bold transition-all ${
+                      numberOfPlayers === count
+                        ? "bg-blue-500 text-white scale-105"
+                        : "bg-white/20 text-white/60 hover:bg-white/30"
+                    }`}
+                  >
+                    {count}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
         </div>
+
+        {/* Game over/winner message */}
+        {gameOver && (
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50">
+            <div className="bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 rounded-3xl p-8 text-center border-4 border-white shadow-2xl">
+              <p className="text-4xl font-black text-white mb-4">🎉 {winner} WINS! 🎉</p>
+              <Button
+                onClick={() => startGame()}
+                className="bg-white text-black font-bold hover:bg-gray-100"
+              >
+                Play Again
+              </Button>
+            </div>
+          </div>
+        )}
       </main>
 
       {/* Invite Friends Modal */}
