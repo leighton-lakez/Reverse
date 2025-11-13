@@ -17,7 +17,7 @@ const Courses = () => {
       description: "Perfect for getting started",
       firstPayment: 500,
       firstDuration: "1 month",
-      recurringPayment: 200,
+      renewalPayment: 250,
       features: [
         "Access to all course materials",
         "Weekly live sessions",
@@ -34,7 +34,7 @@ const Courses = () => {
       description: "Best value for committed learners",
       firstPayment: 700,
       firstDuration: "2 months",
-      recurringPayment: 150,
+      renewalPayment: 150,
       features: [
         "Everything in Basic Plan",
         "1-on-1 mentorship sessions",
@@ -131,9 +131,9 @@ const Courses = () => {
                   </div>
                   <div className="flex items-center gap-2 text-sm">
                     <span className="text-foreground font-semibold">
-                      Then ${plan.recurringPayment}/month
+                      Renew for ${plan.renewalPayment}/month
                     </span>
-                    <span className="text-muted-foreground">after</span>
+                    <span className="text-muted-foreground">at the end of each month</span>
                   </div>
                 </div>
 
