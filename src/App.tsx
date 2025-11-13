@@ -28,6 +28,7 @@ import AdminListings from "./pages/AdminListings";
 import AdminUsers from "./pages/AdminUsers";
 import NotFound from "./pages/NotFound";
 import UnoGame from "./pages/UnoGame";
+import Courses from "./pages/Courses";
 import FirstVisitReverse from "./components/FirstVisitReverse";
 import ChatboxAssistant from "./components/ChatboxAssistant";
 
@@ -63,6 +64,7 @@ const App = () => (
           <Route path="/following/:userId" element={<FollowingList />} />
           <Route path="/debug" element={<Debug />} />
           <Route path="/uno" element={<UnoGame />} />
+          <Route path="/courses" element={<Courses />} />
           {/* Admin Routes */}
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/admin/users" element={<AdminUsers />} />
