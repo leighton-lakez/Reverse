@@ -56,7 +56,7 @@ const UnoGame = () => {
   const [numberOfPlayers, setNumberOfPlayers] = useState<2 | 3 | 4>(2);
   const [botHands, setBotHands] = useState<UnoCard[][]>([]);
   const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0); // 0 = player, 1+ = bots
-  const botNames = ["Bot 1", "Bot 2", "Bot 3"];
+  const botNames = ["Sarah", "Brian", "Steve"];
 
   const colors: CardColor[] = ["red", "blue", "green", "yellow"];
   const values: CardValue[] = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "skip", "reverse", "draw2"];
@@ -943,7 +943,7 @@ const UnoGame = () => {
 
   return (
     <div className="min-h-screen pb-24 relative overflow-hidden">
-      {/* Photorealistic beach background using actual photo URL */}
+      {/* Beach background */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
@@ -1015,25 +1015,31 @@ const UnoGame = () => {
           </div>
         )}
 
-        {/* Game Layout - Players positioned around center (Reference Image 2 Format) */}
-        <div className="relative w-full max-w-4xl mx-auto flex items-center justify-center" style={{ minHeight: '75vh' }}>
+        {/* Game Layout - EXACT REPLICA of Reference Image */}
+        <div className="relative w-full h-screen max-h-screen overflow-hidden flex items-center justify-center">
 
-          {/* TOP PLAYER (First Bot or Single Bot in 2-player) */}
+          {/* TOP PLAYER */}
           {!isMultiplayer && ((numberOfPlayers > 2 && botHands[0]) || (numberOfPlayers === 2 && botHand.length > 0)) && (
-            <div className="absolute top-4 sm:top-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3">
-              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center text-3xl sm:text-4xl border-4 border-white shadow-2xl">
-                👩
+            <div className={`absolute top-12 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 transition-all duration-300 ${
+              currentPlayerIndex === 1 ? 'scale-110' : ''
+            }`}>
+              <div className={`w-16 h-16 rounded-full bg-purple-500 flex items-center justify-center border-4 shadow-xl transition-all duration-300 ${
+                currentPlayerIndex === 1 ? 'border-yellow-400 shadow-[0_0_30px_rgba(250,204,21,0.8)] animate-pulse' : 'border-white'
+              }`}>
+                <div className="text-white text-2xl">👤</div>
               </div>
-              <p className="text-xs sm:text-sm font-bold text-white bg-black/80 px-3 py-1 rounded-full backdrop-blur-md shadow-lg">
-                {numberOfPlayers === 2 ? 'Bot 1' : botNames[0]}
+              <p className={`text-white text-sm font-bold px-3 py-1 rounded transition-all duration-300 ${
+                currentPlayerIndex === 1 ? 'bg-yellow-400/90 text-black' : 'bg-black/70'
+              }`}>
+                {numberOfPlayers === 2 ? 'Sarah' : botNames[0]}
               </p>
-              <div className="flex gap-0 relative" style={{ height: '2.5rem' }}>
-                {(numberOfPlayers === 2 ? botHand : botHands[0]).slice(0, Math.min(8, (numberOfPlayers === 2 ? botHand : botHands[0]).length)).map((card, idx) => (
+              <div className="flex gap-0 relative h-12 w-20">
+                {(numberOfPlayers === 2 ? botHand : botHands[0]).slice(0, Math.min(6, (numberOfPlayers === 2 ? botHand : botHands[0]).length)).map((card, idx) => (
                   <div
                     key={card.id}
-                    className="w-7 h-10 sm:w-8 sm:h-12 bg-black rounded-md border border-white/50 shadow-lg absolute"
+                    className="w-7 h-10 bg-black rounded-sm border border-white/30 absolute"
                     style={{
-                      left: `${idx * 0.45}rem`,
+                      left: `${idx * 8}px`,
                       zIndex: idx
                     }}
                   />
@@ -1042,51 +1048,63 @@ const UnoGame = () => {
             </div>
           )}
 
-          {/* LEFT PLAYER (Second Bot) */}
+          {/* LEFT PLAYER */}
           {!isMultiplayer && numberOfPlayers > 3 && botHands[1] && (
-            <div className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 flex flex-col items-center gap-2">
-              <div className="flex flex-col gap-0 relative" style={{ height: '3.5rem' }}>
-                {botHands[1].slice(0, Math.min(8, botHands[1].length)).map((card, idx) => (
+            <div className={`absolute left-4 top-1/2 -translate-y-1/2 flex flex-row items-center gap-3 transition-all duration-300 ${
+              currentPlayerIndex === 2 ? 'scale-110' : ''
+            }`}>
+              <div className="flex flex-col gap-0 relative h-20 w-10">
+                {botHands[1].slice(0, Math.min(6, botHands[1].length)).map((card, idx) => (
                   <div
                     key={card.id}
-                    className="w-7 h-10 sm:w-8 sm:h-12 bg-black rounded-md border border-white/50 shadow-lg absolute"
+                    className="w-10 h-7 bg-black rounded-sm border border-white/30 absolute"
                     style={{
-                      top: `${idx * 0.45}rem`,
-                      zIndex: idx,
-                      left: 0
+                      top: `${idx * 8}px`,
+                      zIndex: idx
                     }}
                   />
                 ))}
               </div>
-              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-3xl sm:text-4xl border-4 border-white shadow-2xl">
-                🧑
+              <div className="flex flex-col items-center gap-1">
+                <div className={`w-14 h-14 rounded-full bg-orange-500 flex items-center justify-center border-4 shadow-xl transition-all duration-300 ${
+                  currentPlayerIndex === 2 ? 'border-yellow-400 shadow-[0_0_30px_rgba(250,204,21,0.8)] animate-pulse' : 'border-white'
+                }`}>
+                  <div className="text-white text-xl">👤</div>
+                </div>
+                <p className={`text-white text-xs font-bold px-2 py-0.5 rounded transition-all duration-300 ${
+                  currentPlayerIndex === 2 ? 'bg-yellow-400/90 text-black' : 'bg-black/70'
+                }`}>{botNames[1]}</p>
               </div>
-              <p className="text-xs sm:text-sm font-bold text-white bg-black/80 px-3 py-1 rounded-full backdrop-blur-md shadow-lg">{botNames[1]}</p>
             </div>
           )}
 
-          {/* RIGHT PLAYER (Third Bot - only in 3 or 4 player) */}
+          {/* RIGHT PLAYER */}
           {!isMultiplayer && numberOfPlayers >= 3 && botHands[numberOfPlayers === 4 ? 2 : 1] && (
-            <div className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 flex flex-col items-center gap-2">
-              <div className="flex flex-col gap-0 relative" style={{ height: '3.5rem' }}>
-                {botHands[numberOfPlayers === 4 ? 2 : 1].slice(0, Math.min(8, botHands[numberOfPlayers === 4 ? 2 : 1].length)).map((card, idx) => (
+            <div className={`absolute right-4 top-1/2 -translate-y-1/2 flex flex-row items-center gap-3 transition-all duration-300 ${
+              (numberOfPlayers === 3 && currentPlayerIndex === 2) || (numberOfPlayers === 4 && currentPlayerIndex === 3) ? 'scale-110' : ''
+            }`}>
+              <div className="flex flex-col items-center gap-1">
+                <div className={`w-14 h-14 rounded-full bg-green-500 flex items-center justify-center border-4 shadow-xl transition-all duration-300 ${
+                  (numberOfPlayers === 3 && currentPlayerIndex === 2) || (numberOfPlayers === 4 && currentPlayerIndex === 3) ? 'border-yellow-400 shadow-[0_0_30px_rgba(250,204,21,0.8)] animate-pulse' : 'border-white'
+                }`}>
+                  <div className="text-white text-xl">👤</div>
+                </div>
+                <p className={`text-white text-xs font-bold px-2 py-0.5 rounded transition-all duration-300 ${
+                  (numberOfPlayers === 3 && currentPlayerIndex === 2) || (numberOfPlayers === 4 && currentPlayerIndex === 3) ? 'bg-yellow-400/90 text-black' : 'bg-black/70'
+                }`}>{botNames[numberOfPlayers === 4 ? 2 : 1]}</p>
+              </div>
+              <div className="flex flex-col gap-0 relative h-20 w-10">
+                {botHands[numberOfPlayers === 4 ? 2 : 1].slice(0, Math.min(6, botHands[numberOfPlayers === 4 ? 2 : 1].length)).map((card, idx) => (
                   <div
                     key={card.id}
-                    className="w-7 h-10 sm:w-8 sm:h-12 bg-black rounded-md border border-white/50 shadow-lg absolute"
+                    className="w-10 h-7 bg-black rounded-sm border border-white/30 absolute"
                     style={{
-                      top: `${idx * 0.45}rem`,
-                      zIndex: idx,
-                      left: 0
+                      top: `${idx * 8}px`,
+                      zIndex: idx
                     }}
                   />
                 ))}
               </div>
-              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-3xl sm:text-4xl border-4 border-white shadow-2xl">
-                👨
-              </div>
-              <p className="text-xs sm:text-sm font-bold text-white bg-black/80 px-3 py-1 rounded-full backdrop-blur-md shadow-lg">
-                {botNames[numberOfPlayers === 4 ? 2 : 1]}
-              </p>
             </div>
           )}
 
@@ -1144,12 +1162,18 @@ const UnoGame = () => {
           </div>
 
           {/* BOTTOM PLAYER (You) */}
-          <div className="absolute bottom-4 sm:bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-4">
+          <div className={`absolute bottom-4 sm:bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-4 transition-all duration-300 ${
+            isPlayerTurn && !gameOver ? 'scale-105' : ''
+          }`}>
             <div className="flex flex-col items-center gap-2">
-              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center text-3xl sm:text-4xl border-4 border-white shadow-2xl">
-                👑
+              <div className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-green-500 flex items-center justify-center text-2xl border-4 shadow-2xl transition-all duration-300 ${
+                isPlayerTurn && !gameOver ? 'border-yellow-400 shadow-[0_0_30px_rgba(250,204,21,0.8)] animate-pulse' : 'border-white'
+              }`}>
+                <div className="text-white">👤</div>
               </div>
-              <p className="text-xs sm:text-sm font-bold text-white bg-black/80 px-3 py-1 rounded-full backdrop-blur-md shadow-lg">You</p>
+              <p className={`text-xs sm:text-sm font-bold text-white px-3 py-1 rounded transition-all duration-300 ${
+                isPlayerTurn && !gameOver ? 'bg-yellow-400/90 text-black' : 'bg-black/70'
+              }`}>Vitaliy</p>
             </div>
             <div className="flex gap-1 sm:gap-2">
               {playerHand.map((card, index) => {
