@@ -1047,12 +1047,6 @@ const UnoGame = () => {
           {/* LEFT PLAYER (Second Bot) */}
           {!isMultiplayer && numberOfPlayers > 3 && botHands[1] && (
             <div className="absolute left-4 sm:left-6 top-1/2 -translate-y-1/2 flex items-center gap-2">
-              <div className="flex flex-col items-center gap-1">
-                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-2xl sm:text-3xl border-4 border-white shadow-xl">
-                  🧑
-                </div>
-                <p className="text-sm sm:text-base font-bold text-white bg-black/70 px-3 py-1 rounded-full backdrop-blur-md shadow-lg">{botNames[1]}</p>
-              </div>
               <div className="flex flex-col gap-0 relative" style={{ width: '2.5rem' }}>
                 {botHands[1].slice(0, Math.min(7, botHands[1].length)).map((card, idx) => (
                   <div
@@ -1065,12 +1059,26 @@ const UnoGame = () => {
                   />
                 ))}
               </div>
+              <div className="flex flex-col items-center gap-1">
+                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-2xl sm:text-3xl border-4 border-white shadow-xl">
+                  🧑
+                </div>
+                <p className="text-sm sm:text-base font-bold text-white bg-black/70 px-3 py-1 rounded-full backdrop-blur-md shadow-lg">{botNames[1]}</p>
+              </div>
             </div>
           )}
 
           {/* RIGHT PLAYER (Third Bot - only in 3 or 4 player) */}
           {!isMultiplayer && numberOfPlayers >= 3 && botHands[numberOfPlayers === 4 ? 2 : 1] && (
             <div className="absolute right-4 sm:right-6 top-1/2 -translate-y-1/2 flex items-center gap-2">
+              <div className="flex flex-col items-center gap-1">
+                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-2xl sm:text-3xl border-4 border-white shadow-xl">
+                  👨
+                </div>
+                <p className="text-sm sm:text-base font-bold text-white bg-black/70 px-3 py-1 rounded-full backdrop-blur-md shadow-lg">
+                  {botNames[numberOfPlayers === 4 ? 2 : 1]}
+                </p>
+              </div>
               <div className="flex flex-col gap-0 relative" style={{ width: '2.5rem' }}>
                 {botHands[numberOfPlayers === 4 ? 2 : 1].slice(0, Math.min(7, botHands[numberOfPlayers === 4 ? 2 : 1].length)).map((card, idx) => (
                   <div
@@ -1082,14 +1090,6 @@ const UnoGame = () => {
                     }}
                   />
                 ))}
-              </div>
-              <div className="flex flex-col items-center gap-1">
-                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-2xl sm:text-3xl border-4 border-white shadow-xl">
-                  👨
-                </div>
-                <p className="text-sm sm:text-base font-bold text-white bg-black/70 px-3 py-1 rounded-full backdrop-blur-md shadow-lg">
-                  {botNames[numberOfPlayers === 4 ? 2 : 1]}
-                </p>
               </div>
             </div>
           )}
