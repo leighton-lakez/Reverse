@@ -1018,22 +1018,24 @@ const UnoGame = () => {
         {/* Game Layout - Players positioned around center */}
         <div className="relative w-full max-w-6xl mx-auto" style={{ minHeight: '70vh' }}>
 
-          {/* TOP PLAYER (First Bot) */}
-          {!isMultiplayer && numberOfPlayers > 2 && botHands[0] && (
-            <div className="absolute top-4 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1.5">
-              <div className="flex flex-col items-center gap-0.5">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center text-xl sm:text-2xl border-3 border-white shadow-lg">
+          {/* TOP PLAYER (First Bot or Single Bot in 2-player) */}
+          {!isMultiplayer && ((numberOfPlayers > 2 && botHands[0]) || (numberOfPlayers === 2 && botHand.length > 0)) && (
+            <div className="absolute top-6 sm:top-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2">
+              <div className="flex flex-col items-center gap-1">
+                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center text-2xl sm:text-3xl border-4 border-white shadow-xl">
                   👩
                 </div>
-                <p className="text-xs sm:text-sm font-bold text-white bg-black/60 px-2 py-0.5 rounded-full backdrop-blur-sm">{botNames[0]}</p>
+                <p className="text-sm sm:text-base font-bold text-white bg-black/70 px-3 py-1 rounded-full backdrop-blur-md shadow-lg">
+                  {numberOfPlayers === 2 ? 'Bot' : botNames[0]}
+                </p>
               </div>
-              <div className="flex gap-0 relative" style={{ height: '3rem' }}>
-                {botHands[0].slice(0, Math.min(7, botHands[0].length)).map((card, idx) => (
+              <div className="flex gap-0 relative" style={{ height: '3.5rem' }}>
+                {(numberOfPlayers === 2 ? botHand : botHands[0]).slice(0, Math.min(7, (numberOfPlayers === 2 ? botHand : botHands[0]).length)).map((card, idx) => (
                   <div
                     key={card.id}
-                    className="w-6 h-10 sm:w-8 sm:h-12 bg-black rounded-md border border-white/30 shadow-lg absolute"
+                    className="w-8 h-12 sm:w-10 sm:h-14 bg-black rounded-lg border-2 border-white/40 shadow-xl absolute"
                     style={{
-                      left: `${idx * 0.4}rem`,
+                      left: `${idx * 0.5}rem`,
                       zIndex: idx
                     }}
                   />
@@ -1044,20 +1046,20 @@ const UnoGame = () => {
 
           {/* LEFT PLAYER (Second Bot) */}
           {!isMultiplayer && numberOfPlayers > 3 && botHands[1] && (
-            <div className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
-              <div className="flex flex-col items-center gap-0.5">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-xl sm:text-2xl border-3 border-white shadow-lg">
+            <div className="absolute left-4 sm:left-6 top-1/2 -translate-y-1/2 flex items-center gap-2">
+              <div className="flex flex-col items-center gap-1">
+                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-2xl sm:text-3xl border-4 border-white shadow-xl">
                   🧑
                 </div>
-                <p className="text-xs sm:text-sm font-bold text-white bg-black/60 px-2 py-0.5 rounded-full backdrop-blur-sm">{botNames[1]}</p>
+                <p className="text-sm sm:text-base font-bold text-white bg-black/70 px-3 py-1 rounded-full backdrop-blur-md shadow-lg">{botNames[1]}</p>
               </div>
-              <div className="flex flex-col gap-0 relative" style={{ width: '2rem' }}>
+              <div className="flex flex-col gap-0 relative" style={{ width: '2.5rem' }}>
                 {botHands[1].slice(0, Math.min(7, botHands[1].length)).map((card, idx) => (
                   <div
                     key={card.id}
-                    className="w-6 h-10 sm:w-8 sm:h-12 bg-black rounded-md border border-white/30 shadow-lg absolute"
+                    className="w-8 h-12 sm:w-10 sm:h-14 bg-black rounded-lg border-2 border-white/40 shadow-xl absolute"
                     style={{
-                      top: `${idx * 0.4}rem`,
+                      top: `${idx * 0.5}rem`,
                       zIndex: idx
                     }}
                   />
@@ -1066,51 +1068,51 @@ const UnoGame = () => {
             </div>
           )}
 
-          {/* RIGHT PLAYER (Third Bot or Single Bot) */}
-          {!isMultiplayer && (numberOfPlayers === 2 ? botHand : botHands[numberOfPlayers === 4 ? 2 : 1]) && (
-            <div className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
-              <div className="flex flex-col gap-0 relative" style={{ width: '2rem' }}>
-                {(numberOfPlayers === 2 ? botHand : botHands[numberOfPlayers === 4 ? 2 : 1]).slice(0, Math.min(7, (numberOfPlayers === 2 ? botHand : botHands[numberOfPlayers === 4 ? 2 : 1]).length)).map((card, idx) => (
+          {/* RIGHT PLAYER (Third Bot - only in 3 or 4 player) */}
+          {!isMultiplayer && numberOfPlayers >= 3 && botHands[numberOfPlayers === 4 ? 2 : 1] && (
+            <div className="absolute right-4 sm:right-6 top-1/2 -translate-y-1/2 flex items-center gap-2">
+              <div className="flex flex-col gap-0 relative" style={{ width: '2.5rem' }}>
+                {botHands[numberOfPlayers === 4 ? 2 : 1].slice(0, Math.min(7, botHands[numberOfPlayers === 4 ? 2 : 1].length)).map((card, idx) => (
                   <div
                     key={card.id}
-                    className="w-6 h-10 sm:w-8 sm:h-12 bg-black rounded-md border border-white/30 shadow-lg absolute"
+                    className="w-8 h-12 sm:w-10 sm:h-14 bg-black rounded-lg border-2 border-white/40 shadow-xl absolute"
                     style={{
-                      top: `${idx * 0.4}rem`,
+                      top: `${idx * 0.5}rem`,
                       zIndex: idx
                     }}
                   />
                 ))}
               </div>
-              <div className="flex flex-col items-center gap-0.5">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-xl sm:text-2xl border-3 border-white shadow-lg">
+              <div className="flex flex-col items-center gap-1">
+                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-2xl sm:text-3xl border-4 border-white shadow-xl">
                   👨
                 </div>
-                <p className="text-xs sm:text-sm font-bold text-white bg-black/60 px-2 py-0.5 rounded-full backdrop-blur-sm">
-                  {numberOfPlayers === 2 ? 'Bot' : botNames[numberOfPlayers === 4 ? 2 : 1]}
+                <p className="text-sm sm:text-base font-bold text-white bg-black/70 px-3 py-1 rounded-full backdrop-blur-md shadow-lg">
+                  {botNames[numberOfPlayers === 4 ? 2 : 1]}
                 </p>
               </div>
             </div>
           )}
 
           {/* CENTER - Draw Deck and Discard Pile */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-3 sm:gap-6">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-4 sm:gap-8 z-10">
             {/* Draw Deck */}
-            <div className="relative w-20 h-30 sm:w-28 sm:h-42">
-              <div className="absolute inset-0 bg-black rounded-[14px] sm:rounded-[18px] border-3 border-white/30 shadow-2xl">
+            <div className="relative w-24 h-36 sm:w-32 sm:h-48">
+              <div className="absolute inset-0 bg-black rounded-2xl border-4 border-white/40 shadow-2xl">
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="text-yellow-400 font-black text-lg sm:text-2xl">UNO</div>
+                  <div className="text-yellow-400 font-black text-2xl sm:text-3xl drop-shadow-lg">UNO</div>
                 </div>
               </div>
             </div>
 
             {/* Discard Pile */}
             {discardPile.length > 0 && (
-              <div className="relative w-20 h-30 sm:w-28 sm:h-42">
+              <div className="relative w-24 h-36 sm:w-32 sm:h-48">
                 <div
-                  className={`relative w-full h-full rounded-[14px] sm:rounded-[18px] ${getColorClass(currentColor)}`}
+                  className={`relative w-full h-full rounded-2xl ${getColorClass(currentColor)}`}
                   style={{
-                    boxShadow: '0 12px 30px rgba(0,0,0,0.5)',
-                    border: '3px solid rgba(0,0,0,0.3)'
+                    boxShadow: '0 15px 40px rgba(0,0,0,0.6)',
+                    border: '4px solid rgba(0,0,0,0.4)'
                   }}
                 >
                   <div className="absolute inset-[8%] flex items-center justify-center">
@@ -1146,8 +1148,8 @@ const UnoGame = () => {
           </div>
 
           {/* BOTTOM PLAYER (You) */}
-          <div className="absolute bottom-2 sm:bottom-4 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2">
-            <div className="flex gap-0" style={{ perspective: '1000px' }}>
+          <div className="absolute bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3">
+            <div className="flex gap-0" style={{ perspective: '1200px' }}>
               {playerHand.map((card, index) => {
                 const rotation = (index - playerHand.length / 2) * 2.5;
                 const yOffset = Math.abs(index - playerHand.length / 2) * 3;
@@ -1158,23 +1160,23 @@ const UnoGame = () => {
                     key={card.id}
                     onClick={() => handleCardClick(card)}
                     disabled={!isPlayerTurn || gameOver}
-                    className={`relative w-14 h-20 sm:w-20 sm:h-30 transition-all duration-300 ${
+                    className={`relative w-16 h-24 sm:w-24 sm:h-36 transition-all duration-300 ${
                       canPlay
-                        ? "hover:scale-105 hover:-translate-y-3 sm:hover:-translate-y-4 cursor-pointer hover:z-50"
+                        ? "hover:scale-110 hover:-translate-y-6 sm:hover:-translate-y-8 cursor-pointer hover:z-50"
                         : "opacity-50 cursor-not-allowed"
                     }`}
                     style={{
                       transform: `rotateZ(${rotation}deg) translateY(${yOffset}px)`,
                       zIndex: canPlay ? 30 : playerHand.length - Math.abs(index - playerHand.length / 2),
-                      marginLeft: index > 0 ? '-0.6rem' : '0'
+                      marginLeft: index > 0 ? '-0.7rem' : '0'
                     }}
                   >
-                    <div className="absolute inset-0 bg-black/60 rounded-[16px] blur-lg transform translate-y-2" />
+                    <div className="absolute inset-0 bg-black/60 rounded-2xl blur-xl transform translate-y-3" />
                     <div
-                      className={`relative w-full h-full rounded-[14px] sm:rounded-[16px] ${getColorClass(card.color)}`}
+                      className={`relative w-full h-full rounded-2xl ${getColorClass(card.color)}`}
                       style={{
-                        boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
-                        border: '2px solid rgba(0,0,0,0.3)'
+                        boxShadow: '0 15px 40px rgba(0,0,0,0.6)',
+                        border: '3px solid rgba(0,0,0,0.4)'
                       }}
                     >
                       <div className="absolute inset-[8%] flex items-center justify-center">
@@ -1186,7 +1188,7 @@ const UnoGame = () => {
                           }}
                         >
                           <div
-                            className={`text-xl sm:text-4xl font-black ${
+                            className={`text-2xl sm:text-5xl font-black ${
                               card.color === "yellow" ? "text-yellow-500" :
                               card.color === "red" ? "text-red-600" :
                               card.color === "blue" ? "text-blue-600" :
@@ -1212,20 +1214,20 @@ const UnoGame = () => {
                 );
               })}
             </div>
-            <div className="flex items-center gap-2">
-              <div className="flex flex-col items-center gap-0.5">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center text-xl sm:text-2xl border-3 border-white shadow-lg">
+            <div className="flex items-center gap-3">
+              <div className="flex flex-col items-center gap-1">
+                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center text-2xl sm:text-3xl border-4 border-white shadow-xl">
                   👑
                 </div>
-                <p className="text-xs sm:text-sm font-bold text-white bg-black/60 px-2 py-0.5 rounded-full backdrop-blur-sm">You</p>
+                <p className="text-sm sm:text-base font-bold text-white bg-black/70 px-3 py-1 rounded-full backdrop-blur-md shadow-lg">You</p>
               </div>
               {isPlayerTurn && !gameOver && (
                 <Button
                   onClick={drawCard}
                   size="sm"
-                  className="rounded-full bg-yellow-500 hover:bg-yellow-600 text-black font-bold text-xs sm:text-sm px-3 py-1 sm:px-4 sm:py-2"
+                  className="rounded-full bg-yellow-500 hover:bg-yellow-600 text-black font-bold text-sm sm:text-base px-4 py-2 sm:px-6 sm:py-3 shadow-xl"
                 >
-                  🎴 Draw
+                  🎴 Draw Card
                 </Button>
               )}
             </div>
