@@ -502,10 +502,11 @@ const UnoGame = () => {
   useEffect(() => {
     // Only run bot AI in single-player mode
     if (!isMultiplayer && !isPlayerTurn && !gameOver && currentPlayerIndex > 0) {
-      setTimeout(() => {
+      const timer = setTimeout(() => {
         // Bot plays (currentPlayerIndex - 1 because index 0 is player)
         botPlay(currentPlayerIndex - 1);
       }, 1000);
+      return () => clearTimeout(timer);
     }
   }, [isPlayerTurn, gameOver, isMultiplayer, currentPlayerIndex]);
 
@@ -715,7 +716,7 @@ const UnoGame = () => {
     } else {
       // Single player
       setPlayerHand(newPlayerHand);
-      setIsPlayerTurn(false);
+      advanceTurn();
     }
   };
 
