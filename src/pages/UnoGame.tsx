@@ -44,6 +44,7 @@ const UnoGame = () => {
   const [friends, setFriends] = useState<any[]>([]);
   const [currentUserId, setCurrentUserId] = useState<string>("");
   const [sendingInvites, setSendingInvites] = useState<Set<string>>(new Set());
+  const [playerName, setPlayerName] = useState<string>("You");
 
   // Multiplayer state
   const [isMultiplayer, setIsMultiplayer] = useState(false);
@@ -152,6 +153,18 @@ const UnoGame = () => {
 
       const userId = session.user.id;
       setCurrentUserId(userId);
+
+      // Fetch user profile to get display name
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('display_name')
+        .eq('id', userId)
+        .single();
+
+      if (profile?.display_name) {
+        setPlayerName(profile.display_name);
+      }
+
       await fetchFriends(userId);
 
       if (roomCode) {
@@ -1173,7 +1186,7 @@ const UnoGame = () => {
               </div>
               <p className={`text-xs sm:text-sm font-bold text-white px-3 py-1 rounded transition-all duration-300 ${
                 isPlayerTurn && !gameOver ? 'bg-yellow-400/90 text-black' : 'bg-black/70'
-              }`}>Vitaliy</p>
+              }`}>{playerName}</p>
             </div>
             <div className="flex gap-1 sm:gap-2">
               {playerHand.map((card, index) => {
