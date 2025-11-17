@@ -617,13 +617,16 @@ const UnoGame = () => {
       if (card.value === "reverse") {
         setIsReversed(!isReversed);
         toast({ title: "🔄 Reverse!", description: "Direction reversed!" });
+        // After reverse, play continues in opposite direction (next player gets their turn)
         advanceTurn();
       } else if (card.value === "skip") {
-        const nextIndex = getNextPlayerIndex();
-        const skippedPlayer = nextIndex === 0 ? "You" : botNames[nextIndex - 1];
+        // Skip the next player and move to the one after
+        advanceTurn(); // Move to next player (who gets skipped)
+        advanceTurn(); // Move to player after the skipped one
+        const currentIndex = currentPlayerIndex;
+        const skippedIndex = (currentPlayerIndex - (isReversed ? 1 : -1) + numberOfPlayers) % numberOfPlayers;
+        const skippedPlayer = skippedIndex === 0 ? "You" : botNames[skippedIndex - 1];
         toast({ title: "⏭️ Skip!", description: `${skippedPlayer}'s turn skipped!` });
-        advanceTurn(); // Skip
-        advanceTurn(); // Then move to next
       } else if (card.value === "draw2") {
         const nextPlayerIndex = getNextPlayerIndex();
         if (nextPlayerIndex === 0) {
