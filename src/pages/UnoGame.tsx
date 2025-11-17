@@ -1038,7 +1038,7 @@ const UnoGame = () => {
               currentPlayerIndex === 1 ? 'scale-110' : ''
             }`}>
               <div className={`w-16 h-16 rounded-full bg-purple-500 flex items-center justify-center border-4 shadow-xl transition-all duration-300 ${
-                currentPlayerIndex === 1 ? 'border-yellow-400 shadow-[0_0_30px_rgba(250,204,21,0.8)] animate-pulse' : 'border-white'
+                currentPlayerIndex === 1 ? 'border-yellow-400 shadow-[0_0_20px_rgba(250,204,21,0.6)]' : 'border-white'
               }`}>
                 <div className="text-white text-2xl">👤</div>
               </div>
@@ -1081,7 +1081,7 @@ const UnoGame = () => {
               </div>
               <div className="flex flex-col items-center gap-1">
                 <div className={`w-14 h-14 rounded-full bg-orange-500 flex items-center justify-center border-4 shadow-xl transition-all duration-300 ${
-                  currentPlayerIndex === 2 ? 'border-yellow-400 shadow-[0_0_30px_rgba(250,204,21,0.8)] animate-pulse' : 'border-white'
+                  currentPlayerIndex === 2 ? 'border-yellow-400 shadow-[0_0_20px_rgba(250,204,21,0.6)]' : 'border-white'
                 }`}>
                   <div className="text-white text-xl">👤</div>
                 </div>
@@ -1099,7 +1099,7 @@ const UnoGame = () => {
             }`}>
               <div className="flex flex-col items-center gap-1">
                 <div className={`w-14 h-14 rounded-full bg-green-500 flex items-center justify-center border-4 shadow-xl transition-all duration-300 ${
-                  (numberOfPlayers === 3 && currentPlayerIndex === 2) || (numberOfPlayers === 4 && currentPlayerIndex === 3) ? 'border-yellow-400 shadow-[0_0_30px_rgba(250,204,21,0.8)] animate-pulse' : 'border-white'
+                  (numberOfPlayers === 3 && currentPlayerIndex === 2) || (numberOfPlayers === 4 && currentPlayerIndex === 3) ? 'border-yellow-400 shadow-[0_0_20px_rgba(250,204,21,0.6)]' : 'border-white'
                 }`}>
                   <div className="text-white text-xl">👤</div>
                 </div>
@@ -1181,7 +1181,7 @@ const UnoGame = () => {
           }`}>
             <div className="flex flex-col items-center gap-2">
               <div className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-green-500 flex items-center justify-center text-2xl border-4 shadow-2xl transition-all duration-300 ${
-                isPlayerTurn && !gameOver ? 'border-yellow-400 shadow-[0_0_30px_rgba(250,204,21,0.8)] animate-pulse' : 'border-white'
+                isPlayerTurn && !gameOver ? 'border-yellow-400 shadow-[0_0_20px_rgba(250,204,21,0.6)]' : 'border-white'
               }`}>
                 <div className="text-white">👤</div>
               </div>
