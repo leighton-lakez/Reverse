@@ -190,17 +190,35 @@ const ItemDetail = () => {
 
       <main className="max-w-7xl mx-auto px-4 py-3">
         <div className="grid lg:grid-cols-7 gap-4">
-          {/* Image Gallery */}
+          {/* Image/Video Gallery */}
           <div className="lg:col-span-2 animate-fade-in">
             <div className="aspect-square rounded-lg overflow-hidden bg-muted h-[280px]">
-              <img
-                src={item.images?.[0] || item.image || "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800&auto=format&fit=crop"}
-                alt={item.title}
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  e.currentTarget.src = "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800&auto=format&fit=crop";
-                }}
-              />
+              {item.images?.[0] ? (
+                <img
+                  src={item.images[0]}
+                  alt={item.title}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.currentTarget.src = "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800&auto=format&fit=crop";
+                  }}
+                />
+              ) : item.videos?.[0] ? (
+                <video
+                  src={item.videos[0]}
+                  className="w-full h-full object-cover"
+                  controls
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                />
+              ) : (
+                <img
+                  src="https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800&auto=format&fit=crop"
+                  alt={item.title}
+                  className="w-full h-full object-cover"
+                />
+              )}
             </div>
           </div>
 

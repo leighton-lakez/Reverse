@@ -16,6 +16,7 @@ interface Item {
   condition: string;
   location: string;
   images: string[];
+  videos?: string[];
   user_id: string;
   description: string;
   category: string;
@@ -775,11 +776,26 @@ const Index = () => {
               {nextItem && (
                 <div className="absolute inset-0 w-full h-full">
                   <div className="relative w-full h-full rounded-3xl overflow-hidden shadow-xl bg-card border border-border scale-95 opacity-50">
-                    <img
-                      src={nextItem.images?.[0] || "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800&auto=format&fit=crop"}
-                      alt={nextItem.title}
-                      className="w-full h-full object-cover"
-                    />
+                    {nextItem.images?.[0] ? (
+                      <img
+                        src={nextItem.images[0]}
+                        alt={nextItem.title}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : nextItem.videos?.[0] ? (
+                      <video
+                        src={nextItem.videos[0]}
+                        className="w-full h-full object-cover"
+                        muted
+                        playsInline
+                      />
+                    ) : (
+                      <img
+                        src="https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800&auto=format&fit=crop"
+                        alt={nextItem.title}
+                        className="w-full h-full object-cover"
+                      />
+                    )}
                   </div>
                 </div>
               )}
@@ -802,13 +818,32 @@ const Index = () => {
                   onTouchEnd={handleTouchEnd}
                 >
                   <div className="relative w-full h-full rounded-3xl overflow-hidden shadow-2xl bg-card border border-border">
-                    {/* Image */}
-                    <img
-                      src={currentItem.images?.[0] || "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800&auto=format&fit=crop"}
-                      alt={currentItem.title}
-                      className="w-full h-full object-cover"
-                      draggable={false}
-                    />
+                    {/* Image or Video */}
+                    {currentItem.images?.[0] ? (
+                      <img
+                        src={currentItem.images[0]}
+                        alt={currentItem.title}
+                        className="w-full h-full object-cover"
+                        draggable={false}
+                      />
+                    ) : currentItem.videos?.[0] ? (
+                      <video
+                        src={currentItem.videos[0]}
+                        className="w-full h-full object-cover"
+                        autoPlay
+                        loop
+                        muted
+                        playsInline
+                        draggable={false}
+                      />
+                    ) : (
+                      <img
+                        src="https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800&auto=format&fit=crop"
+                        alt={currentItem.title}
+                        className="w-full h-full object-cover"
+                        draggable={false}
+                      />
+                    )}
 
                     {/* Gradient overlay */}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
