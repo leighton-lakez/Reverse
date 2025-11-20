@@ -21,7 +21,7 @@ interface Item {
   category: string;
 }
 
-const categories = ["All", "Handbags", "Shoes", "Clothing", "Accessories", "Jewelry", "Watches"];
+const categories = ["All", "Handbags", "Shoes", "Clothing", "Accessories", "Jewelry", "Watches", "Technology", "Other"];
 
 const Index = () => {
   const location = useLocation();
@@ -224,7 +224,14 @@ const Index = () => {
         .eq("user_id", user.id)
         .eq("item_id", itemId);
 
-      if (!error) {
+      if (error) {
+        console.error("Error removing favorite:", error);
+        toast({
+          title: "Error",
+          description: "Failed to remove from favorites",
+          variant: "destructive",
+        });
+      } else {
         const newFavorites = new Set(favoritedItemIds);
         newFavorites.delete(itemId);
         setFavoritedItemIds(newFavorites);
@@ -242,7 +249,14 @@ const Index = () => {
           item_id: itemId,
         });
 
-      if (!error) {
+      if (error) {
+        console.error("Error adding favorite:", error);
+        toast({
+          title: "Error",
+          description: "Failed to add to favorites",
+          variant: "destructive",
+        });
+      } else {
         const newFavorites = new Set(favoritedItemIds);
         newFavorites.add(itemId);
         setFavoritedItemIds(newFavorites);

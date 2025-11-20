@@ -13,15 +13,10 @@ const CATEGORIES = [
   "Clothing",
   "Shoes",
   "Accessories",
-  "Bags",
+  "Handbags",
   "Jewelry",
   "Watches",
-  "Beauty",
-  "Home",
-  "Electronics",
-  "Sports",
-  "Books",
-  "Art",
+  "Technology",
   "Other"
 ];
 

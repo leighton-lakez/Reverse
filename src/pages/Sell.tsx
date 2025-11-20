@@ -24,6 +24,7 @@ type ItemData = {
   title: string;
   brand: string;
   category: string;
+  customCategory?: string;
   description: string;
   condition: string;
   price: string;
@@ -40,6 +41,7 @@ const conversationSteps = [
   "title",
   "brand",
   "category",
+  "customCategory",
   "description",
   "condition",
   "price",
@@ -329,14 +331,31 @@ Please provide a price suggestion considering any visible damage or wear in the 
         addBotMessageWithDelay(
           "Got it! What category does this item belong to?",
           600,
-          ["Handbags", "Shoes", "Clothing", "Accessories", "Jewelry", "Watches"],
+          ["Handbags", "Shoes", "Clothing", "Accessories", "Jewelry", "Watches", "Technology", "Other"],
           "select"
         );
         setCurrentStep("category");
         break;
 
       case "category":
-        setItemData({ ...itemData, category: inputToSubmit.toLowerCase() });
+        if (inputToSubmit.toLowerCase() === "other") {
+          addBotMessageWithDelay(
+            "Please type in the category name for your item:",
+            600
+          );
+          setCurrentStep("customCategory");
+        } else {
+          setItemData({ ...itemData, category: inputToSubmit.toLowerCase() });
+          addBotMessageWithDelay(
+            "Nice! Can you describe the item? Include details about authenticity, flaws, or anything special about it.",
+            600
+          );
+          setCurrentStep("description");
+        }
+        break;
+
+      case "customCategory":
+        setItemData({ ...itemData, category: inputToSubmit.toLowerCase(), customCategory: inputToSubmit });
         addBotMessageWithDelay(
           "Nice! Can you describe the item? Include details about authenticity, flaws, or anything special about it.",
           600

@@ -394,6 +394,8 @@ const EditListing = () => {
                   <SelectItem value="accessories">Accessories</SelectItem>
                   <SelectItem value="jewelry">Jewelry</SelectItem>
                   <SelectItem value="watches">Watches</SelectItem>
+                  <SelectItem value="technology">Technology</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
                 </SelectContent>
               </Select>
             </div>
