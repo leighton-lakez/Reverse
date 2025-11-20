@@ -264,7 +264,7 @@ const Profile = () => {
           size: draft.size || '',
           images: draft.images || [],
           videos: draft.videos || [],
-          status: "active",
+          status: "available",
         });
 
       if (insertError) {
