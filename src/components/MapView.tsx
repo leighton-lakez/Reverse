@@ -306,8 +306,14 @@ const getCoordinatesSync = (location: string): [number, number] | null => {
 };
 
 // Component to handle map centering and resizing
-const MapUpdater = ({ center, zoom, triggerResize }: { center: [number, number], zoom: number, triggerResize?: number }) => {
+const MapUpdater = ({ center, zoom, triggerResize, mapRef }: { center: [number, number], zoom: number, triggerResize?: number | null, mapRef?: React.MutableRefObject<L.Map | null> }) => {
   const map = useMap();
+
+  useEffect(() => {
+    if (mapRef) {
+      mapRef.current = map;
+    }
+  }, [map, mapRef]);
 
   useEffect(() => {
     map.setView(center, zoom, { animate: true, duration: 0.5 });
@@ -315,7 +321,7 @@ const MapUpdater = ({ center, zoom, triggerResize }: { center: [number, number],
 
   useEffect(() => {
     // Invalidate size when container dimensions change (e.g., sidebar moves)
-    if (triggerResize !== undefined) {
+    if (triggerResize !== undefined && triggerResize !== null) {
       setTimeout(() => {
         map.invalidateSize();
       }, 350); // Wait for sidebar animation to complete
@@ -340,12 +346,27 @@ const MapView = ({ items, onItemClick }: MapViewProps) => {
   const [mapZoom, setMapZoom] = useState(4);
   const [geocodingProgress, setGeocodingProgress] = useState<{ current: number; total: number } | null>(null);
   const [popupItem, setPopupItem] = useState<Item | null>(null);
+  const [popupPosition, setPopupPosition] = useState<{ x: number; y: number } | null>(null);
+  const mapRef = useRef<L.Map | null>(null);
 
   // Swipe functionality for mobile
-  const [sidebarOffset, setSidebarOffset] = useState(0); // 0 = open, negative = swiped left
+  // Initialize with list hidden on mobile (will be set properly in useEffect)
+  const [sidebarOffset, setSidebarOffset] = useState<number | null>(null);
   const [isSwiping, setIsSwiping] = useState(false);
   const [touchStartX, setTouchStartX] = useState(0);
   const sidebarRef = useRef<HTMLDivElement>(null);
+
+  // Initialize sidebar offset - hidden on mobile, visible on desktop
+  useEffect(() => {
+    const isMobile = window.innerWidth < 768;
+    if (isMobile) {
+      // Start with list hidden on mobile - calculate width after mount
+      const sidebarWidth = sidebarRef.current?.offsetWidth || window.innerWidth * 0.75;
+      setSidebarOffset(-sidebarWidth);
+    } else {
+      setSidebarOffset(0);
+    }
+  }, []);
 
   useEffect(() => {
     const geocodeItems = async () => {
@@ -551,11 +572,11 @@ const MapView = ({ items, onItemClick }: MapViewProps) => {
 
   return (
     <div className="h-full w-full flex flex-col relative bg-background">
-      {/* Mobile Hide List Button */}
+      {/* Mobile Show/Hide List Button */}
       <div className="md:hidden flex-shrink-0 bg-background border-b border-border p-2">
         <Button
           onClick={() => {
-            const sidebarWidth = sidebarRef.current?.offsetWidth || 0;
+            const sidebarWidth = sidebarRef.current?.offsetWidth || window.innerWidth * 0.75;
             if (sidebarOffset === 0) {
               // Hide list completely
               setSidebarOffset(-sidebarWidth);
@@ -667,10 +688,10 @@ const MapView = ({ items, onItemClick }: MapViewProps) => {
         {/* Listing Cards Sidebar - Swipeable overlay on mobile, static on desktop */}
         <div
           ref={sidebarRef}
-          className="absolute md:relative w-[75%] sm:w-[240px] md:w-[280px] lg:w-[320px] h-full flex-shrink-0 overflow-y-auto bg-background border-r border-border md:translate-x-0 z-10"
+          className={`absolute md:relative w-[75%] sm:w-[240px] md:w-[280px] lg:w-[320px] h-full flex-shrink-0 overflow-y-auto bg-background border-r border-border md:translate-x-0 z-10 ${sidebarOffset === null ? 'md:opacity-100 opacity-0' : 'opacity-100'}`}
           style={{
-            transform: window.innerWidth < 768 ? `translateX(${sidebarOffset}px)` : 'translateX(0)',
-            transition: isSwiping ? 'none' : 'transform 0.3s ease-out'
+            transform: window.innerWidth < 768 ? `translateX(${sidebarOffset ?? -window.innerWidth}px)` : 'translateX(0)',
+            transition: isSwiping ? 'none' : 'transform 0.3s ease-out, opacity 0.2s ease-out'
           }}
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
