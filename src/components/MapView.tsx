@@ -28,6 +28,7 @@ interface Item {
   condition: string;
   location: string;
   images: string[];
+  videos?: string[];
   user_id: string;
   description: string;
   category: string;
@@ -338,6 +339,7 @@ const MapView = ({ items, onItemClick }: MapViewProps) => {
   const [mapCenter, setMapCenter] = useState<[number, number]>([39.8283, -98.5795]);
   const [mapZoom, setMapZoom] = useState(4);
   const [geocodingProgress, setGeocodingProgress] = useState<{ current: number; total: number } | null>(null);
+  const [popupItem, setPopupItem] = useState<Item | null>(null);
 
   // Swipe functionality for mobile
   const [sidebarOffset, setSidebarOffset] = useState(0); // 0 = open, negative = swiped left
@@ -493,8 +495,18 @@ const MapView = ({ items, onItemClick }: MapViewProps) => {
     });
   };
 
-  // Handle listing card click - navigate to item detail
+  // Handle listing card click - pan map to location
   const handleListingClick = (item: Item) => {
+    if (item.latitude && item.longitude) {
+      setMapCenter([item.latitude, item.longitude]);
+      setMapZoom(15);
+      setSelectedItemId(item.id);
+      setPopupItem(item);
+    }
+  };
+
+  // Handle popup click - navigate to item detail
+  const handlePopupClick = (item: Item) => {
     navigate("/item-detail", { state: { item } });
   };
 
@@ -635,7 +647,9 @@ const MapView = ({ items, onItemClick }: MapViewProps) => {
                   eventHandlers={{
                     click: () => {
                       setSelectedItemId(item.id);
-                      handleListingClick(item);
+                      setPopupItem(item);
+                      setMapCenter([item.latitude!, item.longitude!]);
+                      setMapZoom(15);
                     },
                     mouseover: () => {
                       setHoveredItemId(item.id);
@@ -809,6 +823,77 @@ const MapView = ({ items, onItemClick }: MapViewProps) => {
               </div>
             </div>
           </button>
+        )}
+
+        {/* Listing Popup Preview - Shows when marker is clicked */}
+        {popupItem && (
+          <div className="fixed inset-x-0 bottom-0 md:absolute md:inset-auto md:bottom-4 md:left-1/2 md:-translate-x-1/2 z-50 max-w-md mx-auto px-4 pb-4 md:px-0">
+            <Card
+              className="bg-background/95 backdrop-blur-lg border-2 border-primary shadow-2xl overflow-hidden cursor-pointer"
+              onClick={() => handlePopupClick(popupItem)}
+            >
+              {/* Close button */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setPopupItem(null);
+                  setSelectedItemId(null);
+                }}
+                className="absolute top-2 right-2 z-10 bg-background/80 hover:bg-background rounded-full p-1.5 shadow-lg transition-all"
+              >
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+
+              <div className="flex gap-4 p-4">
+                {/* Image */}
+                {popupItem.images && popupItem.images.length > 0 ? (
+                  <div className="w-24 h-24 flex-shrink-0 rounded-lg overflow-hidden bg-muted">
+                    <img
+                      src={popupItem.images[0]}
+                      alt={popupItem.title}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                ) : popupItem.videos && popupItem.videos.length > 0 ? (
+                  <div className="w-24 h-24 flex-shrink-0 rounded-lg overflow-hidden bg-muted">
+                    <video
+                      src={popupItem.videos[0]}
+                      className="w-full h-full object-cover"
+                      autoPlay
+                      loop
+                      muted
+                      playsInline
+                    />
+                  </div>
+                ) : null}
+
+                {/* Info */}
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-bold text-base mb-1 line-clamp-2">{popupItem.title}</h3>
+                  <p className="text-xl font-bold text-primary mb-1">
+                    ${popupItem.price.toLocaleString()}
+                  </p>
+                  <p className="text-sm text-muted-foreground mb-1">{popupItem.brand}</p>
+                  <div className="flex items-center gap-1 text-muted-foreground mb-2">
+                    <MapPin className="h-3 w-3 flex-shrink-0" />
+                    <span className="text-xs truncate">{popupItem.location}</span>
+                  </div>
+                  <span className="inline-block text-xs bg-muted px-2 py-1 rounded-full">
+                    {popupItem.condition}
+                  </span>
+                </div>
+              </div>
+
+              {/* Click to view full listing hint */}
+              <div className="px-4 pb-3 pt-0">
+                <div className="text-center text-xs text-muted-foreground bg-muted/50 py-2 rounded-lg">
+                  Click to view full listing
+                </div>
+              </div>
+            </Card>
+          </div>
         )}
       </div>
     </div>
