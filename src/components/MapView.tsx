@@ -523,6 +523,17 @@ const MapView = ({ items, onItemClick }: MapViewProps) => {
       setMapZoom(15);
       setSelectedItemId(item.id);
       setPopupItem(item);
+
+      // Calculate screen position for desktop popup after map pans
+      setTimeout(() => {
+        if (mapRef.current && window.innerWidth >= 768) {
+          const markerLatLng = L.latLng(item.latitude!, item.longitude!);
+          const point = mapRef.current.latLngToContainerPoint(markerLatLng);
+          setPopupPosition({ x: point.x, y: point.y });
+        } else {
+          setPopupPosition(null);
+        }
+      }, 600); // Wait for map pan animation
     }
   };
 
@@ -612,7 +623,7 @@ const MapView = ({ items, onItemClick }: MapViewProps) => {
             style={{ zIndex: 0 }}
             scrollWheelZoom={true}
           >
-            <MapUpdater center={mapCenter} zoom={mapZoom} triggerResize={sidebarOffset} />
+            <MapUpdater center={mapCenter} zoom={mapZoom} triggerResize={sidebarOffset} mapRef={mapRef} />
 
             {/* Satellite imagery layer */}
             <TileLayer
@@ -671,6 +682,17 @@ const MapView = ({ items, onItemClick }: MapViewProps) => {
                       setPopupItem(item);
                       setMapCenter([item.latitude!, item.longitude!]);
                       setMapZoom(15);
+
+                      // Calculate screen position for desktop popup
+                      setTimeout(() => {
+                        if (mapRef.current && window.innerWidth >= 768) {
+                          const markerLatLng = L.latLng(item.latitude!, item.longitude!);
+                          const point = mapRef.current.latLngToContainerPoint(markerLatLng);
+                          setPopupPosition({ x: point.x, y: point.y });
+                        } else {
+                          setPopupPosition(null);
+                        }
+                      }, 100);
                     },
                     mouseover: () => {
                       setHoveredItemId(item.id);
@@ -848,7 +870,15 @@ const MapView = ({ items, onItemClick }: MapViewProps) => {
 
         {/* Listing Popup Preview - Shows when marker is clicked */}
         {popupItem && (
-          <div className="fixed inset-x-0 bottom-0 md:absolute md:inset-auto md:bottom-4 md:left-1/2 md:-translate-x-1/2 z-50 max-w-md mx-auto px-4 pb-4 md:px-0">
+          <div
+            className="fixed inset-x-0 bottom-0 md:absolute md:inset-auto z-50 max-w-md mx-auto px-4 pb-4 md:px-0"
+            style={popupPosition ? {
+              left: `${popupPosition.x}px`,
+              bottom: 'auto',
+              top: `${popupPosition.y - 180}px`, // Position above marker (180px is approx card height)
+              transform: 'translateX(-50%)'
+            } : {}}
+          >
             <Card
               className="bg-background/95 backdrop-blur-lg border-2 border-primary shadow-2xl overflow-hidden cursor-pointer"
               onClick={() => handlePopupClick(popupItem)}
@@ -859,6 +889,7 @@ const MapView = ({ items, onItemClick }: MapViewProps) => {
                   e.stopPropagation();
                   setPopupItem(null);
                   setSelectedItemId(null);
+                  setPopupPosition(null);
                 }}
                 className="absolute top-2 right-2 z-10 bg-background/80 hover:bg-background rounded-full p-1.5 shadow-lg transition-all"
               >
