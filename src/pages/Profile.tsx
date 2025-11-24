@@ -1101,14 +1101,31 @@ const Profile = () => {
                     className="group relative overflow-hidden bg-card/50 backdrop-blur-sm rounded-2xl border border-border/50 hover:border-primary/30 transition-all hover:shadow-lg hover:shadow-primary/10"
                   >
                     <div className="relative aspect-square overflow-hidden bg-gradient-to-br from-muted to-muted/50">
-                      <img
-                        src={item.images?.[0] || "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800&auto=format&fit=crop"}
-                        alt={item.title}
-                        className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
-                        onError={(e) => {
-                          e.currentTarget.src = "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800&auto=format&fit=crop";
-                        }}
-                      />
+                      {item.images?.[0] ? (
+                        <img
+                          src={item.images[0]}
+                          alt={item.title}
+                          className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+                          onError={(e) => {
+                            e.currentTarget.src = "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800&auto=format&fit=crop";
+                          }}
+                        />
+                      ) : item.videos?.[0] ? (
+                        <video
+                          src={item.videos[0]}
+                          className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+                          autoPlay
+                          loop
+                          muted
+                          playsInline
+                        />
+                      ) : (
+                        <img
+                          src="https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800&auto=format&fit=crop"
+                          alt={item.title}
+                          className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+                        />
+                      )}
                       {/* Gradient overlay on hover */}
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
@@ -1183,14 +1200,31 @@ const Profile = () => {
                     className="group relative overflow-hidden bg-card/50 backdrop-blur-sm rounded-2xl border border-border/50 opacity-80 hover:opacity-100 transition-all"
                   >
                     <div className="relative aspect-square overflow-hidden bg-gradient-to-br from-muted to-muted/50">
-                      <img
-                        src={item.images?.[0] || "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800&auto=format&fit=crop"}
-                        alt={item.title}
-                        className="h-full w-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
-                        onError={(e) => {
-                          e.currentTarget.src = "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800&auto=format&fit=crop";
-                        }}
-                      />
+                      {item.images?.[0] ? (
+                        <img
+                          src={item.images[0]}
+                          alt={item.title}
+                          className="h-full w-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
+                          onError={(e) => {
+                            e.currentTarget.src = "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800&auto=format&fit=crop";
+                          }}
+                        />
+                      ) : item.videos?.[0] ? (
+                        <video
+                          src={item.videos[0]}
+                          className="h-full w-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
+                          autoPlay
+                          loop
+                          muted
+                          playsInline
+                        />
+                      ) : (
+                        <img
+                          src="https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800&auto=format&fit=crop"
+                          alt={item.title}
+                          className="h-full w-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
+                        />
+                      )}
                       <div className="absolute inset-0 bg-secondary/20" />
                       <Badge className="absolute top-2 right-2 text-xs bg-secondary text-secondary-foreground shadow-md">
                         Sold
@@ -1251,6 +1285,15 @@ const Profile = () => {
                           src={draft.images[0]}
                           alt={draft.title || "Draft"}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        />
+                      ) : draft.videos && draft.videos.length > 0 ? (
+                        <video
+                          src={draft.videos[0]}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          autoPlay
+                          loop
+                          muted
+                          playsInline
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">
