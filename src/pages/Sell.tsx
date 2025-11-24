@@ -566,8 +566,8 @@ Please provide a price suggestion considering any visible damage or wear in the 
           location: itemData.location,
           size: itemData.size,
           trade_preference: itemData.tradePreference,
-          images: uploadedImageUrls,
-          videos: uploadedVideoUrls,
+          images: uploadedImageUrls.length > 0 ? uploadedImageUrls : null,
+          videos: uploadedVideoUrls.length > 0 ? uploadedVideoUrls : null,
         });
 
       if (draftError) {
@@ -722,8 +722,8 @@ Please provide a price suggestion considering any visible damage or wear in the 
         location: validationResult.data.location,
         size: validationResult.data.size || null,
         trade_preference: itemData.tradePreference,
-        images: uploadedImageUrls,
-        videos: uploadedVideoUrls,
+        images: uploadedImageUrls.length > 0 ? uploadedImageUrls : null,
+        videos: uploadedVideoUrls.length > 0 ? uploadedVideoUrls : null,
         status: 'available',
       });
 

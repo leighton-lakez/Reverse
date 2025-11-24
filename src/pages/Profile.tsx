@@ -262,8 +262,8 @@ const Profile = () => {
           price: draft.price,
           location: draft.location,
           size: draft.size || '',
-          images: draft.images || [],
-          videos: draft.videos || [],
+          images: (draft.images && draft.images.length > 0) ? draft.images : null,
+          videos: (draft.videos && draft.videos.length > 0) ? draft.videos : null,
           status: "available",
         });
 
@@ -1013,6 +1013,54 @@ const Profile = () => {
 
             {profileData.bio && (
               <p className="text-base text-foreground/90 leading-relaxed line-clamp-3 mb-4 bg-muted/30 p-3 rounded-xl border border-border/30">{profileData.bio}</p>
+            )}
+
+            {/* Payment Methods Display */}
+            {(profileData.venmo || profileData.cashapp || profileData.zelle || profileData.paypal || profileData.apple_pay || profileData.other_payment) && (
+              <div className="mb-4 p-4 bg-muted/30 rounded-xl border border-border/30">
+                <div className="flex items-center gap-2 mb-3">
+                  <Wallet className="h-5 w-5 text-primary" />
+                  <span className="font-semibold text-foreground">Payment Methods</span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {profileData.venmo && (
+                    <div className="flex items-center gap-1.5 bg-[#008CFF]/10 text-[#008CFF] px-3 py-1.5 rounded-full text-sm font-medium">
+                      <span>Venmo:</span>
+                      <span className="font-semibold">{profileData.venmo}</span>
+                    </div>
+                  )}
+                  {profileData.cashapp && (
+                    <div className="flex items-center gap-1.5 bg-[#00D632]/10 text-[#00D632] px-3 py-1.5 rounded-full text-sm font-medium">
+                      <span>Cash App:</span>
+                      <span className="font-semibold">{profileData.cashapp}</span>
+                    </div>
+                  )}
+                  {profileData.zelle && (
+                    <div className="flex items-center gap-1.5 bg-[#6D1ED4]/10 text-[#6D1ED4] px-3 py-1.5 rounded-full text-sm font-medium">
+                      <span>Zelle:</span>
+                      <span className="font-semibold">{profileData.zelle}</span>
+                    </div>
+                  )}
+                  {profileData.paypal && (
+                    <div className="flex items-center gap-1.5 bg-[#003087]/10 text-[#003087] px-3 py-1.5 rounded-full text-sm font-medium">
+                      <span>PayPal:</span>
+                      <span className="font-semibold">{profileData.paypal}</span>
+                    </div>
+                  )}
+                  {profileData.apple_pay && (
+                    <div className="flex items-center gap-1.5 bg-foreground/10 text-foreground px-3 py-1.5 rounded-full text-sm font-medium">
+                      <span>Apple Pay:</span>
+                      <span className="font-semibold">{profileData.apple_pay}</span>
+                    </div>
+                  )}
+                  {profileData.other_payment && (
+                    <div className="flex items-center gap-1.5 bg-primary/10 text-primary px-3 py-1.5 rounded-full text-sm font-medium">
+                      <span>Other:</span>
+                      <span className="font-semibold">{profileData.other_payment}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
             )}
 
             {/* Story Buttons - Enhanced */}

@@ -141,6 +141,12 @@ export type Database = {
           display_name: string | null
           id: string
           location: string | null
+          venmo: string | null
+          cashapp: string | null
+          zelle: string | null
+          paypal: string | null
+          apple_pay: string | null
+          other_payment: string | null
         }
         Insert: {
           avatar_url?: string | null
@@ -149,6 +155,12 @@ export type Database = {
           display_name?: string | null
           id: string
           location?: string | null
+          venmo?: string | null
+          cashapp?: string | null
+          zelle?: string | null
+          paypal?: string | null
+          apple_pay?: string | null
+          other_payment?: string | null
         }
         Update: {
           avatar_url?: string | null
@@ -157,6 +169,12 @@ export type Database = {
           display_name?: string | null
           id?: string
           location?: string | null
+          venmo?: string | null
+          cashapp?: string | null
+          zelle?: string | null
+          paypal?: string | null
+          apple_pay?: string | null
+          other_payment?: string | null
         }
         Relationships: []
       }
