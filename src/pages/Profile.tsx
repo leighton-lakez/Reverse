@@ -1071,6 +1071,26 @@ const Profile = () => {
                 <div className="text-sm font-semibold text-purple-600">Following</div>
               </div>
             </div>
+
+            {/* Orders & Seller Settings Buttons */}
+            <div className="grid grid-cols-2 gap-3 mt-4">
+              <Button
+                onClick={() => navigate("/orders")}
+                variant="outline"
+                className="h-12 border-green-500/30 hover:bg-green-500/10 hover:border-green-500/50"
+              >
+                <Package className="h-5 w-5 mr-2 text-green-500" />
+                <span className="font-semibold">My Orders</span>
+              </Button>
+              <Button
+                onClick={() => navigate("/seller-settings")}
+                variant="outline"
+                className="h-12 border-[#635BFF]/30 hover:bg-[#635BFF]/10 hover:border-[#635BFF]/50"
+              >
+                <DollarSign className="h-5 w-5 mr-2 text-[#635BFF]" />
+                <span className="font-semibold">Seller Settings</span>
+              </Button>
+            </div>
           </div>
         </div>
 
