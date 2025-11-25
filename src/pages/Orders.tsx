@@ -379,6 +379,19 @@ const Orders = () => {
             <MessageCircle className="h-4 w-4 mr-1" />
             Message
           </Button>
+
+          {/* Open Dispute Button - Only for buyers on shipped/delivered orders */}
+          {isBuyer && ['shipped', 'delivered', 'confirmed'].includes(order.status) && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="border-red-500/30 text-red-500 hover:bg-red-500/10"
+              onClick={() => navigate('/open-dispute', { state: { order } })}
+            >
+              <AlertCircle className="h-4 w-4 mr-1" />
+              Open Dispute
+            </Button>
+          )}
         </div>
       </Card>
     );

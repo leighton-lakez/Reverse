@@ -14,6 +14,7 @@ import ItemDetail from "./pages/ItemDetail";
 import Checkout from "./pages/Checkout";
 import Orders from "./pages/Orders";
 import SellerSettings from "./pages/SellerSettings";
+import OpenDispute from "./pages/OpenDispute";
 import Chat from "./pages/Chat";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
@@ -54,6 +55,7 @@ const App = () => (
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/orders" element={<Orders />} />
           <Route path="/seller-settings" element={<SellerSettings />} />
+          <Route path="/open-dispute" element={<OpenDispute />} />
           <Route path="/chat" element={<Chat />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/reset-password" element={<ResetPassword />} />
