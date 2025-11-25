@@ -33,6 +33,8 @@ type ItemData = {
   tradePreference: string;
   images: File[];
   videos: File[];
+  shippingType: string;
+  returnPolicy: string;
 };
 
 const conversationSteps = [
@@ -48,6 +50,8 @@ const conversationSteps = [
   "location",
   "size",
   "trade",
+  "shipping",
+  "returnPolicy",
   "summary",
 ] as const;
 
@@ -77,6 +81,8 @@ const Sell = () => {
     tradePreference: "",
     images: [],
     videos: [],
+    shippingType: "",
+    returnPolicy: "",
   });
 
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
@@ -402,7 +408,7 @@ Please provide a price suggestion considering any visible damage or wear in the 
       case "size":
         setItemData({ ...itemData, size: inputToSubmit });
         addBotMessageWithDelay(
-          "Last question! Are you open to trades?",
+          "Are you open to trades?",
           600,
           ["Yes", "No"],
           "select"
@@ -412,13 +418,57 @@ Please provide a price suggestion considering any visible damage or wear in the 
 
       case "trade":
         setItemData({ ...itemData, tradePreference: inputToSubmit.toLowerCase() });
-        showSummary(inputToSubmit);
+        addBotMessageWithDelay(
+          "How would you like buyers to receive this item?",
+          600,
+          ["Ship it", "Local pickup only", "Both options"],
+          "select"
+        );
+        setCurrentStep("shipping");
+        break;
+
+      case "shipping":
+        const shippingMap: Record<string, string> = {
+          "Ship it": "shipping",
+          "Local pickup only": "local_pickup",
+          "Both options": "both"
+        };
+        setItemData({ ...itemData, shippingType: shippingMap[inputToSubmit] || inputToSubmit.toLowerCase() });
+        addBotMessageWithDelay(
+          "Last question! What's your return policy?",
+          600,
+          ["No returns", "Returns accepted (3 days)", "Returns accepted (7 days)"],
+          "select"
+        );
+        setCurrentStep("returnPolicy");
+        break;
+
+      case "returnPolicy":
+        const returnMap: Record<string, string> = {
+          "No returns": "no_returns",
+          "Returns accepted (3 days)": "3_days",
+          "Returns accepted (7 days)": "7_days"
+        };
+        setItemData({ ...itemData, returnPolicy: returnMap[inputToSubmit] || inputToSubmit.toLowerCase() });
+        showSummary(returnMap[inputToSubmit] || inputToSubmit.toLowerCase());
         break;
     }
   };
 
-  const showSummary = (tradeAnswer: string) => {
-    const data = { ...itemData, tradePreference: tradeAnswer.toLowerCase() };
+  const showSummary = (returnPolicyAnswer: string) => {
+    const data = { ...itemData, returnPolicy: returnPolicyAnswer };
+
+    const shippingLabels: Record<string, string> = {
+      "shipping": "Ship it",
+      "local_pickup": "Local pickup only",
+      "both": "Shipping & Local pickup"
+    };
+
+    const returnLabels: Record<string, string> = {
+      "no_returns": "No returns",
+      "3_days": "Returns accepted (3 days)",
+      "7_days": "Returns accepted (7 days)"
+    };
 
     addBotMessageWithDelay("Perfect! Here's what we've got:", 600);
 
@@ -433,6 +483,8 @@ Please provide a price suggestion considering any visible damage or wear in the 
 📍 Location: ${data.location}
 📏 Size: ${data.size}
 🔄 Open to trades: ${data.tradePreference}
+🚚 Shipping: ${shippingLabels[data.shippingType] || data.shippingType}
+↩️ Returns: ${returnLabels[data.returnPolicy] || data.returnPolicy}
 📸 ${data.images.length} photo(s)${data.videos.length > 0 ? ` and ${data.videos.length} video(s)` : ''}
       `.trim();
 
@@ -485,6 +537,8 @@ Please provide a price suggestion considering any visible damage or wear in the 
       tradePreference: "",
       images: [],
       videos: [],
+      shippingType: "",
+      returnPolicy: "",
     });
     setCurrentStep("welcome");
 
@@ -568,6 +622,8 @@ Please provide a price suggestion considering any visible damage or wear in the 
           trade_preference: itemData.tradePreference,
           images: uploadedImageUrls.length > 0 ? uploadedImageUrls : null,
           videos: uploadedVideoUrls.length > 0 ? uploadedVideoUrls : null,
+          shipping_type: itemData.shippingType || 'shipping',
+          return_policy: itemData.returnPolicy || 'no_returns',
         });
 
       if (draftError) {
@@ -725,6 +781,8 @@ Please provide a price suggestion considering any visible damage or wear in the 
         images: uploadedImageUrls.length > 0 ? uploadedImageUrls : null,
         videos: uploadedVideoUrls.length > 0 ? uploadedVideoUrls : null,
         status: 'available',
+        shipping_type: itemData.shippingType || 'shipping',
+        return_policy: itemData.returnPolicy || 'no_returns',
       });
 
       if (error) {

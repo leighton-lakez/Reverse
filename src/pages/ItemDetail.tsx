@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ArrowLeft, MapPin, Heart, Share2, ShieldCheck, MessageCircle } from "lucide-react";
+import { ArrowLeft, MapPin, Heart, Share2, ShieldCheck, MessageCircle, ShoppingCart, Truck, RotateCcw, MapPinned } from "lucide-react";
 import { useNavigate, useLocation, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -273,6 +273,38 @@ const ItemDetail = () => {
               </div>
             </Card>
 
+            {/* Shipping & Returns Info */}
+            <Card className="p-3 border-border bg-card">
+              <h3 className="text-sm font-semibold text-foreground mb-2">Shipping & Returns</h3>
+              <div className="flex flex-wrap gap-3">
+                <div className="flex items-center gap-2 text-xs">
+                  {item.shipping_type === 'local_pickup' ? (
+                    <>
+                      <MapPinned className="h-4 w-4 text-primary" />
+                      <span>Local pickup only</span>
+                    </>
+                  ) : item.shipping_type === 'both' ? (
+                    <>
+                      <Truck className="h-4 w-4 text-primary" />
+                      <span>Shipping & Local pickup</span>
+                    </>
+                  ) : (
+                    <>
+                      <Truck className="h-4 w-4 text-primary" />
+                      <span>Shipping available</span>
+                    </>
+                  )}
+                </div>
+                <div className="flex items-center gap-2 text-xs">
+                  <RotateCcw className="h-4 w-4 text-primary" />
+                  <span>
+                    {item.return_policy === '3_days' ? 'Returns accepted (3 days)' :
+                     item.return_policy === '7_days' ? 'Returns accepted (7 days)' :
+                     'No returns'}
+                  </span>
+                </div>
+              </div>
+            </Card>
 
             {/* Seller Info */}
             <Card className="p-3 border-border bg-gradient-to-br from-muted/50 to-muted/30">
@@ -300,10 +332,19 @@ const ItemDetail = () => {
               </div>
             </Card>
 
-            {/* Action Button */}
+            {/* Action Buttons */}
+            {user?.id !== item.user_id && (
+              <Button
+                onClick={() => navigate("/checkout", { state: { item } })}
+                className="w-full h-12 text-base font-semibold bg-green-600 hover:bg-green-700 text-white gap-2"
+              >
+                <ShoppingCart className="h-5 w-5" />
+                Buy Now - ${item.price}
+              </Button>
+            )}
             <Button
               onClick={() => navigate("/chat", { state: { sellerId: item.user_id, item: { id: item.id, title: item.title, price: item.price, image: item.images?.[0] || item.image } } })}
-              className="w-full h-12 text-base font-semibold bg-primary hover:bg-primary/90 text-primary-foreground gap-2"
+              className={`w-full h-12 text-base font-semibold gap-2 ${user?.id === item.user_id ? 'bg-primary hover:bg-primary/90 text-primary-foreground' : 'bg-muted hover:bg-muted/80 text-foreground'}`}
             >
               <MessageCircle className="h-5 w-5" />
               Message Seller

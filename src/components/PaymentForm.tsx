@@ -5,7 +5,7 @@ import { CreditCard, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface PaymentFormProps {
-  onSuccess: () => void;
+  onSuccess: (paymentIntentId: string) => void;
   amount: number;
 }
 
@@ -24,7 +24,7 @@ export default function PaymentForm({ onSuccess, amount }: PaymentFormProps) {
     setIsProcessing(true);
 
     try {
-      const { error } = await stripe.confirmPayment({
+      const { error, paymentIntent } = await stripe.confirmPayment({
         elements,
         confirmParams: {
           return_url: `${window.location.origin}/checkout/success`,
@@ -34,9 +34,11 @@ export default function PaymentForm({ onSuccess, amount }: PaymentFormProps) {
 
       if (error) {
         toast.error(error.message || 'Payment failed. Please try again.');
-      } else {
+      } else if (paymentIntent && paymentIntent.status === 'succeeded') {
         toast.success('Payment successful!');
-        onSuccess();
+        onSuccess(paymentIntent.id);
+      } else {
+        toast.error('Payment status unknown. Please contact support.');
       }
     } catch (err: any) {
       toast.error(err.message || 'An unexpected error occurred');

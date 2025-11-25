@@ -52,6 +52,8 @@ export type Database = {
           trade_preference: string | null
           updated_at: string
           user_id: string
+          return_policy: string | null
+          shipping_type: string | null
         }
         Insert: {
           brand?: string | null
@@ -69,6 +71,8 @@ export type Database = {
           trade_preference?: string | null
           updated_at?: string
           user_id: string
+          return_policy?: string | null
+          shipping_type?: string | null
         }
         Update: {
           brand?: string | null
@@ -86,6 +90,8 @@ export type Database = {
           trade_preference?: string | null
           updated_at?: string
           user_id?: string
+          return_policy?: string | null
+          shipping_type?: string | null
         }
         Relationships: []
       }
@@ -243,6 +249,205 @@ export type Database = {
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
+        }
+        Relationships: []
+      }
+      orders: {
+        Row: {
+          id: string
+          created_at: string
+          updated_at: string
+          item_id: string
+          buyer_id: string
+          seller_id: string
+          amount: number
+          platform_fee: number
+          seller_amount: number
+          status: string
+          payment_intent_id: string | null
+          stripe_transfer_id: string | null
+          shipping_address: Json | null
+          shipping_type: string
+          tracking_number: string | null
+          tracking_carrier: string | null
+          shipped_at: string | null
+          delivered_at: string | null
+          buyer_confirmed_at: string | null
+          escrow_release_at: string | null
+          cancelled_at: string | null
+          cancellation_reason: string | null
+        }
+        Insert: {
+          id?: string
+          created_at?: string
+          updated_at?: string
+          item_id: string
+          buyer_id: string
+          seller_id: string
+          amount: number
+          platform_fee: number
+          seller_amount: number
+          status?: string
+          payment_intent_id?: string | null
+          stripe_transfer_id?: string | null
+          shipping_address?: Json | null
+          shipping_type: string
+          tracking_number?: string | null
+          tracking_carrier?: string | null
+          shipped_at?: string | null
+          delivered_at?: string | null
+          buyer_confirmed_at?: string | null
+          escrow_release_at?: string | null
+          cancelled_at?: string | null
+          cancellation_reason?: string | null
+        }
+        Update: {
+          id?: string
+          created_at?: string
+          updated_at?: string
+          item_id?: string
+          buyer_id?: string
+          seller_id?: string
+          amount?: number
+          platform_fee?: number
+          seller_amount?: number
+          status?: string
+          payment_intent_id?: string | null
+          stripe_transfer_id?: string | null
+          shipping_address?: Json | null
+          shipping_type?: string
+          tracking_number?: string | null
+          tracking_carrier?: string | null
+          shipped_at?: string | null
+          delivered_at?: string | null
+          buyer_confirmed_at?: string | null
+          escrow_release_at?: string | null
+          cancelled_at?: string | null
+          cancellation_reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orders_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "items"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      seller_accounts: {
+        Row: {
+          id: string
+          user_id: string
+          created_at: string
+          updated_at: string
+          stripe_account_id: string | null
+          stripe_onboarding_complete: boolean
+          payout_method: string | null
+          payout_email: string | null
+          bank_last_four: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          created_at?: string
+          updated_at?: string
+          stripe_account_id?: string | null
+          stripe_onboarding_complete?: boolean
+          payout_method?: string | null
+          payout_email?: string | null
+          bank_last_four?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          created_at?: string
+          updated_at?: string
+          stripe_account_id?: string | null
+          stripe_onboarding_complete?: boolean
+          payout_method?: string | null
+          payout_email?: string | null
+          bank_last_four?: string | null
+        }
+        Relationships: []
+      }
+      disputes: {
+        Row: {
+          id: string
+          created_at: string
+          updated_at: string
+          order_id: string
+          opened_by: string
+          reason: string
+          description: string | null
+          status: string
+          resolution: string | null
+          resolved_at: string | null
+          refund_amount: number | null
+        }
+        Insert: {
+          id?: string
+          created_at?: string
+          updated_at?: string
+          order_id: string
+          opened_by: string
+          reason: string
+          description?: string | null
+          status?: string
+          resolution?: string | null
+          resolved_at?: string | null
+          refund_amount?: number | null
+        }
+        Update: {
+          id?: string
+          created_at?: string
+          updated_at?: string
+          order_id?: string
+          opened_by?: string
+          reason?: string
+          description?: string | null
+          status?: string
+          resolution?: string | null
+          resolved_at?: string | null
+          refund_amount?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "disputes_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      saved_payment_methods: {
+        Row: {
+          id: string
+          user_id: string
+          created_at: string
+          stripe_payment_method_id: string
+          card_brand: string | null
+          card_last_four: string | null
+          is_default: boolean
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          created_at?: string
+          stripe_payment_method_id: string
+          card_brand?: string | null
+          card_last_four?: string | null
+          is_default?: boolean
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          created_at?: string
+          stripe_payment_method_id?: string
+          card_brand?: string | null
+          card_last_four?: string | null
+          is_default?: boolean
         }
         Relationships: []
       }

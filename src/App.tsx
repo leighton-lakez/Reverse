@@ -12,6 +12,7 @@ import Profile from "./pages/Profile";
 import UserProfile from "./pages/UserProfile";
 import ItemDetail from "./pages/ItemDetail";
 import Checkout from "./pages/Checkout";
+import Orders from "./pages/Orders";
 import Chat from "./pages/Chat";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
@@ -50,6 +51,7 @@ const App = () => (
           <Route path="/user/:userId" element={<UserProfile />} />
           <Route path="/item-detail" element={<ItemDetail />} />
           <Route path="/checkout" element={<Checkout />} />
+          <Route path="/orders" element={<Orders />} />
           <Route path="/chat" element={<Chat />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/reset-password" element={<ResetPassword />} />
