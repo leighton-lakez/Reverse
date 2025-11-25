@@ -698,20 +698,8 @@ Please provide a price suggestion considering any visible damage or wear in the 
         const firstError = validationResult.error.errors[0];
         console.error('Validation errors:', validationResult.error.errors);
 
-        // User-friendly field names
-        const fieldNames: Record<string, string> = {
-          title: 'Title',
-          brand: 'Brand',
-          category: 'Category',
-          description: 'Description',
-          condition: 'Condition',
-          price: 'Price',
-          location: 'Location',
-          size: 'Size'
-        };
-
-        const fieldName = fieldNames[firstError.path[0] as string] || firstError.path[0];
-        throw new Error(`${fieldName}: ${firstError.message}`);
+        // Just use the validation message directly - it's already user-friendly
+        throw new Error(firstError.message);
       }
 
       // Upload images
@@ -811,16 +799,13 @@ Please provide a price suggestion considering any visible damage or wear in the 
         full: error
       });
 
-      // Show actual error in development, friendly error in production
+      // Show the error message to the user
       const errorMessage = error.message || getUserFriendlyError(error);
-      const displayMessage = process.env.NODE_ENV === 'development'
-        ? errorMessage
-        : getUserFriendlyError(error);
 
-      addMessage(`Oops! ${displayMessage} Please try again.`, "bot");
+      addMessage(`${errorMessage}`, "bot");
       toast({
-        title: "Error",
-        description: displayMessage,
+        title: "Please fix this",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
