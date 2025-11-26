@@ -33,8 +33,10 @@ const Checkout = () => {
   const stripePromise = getStripe();
 
   // Check if both options are available
-  const canShip = item.shipping_type === 'shipping' || item.shipping_type === 'both';
-  const canPickup = item.shipping_type === 'local_pickup' || item.shipping_type === 'both';
+  // If shipping_type is null/undefined (old listings), allow both options
+  const shippingType = item.shipping_type || 'both';
+  const canShip = shippingType === 'shipping' || shippingType === 'both';
+  const canPickup = shippingType === 'local_pickup' || shippingType === 'both';
 
   // Require authentication for checkout
   useEffect(() => {
